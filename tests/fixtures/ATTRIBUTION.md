@@ -12,5 +12,6 @@ Notes for tests:
 - 640x480, 25 fps, 125 frames (5 s).
 - Filmed from across the net, not side-on, so metric values are not representative.
 - The net occludes the lower legs for much of the clip.
-- MediaPipe labels the racket arm as the player's LEFT (the clip appears mirrored or the
-  facing direction is misread), so the pipeline is run with `--hand left`.
+- Right-handed player facing the camera. The clip ends at ball contact (last frame).
+- MediaPipe reports the hitting elbow with low visibility throughout, so the racket drop
+  phase is not detected with default settings.

@@ -87,6 +87,7 @@ def analyze(
     out_dir: str | Path,
     config: AnalysisConfig | None = None,
     debug_plots: bool = False,
+    render_video: bool = True,
 ) -> AnalysisResult:
     """Validate, extract pose, analyse, and write outputs into ``out_dir``."""
     config = config or AnalysisConfig()
@@ -113,6 +114,15 @@ def analyze(
             out_dir / "smoothing_wrist.png",
         )
         result.outputs["smoothing_plot"] = str(path)
+
+    if render_video:
+        from .render import render_annotated
+
+        video_out = render_annotated(
+            info.path, analysis.pose, analysis.series, result.phases, hand,
+            out_dir / "annotated.mp4",
+        )
+        result.outputs["annotated_video"] = str(video_out)
 
     results_path = out_dir / "results.json"
     result.outputs["results"] = str(results_path)
