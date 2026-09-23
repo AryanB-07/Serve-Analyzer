@@ -76,7 +76,6 @@ def test_compute_series_on_stick_figure():
     assert s[A.TRUNK_TILT][0] == pytest.approx(0.0)
     assert s[A.WRIST_HEIGHT][0] == pytest.approx(1.0)  # wrist level with nose
     assert s[A.WRIST_ELEVATION_PX][0] == pytest.approx(0.0)
-    assert s[A.TOSS_WRIST_ELEVATION_PX][0] == pytest.approx(-90.0)
     assert s[A.TOSS_ARM_RAISE_PX][0] == pytest.approx(-60.0)  # toss arm hanging down
 
 

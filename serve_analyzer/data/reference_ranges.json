@@ -1,0 +1,19 @@
+{
+  "_note": "PLACEHOLDER values, loosely inspired by serve biomechanics literature. Not validated; refine before trusting any label. Angles in degrees, wrist_height in body heights (1.0 = nose height). Each metric has a 'good' range and a wider 'borderline' range that contains it.",
+  "trophy": {
+    "front_knee_flexion": {"good": [50, 80], "borderline": [35, 95]},
+    "back_knee_flexion": {"good": [45, 80], "borderline": [30, 95]},
+    "elbow_angle": {"good": [80, 120], "borderline": [65, 140]},
+    "trunk_tilt": {"good": [15, 35], "borderline": [8, 45]}
+  },
+  "racket_drop": {
+    "elbow_angle": {"good": [50, 90], "borderline": [35, 110]},
+    "trunk_tilt": {"good": [10, 30], "borderline": [5, 40]}
+  },
+  "contact": {
+    "elbow_angle": {"good": [160, 180], "borderline": [145, 180]},
+    "wrist_height": {"good": [1.3, 1.6], "borderline": [1.15, 1.7]},
+    "front_knee_flexion": {"good": [0, 20], "borderline": [0, 35]},
+    "trunk_tilt": {"good": [5, 30], "borderline": [0, 40]}
+  }
+}

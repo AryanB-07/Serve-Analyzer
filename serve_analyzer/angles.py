@@ -15,7 +15,6 @@ ELBOW_ANGLE = "elbow_angle"
 TRUNK_TILT = "trunk_tilt"
 WRIST_HEIGHT = "wrist_height"
 WRIST_ELEVATION_PX = "wrist_elevation_px"
-TOSS_WRIST_ELEVATION_PX = "toss_wrist_elevation_px"
 TOSS_ARM_RAISE_PX = "toss_arm_raise_px"
 
 METRIC_NAMES = [FRONT_KNEE_FLEXION, BACK_KNEE_FLEXION, ELBOW_ANGLE, TRUNK_TILT, WRIST_HEIGHT]
@@ -87,6 +86,5 @@ def compute_series(seq: PoseSequence, hand: Hand) -> Series:
         TRUNK_TILT: tilt_from_vertical(mid_hip, mid_shoulder),
         WRIST_HEIGHT: height(hit.wrist),
         WRIST_ELEVATION_PX: -p(hit.wrist)[:, 1],
-        TOSS_WRIST_ELEVATION_PX: -p(toss.wrist)[:, 1],
         TOSS_ARM_RAISE_PX: p(toss.shoulder)[:, 1] - p(toss.wrist)[:, 1],
     }

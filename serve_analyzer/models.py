@@ -73,6 +73,7 @@ class AnalysisResult:
     metrics: Metrics
     labels: Labels
     feedback: list[str]
+    warnings: list[str] = field(default_factory=list)
     outputs: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,5 +85,6 @@ class AnalysisResult:
             "metrics": self.metrics,
             "labels": self.labels,
             "feedback": self.feedback,
+            "warnings": self.warnings,
             "outputs": self.outputs,
         }
