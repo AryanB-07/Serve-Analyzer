@@ -38,8 +38,17 @@ class ArmSide:
     wrist: int
 
 
+@dataclass(frozen=True)
+class LegSide:
+    hip: int
+    knee: int
+    ankle: int
+
+
 LEFT_ARM = ArmSide(LEFT_SHOULDER, LEFT_ELBOW, LEFT_WRIST)
 RIGHT_ARM = ArmSide(RIGHT_SHOULDER, RIGHT_ELBOW, RIGHT_WRIST)
+LEFT_LEG = LegSide(LEFT_HIP, LEFT_KNEE, LEFT_ANKLE)
+RIGHT_LEG = LegSide(RIGHT_HIP, RIGHT_KNEE, RIGHT_ANKLE)
 
 
 def hitting_arm(hand: Hand) -> ArmSide:
@@ -48,3 +57,12 @@ def hitting_arm(hand: Hand) -> ArmSide:
 
 def tossing_arm(hand: Hand) -> ArmSide:
     return LEFT_ARM if hand is Hand.RIGHT else RIGHT_ARM
+
+
+def front_leg(hand: Hand) -> LegSide:
+    """The leg on the tossing side, which is in front in a standard serve stance."""
+    return LEFT_LEG if hand is Hand.RIGHT else RIGHT_LEG
+
+
+def back_leg(hand: Hand) -> LegSide:
+    return RIGHT_LEG if hand is Hand.RIGHT else LEFT_LEG
