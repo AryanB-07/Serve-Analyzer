@@ -89,7 +89,7 @@ def test_missing_trophy_propagates_to_racket_drop_only():
 
 def test_phase_label_segments():
     phases = PhaseFrames(trophy=10, racket_drop=20, contact=30)
-    assert phase_label(0, phases) == "Preparation"
+    assert phase_label(0, phases) == "Stance"
     assert phase_label(10, phases) == "Trophy"
     assert phase_label(25, phases) == "Racket drop"
     assert phase_label(40, phases) == "Contact / follow-through"

@@ -1,27 +1,37 @@
-"""End-to-end analysis: video in, results.json (and annotated video) out."""
+"""End-to-end analysis: video in, results.json, frames.json and videos out."""
 
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 
 from . import angles as A
 from . import feedback, landmarks
 from .config import AnalysisConfig
+from .errors import AnalysisError
+from .export import build_frames_payload
 from .metrics import compute_metrics
 from .models import AnalysisResult, Hand, PhaseFrames, PoseSequence
 from .phases import detect_phases
 from .pose import ensure_model, extract_pose_sequence
 from .preprocessing import clean
-from .reference import RangeTable, assess, load_ranges, to_labels
-from .video import probe, validate
+from .reference import RangeTable, assess, load_ranges, ranges_to_dict, to_labels
+from .video import probe, validate, write_playback_copy, write_thumbnail
 
+__all__ = ["AnalysisError", "SequenceAnalysis", "Stage", "analyze", "analyze_sequence"]
 
-class AnalysisError(RuntimeError):
-    """The video was valid but could not be analysed (e.g. no person found)."""
+Stage = Literal["extracting_pose", "analyzing", "rendering"]
+
+RESULTS_FILE = "results.json"
+FRAMES_FILE = "frames.json"
+PLAYBACK_FILE = "playback.mp4"
+ANNOTATED_FILE = "annotated.mp4"
+THUMBNAIL_FILE = "thumbnail.jpg"
 
 
 @dataclass
@@ -36,7 +46,7 @@ def analyze_sequence(
 ) -> SequenceAnalysis:
     """Everything after pose extraction. Pure: no file or video I/O."""
     if np.isnan(raw.landmarks[:, :, :2]).all():
-        raise AnalysisError("No person was detected in the video.")
+        raise AnalysisError("No person was detected in the video.", code="NO_PERSON_DETECTED")
 
     pose = clean(
         raw,
@@ -54,9 +64,12 @@ def analyze_sequence(
         hand=hand,
         fps=raw.fps,
         n_frames=raw.n_frames,
+        width=raw.width,
+        height=raw.height,
         phases=phases,
         metrics=metrics,
         labels=to_labels(assessments),
+        ranges=ranges_to_dict(ranges),
         feedback=feedback.generate(assessments),
         warnings=_warnings(phases, raw.n_frames, hand),
     )
@@ -76,9 +89,16 @@ def _warnings(phases: PhaseFrames, n_frames: int, hand: Hand) -> list[str]:
         other = Hand.LEFT if hand is Hand.RIGHT else Hand.RIGHT
         out.append(
             "The hitting wrist is highest at the very edge of the clip, so contact may be "
-            f"cut off or --hand may be wrong (try --hand {other.value})."
+            f"cut off or the hitting hand may be wrong (try {other.value})."
         )
     return out
+
+
+def _thumbnail_frame(phases: PhaseFrames, n_frames: int) -> int:
+    for frame in (phases.trophy, phases.contact):
+        if frame is not None:
+            return frame
+    return n_frames // 2
 
 
 def analyze(
@@ -88,21 +108,38 @@ def analyze(
     config: AnalysisConfig | None = None,
     debug_plots: bool = False,
     render_video: bool = True,
+    on_stage: Callable[[Stage], None] | None = None,
 ) -> AnalysisResult:
-    """Validate, extract pose, analyse, and write outputs into ``out_dir``."""
+    """Validate, extract pose, analyse, and write outputs into ``out_dir``.
+
+    ``on_stage`` is called as each stage starts, for progress reporting.
+    """
     config = config or AnalysisConfig()
     hand = Hand(hand)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    report = on_stage or (lambda stage: None)
 
     info = probe(video_path)
     validate(info, config.max_duration_s, config.min_fps)
     ranges = load_ranges(config.reference_ranges_path)
 
+    report("extracting_pose")
     model_path = ensure_model(config.model_variant, config.model_dir)
     raw = extract_pose_sequence(info, model_path)
+
+    report("analyzing")
     analysis = analyze_sequence(raw, hand, config, ranges)
     result = analysis.result
+
+    frames_path = out_dir / FRAMES_FILE
+    frames_path.write_text(
+        json.dumps(
+            build_frames_payload(raw, analysis.pose, analysis.series, result.phases),
+            separators=(",", ":"),
+        )
+    )
+    result.outputs["frames"] = str(frames_path)
 
     if debug_plots:
         from .plots import plot_smoothing
@@ -118,13 +155,24 @@ def analyze(
     if render_video:
         from .render import render_annotated
 
-        video_out = render_annotated(
-            info.path, analysis.pose, analysis.series, result.phases, hand,
-            out_dir / "annotated.mp4",
+        report("rendering")
+        result.outputs["playback_video"] = str(
+            write_playback_copy(info.path, out_dir / PLAYBACK_FILE, info.fps)
         )
-        result.outputs["annotated_video"] = str(video_out)
+        result.outputs["annotated_video"] = str(
+            render_annotated(
+                info.path, analysis.pose, analysis.series, result.phases, hand,
+                out_dir / ANNOTATED_FILE,
+            )
+        )
+        result.outputs["thumbnail"] = str(
+            write_thumbnail(
+                info.path, _thumbnail_frame(result.phases, result.n_frames),
+                out_dir / THUMBNAIL_FILE,
+            )
+        )
 
-    results_path = out_dir / "results.json"
+    results_path = out_dir / RESULTS_FILE
     result.outputs["results"] = str(results_path)
     results_path.write_text(json.dumps(result.to_dict(), indent=2))
     return result

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .models import FeedbackItem
 from .reference import Assessment
 
 MAX_POINTS = 4
@@ -88,8 +89,8 @@ def _rank(a: Assessment) -> tuple[int, int]:
     return SEVERITY[a.status], priority
 
 
-def generate(assessments: list[Assessment], max_points: int = MAX_POINTS) -> list[str]:
-    """Up to ``max_points`` messages, worst and most important first."""
+def generate(assessments: list[Assessment], max_points: int = MAX_POINTS) -> list[FeedbackItem]:
+    """Up to ``max_points`` items, worst and most important first."""
     issues = [a for a in assessments if a.status in SEVERITY and a.direction is not None]
     points = []
     for a in sorted(issues, key=_rank):
@@ -97,11 +98,12 @@ def generate(assessments: list[Assessment], max_points: int = MAX_POINTS) -> lis
         if template is None:
             continue
         lo, hi = a.range.good
-        points.append(template.format(value=a.value, lo=lo, hi=hi))
+        text = template.format(value=a.value, lo=lo, hi=hi)
+        points.append(FeedbackItem(text, a.phase, a.metric, a.status))
         if len(points) == max_points:
             break
     if points:
         return points
     if any(a.status == "good" for a in assessments):
-        return [ALL_GOOD]
-    return [NOTHING_MEASURED]
+        return [FeedbackItem(ALL_GOOD, status="good")]
+    return [FeedbackItem(NOTHING_MEASURED)]

@@ -59,8 +59,9 @@ def test_labels_and_feedback_prioritise_off_over_borderline():
     }
     points = feedback.generate(assessments)
     assert len(points) == 2
-    assert points[0].startswith("Straighten your hitting arm")
-    assert "1.20 body heights" in points[1]
+    assert points[0].text.startswith("Straighten your hitting arm")
+    assert (points[0].phase, points[0].metric, points[0].status) == ("contact", "elbow_angle", "off")
+    assert "1.20 body heights" in points[1].text
 
 
 def test_feedback_capped_at_max_points():
@@ -75,5 +76,7 @@ def test_feedback_capped_at_max_points():
 
 def test_feedback_all_good_and_nothing_measured():
     ranges = {"contact": {"elbow_angle": Range((160, 180), (145, 180))}}
-    assert feedback.generate(assess(_metrics(elbow_angle=170.0), ranges)) == [feedback.ALL_GOOD]
-    assert feedback.generate(assess(_metrics(), ranges)) == [feedback.NOTHING_MEASURED]
+    [all_good] = feedback.generate(assess(_metrics(elbow_angle=170.0), ranges))
+    assert all_good.text == feedback.ALL_GOOD and all_good.phase is None
+    [nothing] = feedback.generate(assess(_metrics(), ranges))
+    assert nothing.text == feedback.NOTHING_MEASURED

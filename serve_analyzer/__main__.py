@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 from .config import AnalysisConfig
+from .errors import PipelineError
 from .models import Hand
-from .pipeline import AnalysisError, analyze
-from .video import VideoValidationError
+from .pipeline import analyze
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     try:
         result = analyze(args.video, args.hand, args.out, config, debug_plots=args.debug_plots)
-    except (VideoValidationError, AnalysisError, ValueError) as exc:
+    except (PipelineError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
@@ -47,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Phases (frame): {phases}")
     print("Feedback:")
     for point in result.feedback:
-        print(f"  - {point}")
+        print(f"  - {point.text}")
     for warning in result.warnings:
         print(f"warning: {warning}", file=sys.stderr)
     for name, path in result.outputs.items():

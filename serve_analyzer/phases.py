@@ -73,7 +73,7 @@ PHASE_SEGMENTS = [
 
 def phase_label(frame: int, phases: PhaseFrames) -> str:
     """Name of the phase segment a frame falls in, for the video overlay."""
-    label = "Preparation"
+    label = "Stance"
     for attr, name in PHASE_SEGMENTS:
         start = getattr(phases, attr)
         if start is not None and frame >= start:

@@ -62,6 +62,19 @@ class PhaseFrames:
 
 Metrics = dict[str, dict[str, float | None]]
 Labels = dict[str, dict[str, str]]
+Ranges = dict[str, dict[str, dict[str, list[float]]]]
+
+RESULTS_SCHEMA_VERSION = 2
+
+
+@dataclass
+class FeedbackItem:
+    """One coaching point. ``phase``/``metric`` link it to the moment it is about."""
+
+    text: str
+    phase: str | None = None
+    metric: str | None = None
+    status: str | None = None
 
 
 @dataclass
@@ -69,22 +82,29 @@ class AnalysisResult:
     hand: Hand
     fps: float
     n_frames: int
+    width: int
+    height: int
     phases: PhaseFrames
     metrics: Metrics
     labels: Labels
-    feedback: list[str]
+    ranges: Ranges
+    feedback: list[FeedbackItem]
     warnings: list[str] = field(default_factory=list)
     outputs: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "schema_version": RESULTS_SCHEMA_VERSION,
             "hand": self.hand.value,
             "fps": self.fps,
             "n_frames": self.n_frames,
+            "width": self.width,
+            "height": self.height,
             "phases": self.phases.as_dict(),
             "metrics": self.metrics,
             "labels": self.labels,
-            "feedback": self.feedback,
+            "ranges": self.ranges,
+            "feedback": [asdict(f) for f in self.feedback],
             "warnings": self.warnings,
             "outputs": self.outputs,
         }

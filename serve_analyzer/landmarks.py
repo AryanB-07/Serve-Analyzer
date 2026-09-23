@@ -20,6 +20,16 @@ LEFT_HIP, RIGHT_HIP = 23, 24
 LEFT_KNEE, RIGHT_KNEE = 25, 26
 LEFT_ANKLE, RIGHT_ANKLE = 27, 28
 
+DRAWN_LANDMARKS: dict[str, int] = {
+    "nose": NOSE,
+    "left_shoulder": LEFT_SHOULDER, "right_shoulder": RIGHT_SHOULDER,
+    "left_elbow": LEFT_ELBOW, "right_elbow": RIGHT_ELBOW,
+    "left_wrist": LEFT_WRIST, "right_wrist": RIGHT_WRIST,
+    "left_hip": LEFT_HIP, "right_hip": RIGHT_HIP,
+    "left_knee": LEFT_KNEE, "right_knee": RIGHT_KNEE,
+    "left_ankle": LEFT_ANKLE, "right_ankle": RIGHT_ANKLE,
+}
+
 SKELETON_EDGES: list[tuple[int, int]] = [
     (LEFT_SHOULDER, RIGHT_SHOULDER),
     (LEFT_SHOULDER, LEFT_ELBOW), (LEFT_ELBOW, LEFT_WRIST),

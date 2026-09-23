@@ -8,7 +8,7 @@ from importlib import resources
 from pathlib import Path
 from typing import Literal
 
-from .models import Labels, Metrics
+from .models import Labels, Metrics, Ranges
 
 Status = Literal["good", "borderline", "off", "unknown"]
 Direction = Literal["low", "high"]
@@ -85,3 +85,10 @@ def to_labels(assessments: list[Assessment]) -> Labels:
     for a in assessments:
         labels.setdefault(a.phase, {})[a.metric] = a.status
     return labels
+
+
+def ranges_to_dict(ranges: RangeTable) -> Ranges:
+    return {
+        phase: {m: {"good": list(r.good), "borderline": list(r.borderline)} for m, r in by.items()}
+        for phase, by in ranges.items()
+    }
