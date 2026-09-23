@@ -49,7 +49,7 @@ Outputs in `--out`:
 From Python:
 
 ```python
-from serve_analyzer.pipeline import analyze
+from serve_analyzer import analyze
 
 result = analyze("serve.mp4", "right", "results/")
 print(result.phases, result.feedback)
