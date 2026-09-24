@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isTerminal, nextPollDelay, POLL_MAX_MS } from "./polling";
+import { createStatusBackoff, isTerminal, nextPollDelay, POLL_MAX_MS } from "./polling";
 
 describe("nextPollDelay", () => {
   it("backs off exponentially from 1s", () => {
@@ -18,5 +18,17 @@ describe("isTerminal", () => {
     expect(isTerminal("failed")).toBe(true);
     expect(isTerminal("rendering")).toBe(false);
     expect(isTerminal(undefined)).toBe(false);
+  });
+});
+
+describe("createStatusBackoff", () => {
+  it("backs off while the status is unchanged and resets on a transition", () => {
+    const next = createStatusBackoff();
+    expect(next("queued", 0)).toBe(1000);
+    expect(next("queued", 1)).toBe(1500);
+    expect(next("queued", 2)).toBe(2250);
+    expect(next("extracting_pose", 3)).toBe(1000);
+    expect(next("extracting_pose", 4)).toBe(1500);
+    expect(next("succeeded", 5)).toBe(false);
   });
 });

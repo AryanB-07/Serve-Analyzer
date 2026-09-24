@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
-import { isTerminal, nextPollDelay } from "../lib/polling";
+import { createStatusBackoff } from "../lib/polling";
 import { api } from ".";
 
 export const queryKeys = {
@@ -10,13 +11,16 @@ export const queryKeys = {
   frames: (id: string) => ["frames", id] as const,
 };
 
-/** Status of one analysis; polls with backoff until it succeeds or fails. */
+/**
+ * Status of one analysis. Polls until it succeeds or fails, backing off while
+ * the status is unchanged and speeding up again on each stage transition.
+ */
 export function useAnalysis(id: string) {
+  const [backoff] = useState(createStatusBackoff);
   return useQuery({
     queryKey: queryKeys.analysis(id),
     queryFn: () => api.getAnalysis(id),
-    refetchInterval: (query) =>
-      isTerminal(query.state.data?.status) ? false : nextPollDelay(query.state.dataUpdateCount),
+    refetchInterval: (query) => backoff(query.state.data?.status, query.state.dataUpdateCount),
   });
 }
 

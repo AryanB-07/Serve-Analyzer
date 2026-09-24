@@ -14,3 +14,21 @@ export function nextPollDelay(attempt: number): number {
 export function isTerminal(status: AnalysisStatus | undefined): boolean {
   return status !== undefined && TERMINAL_STATUSES.has(status);
 }
+
+/**
+ * Tracks polls since the status last changed. A stage transition means work
+ * is progressing, so polling returns to the fast end of the backoff; it only
+ * slows down while the status sits still.
+ */
+export function createStatusBackoff() {
+  let lastStatus: AnalysisStatus | undefined;
+  let pollsAtChange = 0;
+  return (status: AnalysisStatus | undefined, pollCount: number): number | false => {
+    if (isTerminal(status)) return false;
+    if (status !== lastStatus) {
+      lastStatus = status;
+      pollsAtChange = pollCount;
+    }
+    return nextPollDelay(pollCount - pollsAtChange);
+  };
+}

@@ -1,9 +1,12 @@
-import { useState } from "react";
-import { useParams } from "react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, type ReactNode } from "react";
+import { Link, useParams } from "react-router";
 
-import { useAnalysis, useFrames, useResult } from "../../api/queries";
+import { api, ApiError } from "../../api";
+import { queryKeys, useAnalysis, useFrames, useResult } from "../../api/queries";
 import type { AnalysisResult, AnalysisSummary, FramesPayload } from "../../api/types";
 import { PlayheadProvider, usePlayheadStore } from "../../playhead/context";
+import { ProcessingView } from "../processing/ProcessingView";
 import { AngleCharts } from "./charts/AngleCharts";
 import { FeedbackPanel } from "./FeedbackPanel";
 import { FrameControls } from "./FrameControls";
@@ -83,6 +86,37 @@ function ResultsView({
   );
 }
 
+function Processing({ summary }: { summary: AnalysisSummary }) {
+  const queryClient = useQueryClient();
+  const [since, setSince] = useState(() => Date.parse(summary.created_at));
+  const retry = useMutation({
+    mutationFn: () => api.retryAnalysis(summary.id),
+    onSuccess: (next) => {
+      setSince(Date.now());
+      // New data with a non-terminal status restarts the status query's polling.
+      queryClient.setQueryData(queryKeys.analysis(summary.id), next);
+    },
+  });
+  return (
+    <ProcessingView
+      summary={summary}
+      since={since}
+      onRetry={() => retry.mutate()}
+      retrying={retry.isPending}
+      retryError={retry.error?.message ?? null}
+    />
+  );
+}
+
+function CenteredMessage({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <div className="mx-auto max-w-xl space-y-3 rounded-2xl border border-border bg-surface p-8 text-center">
+      <h1 className="text-xl font-semibold">{title}</h1>
+      {children}
+    </div>
+  );
+}
+
 export function ResultsPage() {
   const { id = "" } = useParams();
   const analysis = useAnalysis(id);
@@ -90,11 +124,41 @@ export function ResultsPage() {
   const result = useResult(id, succeeded);
   const frames = useFrames(id, succeeded);
 
-  if (analysis.isError) return <p role="alert">Could not load this analysis: {analysis.error.message}</p>;
-  if (!analysis.data) return <p>Loading…</p>;
-  if (!succeeded) return <p>Status: {analysis.data.status}</p>;
-  if (result.isError || frames.isError) return <p role="alert">Could not load the results.</p>;
-  if (!result.data || !frames.data) return <p>Loading results…</p>;
+  if (analysis.isError && !analysis.data) {
+    const notFound = analysis.error instanceof ApiError && analysis.error.status === 404;
+    return (
+      <CenteredMessage title={notFound ? "We couldn't find that analysis" : "We couldn't load this analysis"}>
+        <p className="text-ink-muted">{notFound ? "It may have been deleted, or the link is wrong." : analysis.error.message}</p>
+        <div className="flex justify-center gap-3">
+          {!notFound && (
+            <button type="button" onClick={() => analysis.refetch()} className="rounded-lg border border-border px-4 py-2 font-medium">
+              Try again
+            </button>
+          )}
+          <Link to="/history" className="rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent">Go to history</Link>
+        </div>
+      </CenteredMessage>
+    );
+  }
+  if (!analysis.data) return <CenteredMessage title="Loading…" />;
+  if (!succeeded) return <Processing summary={analysis.data} />;
+  if (result.isError || frames.isError) {
+    return (
+      <CenteredMessage title="We couldn't load the results">
+        <button
+          type="button"
+          onClick={() => {
+            void result.refetch();
+            void frames.refetch();
+          }}
+          className="rounded-lg border border-border px-4 py-2 font-medium"
+        >
+          Try again
+        </button>
+      </CenteredMessage>
+    );
+  }
+  if (!result.data || !frames.data) return <CenteredMessage title="Loading results…" />;
 
   return <ResultsView key={id} summary={analysis.data} result={result.data} frames={frames.data} />;
 }
