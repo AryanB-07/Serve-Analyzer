@@ -1,0 +1,1606 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Serve Analyzer API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/analyses": {
+      "post": {
+        "summary": "Create Analysis",
+        "description": "Create a record and return a presigned URL to PUT the video to.",
+        "operationId": "create_analysis_analyses_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnalysisRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAnalysisResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Analyses",
+        "operationId": "list_analyses_analyses_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyses/{analysis_id}": {
+      "get": {
+        "summary": "Get Analysis",
+        "operationId": "get_analysis_analyses__analysis_id__get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyses/{analysis_id}/start": {
+      "post": {
+        "summary": "Start Analysis",
+        "description": "Queue the analysis once the upload has finished.",
+        "operationId": "start_analysis_analyses__analysis_id__start_post",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyses/{analysis_id}/retry": {
+      "post": {
+        "summary": "Retry Analysis",
+        "operationId": "retry_analysis_analyses__analysis_id__retry_post",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyses/{analysis_id}/result": {
+      "get": {
+        "summary": "Get Result",
+        "operationId": "get_result_analyses__analysis_id__result_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyses/{analysis_id}/frames": {
+      "get": {
+        "summary": "Get Frames",
+        "description": "Per-frame landmarks and metric series.\n\nServed straight from the pipeline's frames.json (validated against\nFramesPayload in tests) to avoid re-parsing a large payload per request.",
+        "operationId": "get_frames_analyses__analysis_id__frames_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FramesPayload"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalysisList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "AnalysisList"
+      },
+      "AnalysisResult": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "hand": {
+            "type": "string",
+            "enum": [
+              "right",
+              "left"
+            ],
+            "title": "Hand"
+          },
+          "fps": {
+            "type": "number",
+            "title": "Fps"
+          },
+          "n_frames": {
+            "type": "integer",
+            "title": "N Frames"
+          },
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          },
+          "phases": {
+            "$ref": "#/components/schemas/PhaseFrames"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/PhaseMetrics"
+          },
+          "labels": {
+            "$ref": "#/components/schemas/PhaseLabels"
+          },
+          "ranges": {
+            "$ref": "#/components/schemas/PhaseRanges"
+          },
+          "feedback": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackItem"
+            },
+            "type": "array",
+            "title": "Feedback"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "video_url": {
+            "type": "string",
+            "title": "Video Url"
+          },
+          "annotated_video_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotated Video Url"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "hand",
+          "fps",
+          "n_frames",
+          "width",
+          "height",
+          "phases",
+          "metrics",
+          "labels",
+          "ranges",
+          "feedback",
+          "warnings",
+          "video_url"
+        ],
+        "title": "AnalysisResult"
+      },
+      "AnalysisSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "hand": {
+            "type": "string",
+            "enum": [
+              "right",
+              "left"
+            ],
+            "title": "Hand"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "awaiting_upload",
+              "queued",
+              "extracting_pose",
+              "analyzing",
+              "rendering",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApiError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          },
+          "counts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StatusCounts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "hand",
+          "status",
+          "filename",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AnalysisSummary"
+      },
+      "ApiError": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "UNREADABLE_VIDEO",
+              "VIDEO_TOO_LONG",
+              "FPS_TOO_LOW",
+              "NO_PERSON_DETECTED",
+              "INTERNAL"
+            ],
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ApiError"
+      },
+      "CreateAnalysisRequest": {
+        "properties": {
+          "hand": {
+            "type": "string",
+            "enum": [
+              "right",
+              "left"
+            ],
+            "title": "Hand"
+          },
+          "filename": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Filename"
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "video/mp4",
+              "video/quicktime"
+            ],
+            "title": "Content Type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Size Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hand",
+          "filename",
+          "content_type",
+          "size_bytes"
+        ],
+        "title": "CreateAnalysisRequest"
+      },
+      "CreateAnalysisResponse": {
+        "properties": {
+          "analysis": {
+            "$ref": "#/components/schemas/AnalysisSummary"
+          },
+          "upload": {
+            "$ref": "#/components/schemas/UploadTarget"
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis",
+          "upload"
+        ],
+        "title": "CreateAnalysisResponse"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse"
+      },
+      "FeedbackItem": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "trophy",
+                  "racket_drop",
+                  "contact"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "front_knee_flexion",
+                  "back_knee_flexion",
+                  "elbow_angle",
+                  "trunk_tilt",
+                  "wrist_height"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "good",
+                  "borderline",
+                  "off",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "FeedbackItem"
+      },
+      "FrameLandmarks": {
+        "properties": {
+          "raw": {
+            "$ref": "#/components/schemas/RawLandmarks"
+          },
+          "smoothed": {
+            "$ref": "#/components/schemas/SmoothedLandmarks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "raw",
+          "smoothed"
+        ],
+        "title": "FrameLandmarks"
+      },
+      "FramesPayload": {
+        "properties": {
+          "fps": {
+            "type": "number",
+            "title": "Fps"
+          },
+          "n_frames": {
+            "type": "integer",
+            "title": "N Frames"
+          },
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          },
+          "phases": {
+            "$ref": "#/components/schemas/PhaseFrames"
+          },
+          "landmarks": {
+            "$ref": "#/components/schemas/FrameLandmarks"
+          },
+          "series": {
+            "$ref": "#/components/schemas/MetricSeries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fps",
+          "n_frames",
+          "width",
+          "height",
+          "phases",
+          "landmarks",
+          "series"
+        ],
+        "title": "FramesPayload"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LandmarkTrack": {
+        "properties": {
+          "x": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Y"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "LandmarkTrack",
+        "description": "Normalised coordinates (0-1 of the frame), one entry per frame; null when missing."
+      },
+      "MetricLabels": {
+        "properties": {
+          "front_knee_flexion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "good",
+                  "borderline",
+                  "off",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Front Knee Flexion"
+          },
+          "back_knee_flexion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "good",
+                  "borderline",
+                  "off",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Back Knee Flexion"
+          },
+          "elbow_angle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "good",
+                  "borderline",
+                  "off",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elbow Angle"
+          },
+          "trunk_tilt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "good",
+                  "borderline",
+                  "off",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trunk Tilt"
+          },
+          "wrist_height": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "good",
+                  "borderline",
+                  "off",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wrist Height"
+          }
+        },
+        "type": "object",
+        "title": "MetricLabels"
+      },
+      "MetricRange": {
+        "properties": {
+          "good": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Good"
+          },
+          "borderline": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Borderline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "good",
+          "borderline"
+        ],
+        "title": "MetricRange"
+      },
+      "MetricRanges": {
+        "properties": {
+          "front_knee_flexion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "back_knee_flexion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "elbow_angle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trunk_tilt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wrist_height": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "MetricRanges"
+      },
+      "MetricSeries": {
+        "properties": {
+          "front_knee_flexion": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Front Knee Flexion"
+          },
+          "back_knee_flexion": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Back Knee Flexion"
+          },
+          "elbow_angle": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Elbow Angle"
+          },
+          "trunk_tilt": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Trunk Tilt"
+          },
+          "wrist_height": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Wrist Height"
+          }
+        },
+        "type": "object",
+        "required": [
+          "front_knee_flexion",
+          "back_knee_flexion",
+          "elbow_angle",
+          "trunk_tilt",
+          "wrist_height"
+        ],
+        "title": "MetricSeries"
+      },
+      "MetricValues": {
+        "properties": {
+          "front_knee_flexion": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Front Knee Flexion"
+          },
+          "back_knee_flexion": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Back Knee Flexion"
+          },
+          "elbow_angle": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elbow Angle"
+          },
+          "trunk_tilt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trunk Tilt"
+          },
+          "wrist_height": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wrist Height"
+          }
+        },
+        "type": "object",
+        "required": [
+          "front_knee_flexion",
+          "back_knee_flexion",
+          "elbow_angle",
+          "trunk_tilt",
+          "wrist_height"
+        ],
+        "title": "MetricValues"
+      },
+      "PhaseFrames": {
+        "properties": {
+          "trophy": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trophy"
+          },
+          "racket_drop": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Racket Drop"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trophy",
+          "racket_drop",
+          "contact"
+        ],
+        "title": "PhaseFrames"
+      },
+      "PhaseLabels": {
+        "properties": {
+          "trophy": {
+            "$ref": "#/components/schemas/MetricLabels"
+          },
+          "racket_drop": {
+            "$ref": "#/components/schemas/MetricLabels"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/MetricLabels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trophy",
+          "racket_drop",
+          "contact"
+        ],
+        "title": "PhaseLabels"
+      },
+      "PhaseMetrics": {
+        "properties": {
+          "trophy": {
+            "$ref": "#/components/schemas/MetricValues"
+          },
+          "racket_drop": {
+            "$ref": "#/components/schemas/MetricValues"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/MetricValues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trophy",
+          "racket_drop",
+          "contact"
+        ],
+        "title": "PhaseMetrics"
+      },
+      "PhaseRanges": {
+        "properties": {
+          "trophy": {
+            "$ref": "#/components/schemas/MetricRanges"
+          },
+          "racket_drop": {
+            "$ref": "#/components/schemas/MetricRanges"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/MetricRanges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trophy",
+          "racket_drop",
+          "contact"
+        ],
+        "title": "PhaseRanges"
+      },
+      "RawLandmarkTrack": {
+        "properties": {
+          "x": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Y"
+          },
+          "v": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "V"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "v"
+        ],
+        "title": "RawLandmarkTrack"
+      },
+      "RawLandmarks": {
+        "properties": {
+          "nose": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "left_shoulder": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "right_shoulder": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "left_elbow": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "right_elbow": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "left_wrist": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "right_wrist": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "left_hip": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "right_hip": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "left_knee": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "right_knee": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "left_ankle": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          },
+          "right_ankle": {
+            "$ref": "#/components/schemas/RawLandmarkTrack"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nose",
+          "left_shoulder",
+          "right_shoulder",
+          "left_elbow",
+          "right_elbow",
+          "left_wrist",
+          "right_wrist",
+          "left_hip",
+          "right_hip",
+          "left_knee",
+          "right_knee",
+          "left_ankle",
+          "right_ankle"
+        ],
+        "title": "RawLandmarks"
+      },
+      "SmoothedLandmarks": {
+        "properties": {
+          "nose": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "left_shoulder": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "right_shoulder": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "left_elbow": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "right_elbow": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "left_wrist": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "right_wrist": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "left_hip": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "right_hip": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "left_knee": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "right_knee": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "left_ankle": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          },
+          "right_ankle": {
+            "$ref": "#/components/schemas/LandmarkTrack"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nose",
+          "left_shoulder",
+          "right_shoulder",
+          "left_elbow",
+          "right_elbow",
+          "left_wrist",
+          "right_wrist",
+          "left_hip",
+          "right_hip",
+          "left_knee",
+          "right_knee",
+          "left_ankle",
+          "right_ankle"
+        ],
+        "title": "SmoothedLandmarks"
+      },
+      "StatusCounts": {
+        "properties": {
+          "good": {
+            "type": "integer",
+            "title": "Good"
+          },
+          "borderline": {
+            "type": "integer",
+            "title": "Borderline"
+          },
+          "off": {
+            "type": "integer",
+            "title": "Off"
+          },
+          "unknown": {
+            "type": "integer",
+            "title": "Unknown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "good",
+          "borderline",
+          "off",
+          "unknown"
+        ],
+        "title": "StatusCounts"
+      },
+      "UploadTarget": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "method": {
+            "type": "string",
+            "const": "PUT",
+            "title": "Method",
+            "default": "PUT"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Headers"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "headers",
+          "expires_at"
+        ],
+        "title": "UploadTarget"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

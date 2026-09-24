@@ -1,0 +1,16 @@
+{
+  "id": "demo-serve-2",
+  "hand": "right",
+  "status": "succeeded",
+  "filename": "serve_week2.mp4",
+  "created_at": "2026-09-20T17:30:00Z",
+  "updated_at": "2026-09-20T17:30:00Z",
+  "error": null,
+  "thumbnail_url": "/mock/demo-serve-2/thumbnail.jpg",
+  "counts": {
+    "good": 3,
+    "borderline": 2,
+    "off": 0,
+    "unknown": 5
+  }
+}

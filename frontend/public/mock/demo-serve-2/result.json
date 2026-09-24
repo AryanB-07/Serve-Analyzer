@@ -1,0 +1,193 @@
+{
+  "id": "demo-serve-2",
+  "hand": "right",
+  "fps": 25.0,
+  "n_frames": 105,
+  "width": 640,
+  "height": 480,
+  "phases": {
+    "trophy": 92,
+    "racket_drop": null,
+    "contact": 104
+  },
+  "metrics": {
+    "trophy": {
+      "front_knee_flexion": 80.935,
+      "back_knee_flexion": null,
+      "elbow_angle": null,
+      "trunk_tilt": 22.602,
+      "wrist_height": null
+    },
+    "racket_drop": {
+      "front_knee_flexion": null,
+      "back_knee_flexion": null,
+      "elbow_angle": null,
+      "trunk_tilt": null,
+      "wrist_height": null
+    },
+    "contact": {
+      "front_knee_flexion": 1.151,
+      "back_knee_flexion": null,
+      "elbow_angle": null,
+      "trunk_tilt": 20.055,
+      "wrist_height": 1.294
+    }
+  },
+  "labels": {
+    "trophy": {
+      "front_knee_flexion": "borderline",
+      "back_knee_flexion": "unknown",
+      "elbow_angle": "unknown",
+      "trunk_tilt": "good",
+      "wrist_height": null
+    },
+    "racket_drop": {
+      "front_knee_flexion": null,
+      "back_knee_flexion": null,
+      "elbow_angle": "unknown",
+      "trunk_tilt": "unknown",
+      "wrist_height": null
+    },
+    "contact": {
+      "front_knee_flexion": "good",
+      "back_knee_flexion": null,
+      "elbow_angle": "unknown",
+      "trunk_tilt": "good",
+      "wrist_height": "borderline"
+    }
+  },
+  "ranges": {
+    "trophy": {
+      "front_knee_flexion": {
+        "good": [
+          50.0,
+          80.0
+        ],
+        "borderline": [
+          35.0,
+          95.0
+        ]
+      },
+      "back_knee_flexion": {
+        "good": [
+          45.0,
+          80.0
+        ],
+        "borderline": [
+          30.0,
+          95.0
+        ]
+      },
+      "elbow_angle": {
+        "good": [
+          80.0,
+          120.0
+        ],
+        "borderline": [
+          65.0,
+          140.0
+        ]
+      },
+      "trunk_tilt": {
+        "good": [
+          15.0,
+          35.0
+        ],
+        "borderline": [
+          8.0,
+          45.0
+        ]
+      },
+      "wrist_height": null
+    },
+    "racket_drop": {
+      "front_knee_flexion": null,
+      "back_knee_flexion": null,
+      "elbow_angle": {
+        "good": [
+          50.0,
+          90.0
+        ],
+        "borderline": [
+          35.0,
+          110.0
+        ]
+      },
+      "trunk_tilt": {
+        "good": [
+          10.0,
+          30.0
+        ],
+        "borderline": [
+          5.0,
+          40.0
+        ]
+      },
+      "wrist_height": null
+    },
+    "contact": {
+      "front_knee_flexion": {
+        "good": [
+          0.0,
+          20.0
+        ],
+        "borderline": [
+          0.0,
+          35.0
+        ]
+      },
+      "back_knee_flexion": null,
+      "elbow_angle": {
+        "good": [
+          160.0,
+          180.0
+        ],
+        "borderline": [
+          145.0,
+          180.0
+        ]
+      },
+      "trunk_tilt": {
+        "good": [
+          5.0,
+          30.0
+        ],
+        "borderline": [
+          0.0,
+          40.0
+        ]
+      },
+      "wrist_height": {
+        "good": [
+          1.3,
+          1.6
+        ],
+        "borderline": [
+          1.15,
+          1.7
+        ]
+      }
+    }
+  },
+  "feedback": [
+    {
+      "text": "Hit the ball higher: at contact your wrist is at 1.29 body heights (target 1.30-1.60). Reach up fully and drive up with your legs.",
+      "phase": "contact",
+      "metric": "wrist_height",
+      "status": "borderline"
+    },
+    {
+      "text": "You sit very deep on your front knee at the trophy (81°, target 50-80°); a slightly shallower bend is easier to push out of quickly.",
+      "phase": "trophy",
+      "metric": "front_knee_flexion",
+      "status": "borderline"
+    }
+  ],
+  "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+  ],
+  "video_url": "/mock/demo-serve-2/playback.mp4",
+  "annotated_video_url": "/mock/demo-serve-2/annotated.mp4",
+  "thumbnail_url": "/mock/demo-serve-2/thumbnail.jpg"
+}

@@ -55,6 +55,33 @@ result = analyze("serve.mp4", "right", "results/")
 print(result.phases, result.feedback)
 ```
 
+## Web app (in progress)
+
+Needs Node 22 (`frontend/.node-version`) in addition to uv.
+
+```bash
+uv sync --extra dev --extra api
+cd frontend && npm install
+```
+
+**Frontend only, with mock data** (no Python needed):
+
+```bash
+cd frontend && npm run dev:mock        # http://localhost:5173
+```
+
+**Full stack**, in three terminals:
+
+```bash
+uv run uvicorn serve_api.app:create_app --factory --reload   # API on :8000
+uv run python -m serve_api.worker                            # runs queued analyses
+cd frontend && npm run dev                                   # http://localhost:5173, proxies /api
+```
+
+After changing API schemas, run `npm run gen:api` in `frontend/` to regenerate
+`openapi.json` and the TypeScript types. `tests/test_openapi_sync.py` fails until you do.
+`npm run gen:mocks` rebuilds the mock fixtures from the real pipeline.
+
 ## How it works
 
 | Stage | Module | What it does |
