@@ -62,12 +62,6 @@ export function formatMetric(metric: MetricName, value: number | null | undefine
   return metric === "wrist_height" ? `${value.toFixed(2)}×` : `${Math.round(value)}°`;
 }
 
-/** uPlot's column format: [x values (seconds), ...one array per series]. */
-export function chartColumns(frames: FramesPayload, spec: ChartSpec): (number | null)[][] {
-  const xs = Array.from({ length: frames.n_frames }, (_, i) => i / frames.fps);
-  return [xs, ...spec.series.map((s) => frames.series[s.metric].map((v) => v ?? null))];
-}
-
 export interface Band {
   phase: PhaseName;
   startFrame: number;

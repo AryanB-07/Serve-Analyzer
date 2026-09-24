@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { createStatusBackoff } from "../lib/polling";
+import { createStatusBackoff, isTerminal } from "../lib/polling";
 import { api } from ".";
 
 export const queryKeys = {
@@ -43,6 +43,14 @@ export function useFrames(id: string, enabled = true) {
   });
 }
 
-export function useAnalyses() {
-  return useQuery({ queryKey: queryKeys.analyses, queryFn: () => api.listAnalyses() });
+/** Paged history, newest first. Refreshes every few seconds while any item is still processing. */
+export function useAnalysesList() {
+  return useInfiniteQuery({
+    queryKey: queryKeys.analyses,
+    queryFn: ({ pageParam }) => api.listAnalyses(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
+    refetchInterval: (query) =>
+      query.state.data?.pages.some((page) => page.items.some((a) => !isTerminal(a.status))) ? 3000 : false,
+  });
 }

@@ -24,11 +24,19 @@ export function VideoStage({
   frames,
   options,
   controls = false,
+  muted = false,
+  onVideoElement,
+  onVideoClick,
 }: {
   result: AnalysisResult;
   frames: FramesPayload;
   options: OverlayOptions;
   controls?: boolean;
+  muted?: boolean;
+  /** Receives the <video> element, e.g. to slave it to another playhead. */
+  onVideoElement?: (video: HTMLVideoElement | null) => void;
+  /** Overrides click-to-toggle-play (default: this stage's own playhead). */
+  onVideoClick?: () => void;
 }) {
   const store = usePlayheadStore();
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
@@ -37,6 +45,10 @@ export function VideoStage({
   const drawRef = useRef<() => void>(() => {});
 
   useVideoClock(video, store);
+
+  useEffect(() => {
+    onVideoElement?.(video);
+  }, [video, onVideoElement]);
 
   useLayoutEffect(() => {
     optionsRef.current = options;
@@ -98,7 +110,8 @@ export function VideoStage({
         playsInline
         preload="auto"
         controls={controls}
-        onClick={controls ? undefined : store.togglePlay}
+        muted={muted}
+        onClick={controls ? undefined : (onVideoClick ?? store.togglePlay)}
         aria-label="Serve video"
       />
       <canvas

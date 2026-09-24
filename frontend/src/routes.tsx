@@ -1,6 +1,7 @@
 import { createBrowserRouter, Link } from "react-router";
 
 import { AppShell } from "./components/AppShell";
+import { ComparePage } from "./features/compare/ComparePage";
 import { HistoryPage } from "./features/history/HistoryPage";
 import { ResultsPage } from "./features/results/ResultsPage";
 import { UploadPage } from "./features/upload/UploadPage";
@@ -21,6 +22,7 @@ export const routes = [
       { path: "/", element: <UploadPage /> },
       { path: "/analyses/:id", element: <ResultsPage /> },
       { path: "/history", element: <HistoryPage /> },
+      { path: "/compare", element: <ComparePage /> },
       { path: "*", element: <NotFound /> },
     ],
   },

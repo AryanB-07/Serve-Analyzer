@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AnalysisResult, FramesPayload } from "../api/types";
-import { CHARTS, chartColumns, formatMetric, phasePoints, referenceBands, seriesSummary, yRange } from "./chartData";
+import { CHARTS, formatMetric, phasePoints, referenceBands, seriesSummary, yRange } from "./chartData";
 
 const elbow = CHARTS.find((c) => c.id === "elbow")!;
 const knee = CHARTS.find((c) => c.id === "knee")!;
@@ -36,16 +36,6 @@ const result = {
     contact: { elbow_angle: "good", front_knee_flexion: "borderline" },
   },
 } as unknown as AnalysisResult;
-
-describe("chartColumns", () => {
-  it("uses seconds on x and keeps gaps as null", () => {
-    expect(chartColumns(frames, elbow)).toEqual([
-      [0, 0.04, 0.08, 0.12],
-      [150, null, 170, 175],
-    ]);
-    expect(chartColumns(frames, knee)).toHaveLength(3);
-  });
-});
 
 describe("referenceBands", () => {
   it("draws each phase's own range over that phase's segment, skipping undetected phases", () => {
