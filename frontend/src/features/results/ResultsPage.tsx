@@ -5,7 +5,9 @@ import { useAnalysis, useFrames, useResult } from "../../api/queries";
 import type { AnalysisResult, AnalysisSummary, FramesPayload } from "../../api/types";
 import { PlayheadProvider, usePlayheadStore } from "../../playhead/context";
 import { AngleCharts } from "./charts/AngleCharts";
+import { FeedbackPanel } from "./FeedbackPanel";
 import { FrameControls } from "./FrameControls";
+import { MetricCards } from "./MetricCards";
 import { OverlayToggles } from "./OverlayToggles";
 import { PhaseTimeline } from "./PhaseTimeline";
 import { CurrentPhase, FrameCounter, StatusKey } from "./PlayheadReadout";
@@ -41,9 +43,9 @@ function ResultsView({
           </p>
         </header>
 
-        {/* Phone order is DOM order (video, notes, charts); on large screens the
-            notes column sits beside both. */}
-        <div className="grid gap-x-6 gap-y-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        {/* Phone order is DOM order (video, analysis, charts); on large screens the
+            analysis column sits beside both. */}
+        <div className="grid gap-x-6 gap-y-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
           <section aria-label="Video" className="min-w-0 space-y-3 lg:col-start-1">
             <VideoStage result={result} frames={frames} options={options} />
             <FrameControls>
@@ -57,10 +59,12 @@ function ResultsView({
             </div>
           </section>
 
-          <aside aria-label="Notes" className="space-y-3 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <aside aria-label="Analysis" className="space-y-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <FeedbackPanel result={result} />
+            <MetricCards result={result} />
             {result.warnings.length > 0 && (
               <div className="rounded-xl border border-warn/40 bg-surface p-4">
-                <h2 className="mb-2 text-sm font-semibold text-warn">Heads up</h2>
+                <h2 className="mb-2 text-sm font-semibold text-warn">About this clip</h2>
                 <ul className="list-disc space-y-1 pl-5 text-sm text-ink-muted">
                   {result.warnings.map((w) => (
                     <li key={w}>{w}</li>
