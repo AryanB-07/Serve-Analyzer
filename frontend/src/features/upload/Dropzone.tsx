@@ -22,7 +22,10 @@ export function Dropzone({ onFile, disabled }: { onFile: (file: File) => void; d
         e.preventDefault();
         if (!disabled) setDragging(true);
       }}
-      onDragLeave={() => setDragging(false)}
+      onDragLeave={(e) => {
+        // dragleave also fires when moving onto a child element; ignore those.
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+      }}
       onDrop={onDrop}
     >
       <input

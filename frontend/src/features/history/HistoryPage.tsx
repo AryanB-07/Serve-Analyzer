@@ -5,7 +5,7 @@ import { useAnalysesList } from "../../api/queries";
 import type { AnalysisSummary } from "../../api/types";
 import { StatusIcon } from "../../components/StatusIcon";
 import { beforeAfter, toggleSelection } from "../../lib/compare";
-import { ERROR_COPY } from "../processing/errorCopy";
+import { errorCopyFor } from "../processing/errorCopy";
 
 function formatWhen(iso: string) {
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
@@ -19,7 +19,8 @@ export function CountsSummary({ counts }: { counts: NonNullable<AnalysisSummary[
     { status: "off" as const, n: counts.off, word: "need work" },
   ];
   return (
-    <p className="flex flex-wrap items-center gap-x-3 text-sm" aria-label={items.map((i) => `${i.n} ${i.word}`).join(", ")}>
+    <p className="flex flex-wrap items-center gap-x-3 text-sm">
+      <span className="sr-only">{items.map((i) => `${i.n} ${i.word}`).join(", ")}</span>
       {items.map((i) => (
         <span key={i.status} className="inline-flex items-center gap-1" aria-hidden>
           <StatusIcon status={i.status} className="size-3" />
@@ -34,8 +35,7 @@ export function CountsSummary({ counts }: { counts: NonNullable<AnalysisSummary[
 function StatusLine({ analysis }: { analysis: AnalysisSummary }) {
   if (analysis.status === "succeeded" && analysis.counts) return <CountsSummary counts={analysis.counts} />;
   if (analysis.status === "failed") {
-    const code = analysis.error?.code ?? "INTERNAL";
-    return <p className="text-sm text-bad">Failed · {ERROR_COPY[code].title}</p>;
+    return <p className="text-sm text-bad">Failed · {errorCopyFor(analysis.error?.code).title}</p>;
   }
   if (analysis.status === "awaiting_upload") return <p className="text-sm text-ink-muted">Upload not finished</p>;
   return <p className="text-sm text-accent">Processing…</p>;

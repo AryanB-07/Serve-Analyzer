@@ -1,4 +1,4 @@
-import type { ApiClient } from "../../api/client";
+import { UploadAbortedError, type ApiClient } from "../../api/client";
 import type { AnalysisSummary, CreateAnalysisRequest, Hand } from "../../api/types";
 
 export type UploadStep = "creating" | "uploading" | "starting";
@@ -34,11 +34,11 @@ export async function runUpload(
     content_type: contentType,
     size_bytes: file.size,
   });
-  signal?.throwIfAborted();
+  if (signal?.aborted) throw new UploadAbortedError();
 
   onStep?.("uploading");
   await client.uploadVideo(upload, file, (f) => onProgress?.(f), signal);
-  signal?.throwIfAborted();
+  if (signal?.aborted) throw new UploadAbortedError();
 
   onStep?.("starting");
   return client.startAnalysis(analysis.id);

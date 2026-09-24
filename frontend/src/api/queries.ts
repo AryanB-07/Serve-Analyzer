@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { createStatusBackoff, isTerminal } from "../lib/polling";
+import { createStatusBackoff, isActive } from "../lib/polling";
 import { api } from ".";
 
 export const queryKeys = {
@@ -51,6 +51,6 @@ export function useAnalysesList() {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.next_cursor ?? undefined,
     refetchInterval: (query) =>
-      query.state.data?.pages.some((page) => page.items.some((a) => !isTerminal(a.status))) ? 3000 : false,
+      query.state.data?.pages.some((page) => page.items.some((a) => isActive(a.status))) ? 3000 : false,
   });
 }

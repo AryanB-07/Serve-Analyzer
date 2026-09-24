@@ -48,3 +48,11 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
     linkGuide: false,
   },
 };
+
+/**
+ * Copy for a code from the server. Falls back to INTERNAL for codes this build
+ * doesn't know (a newer backend), rather than crashing the page.
+ */
+export function errorCopyFor(code: string | undefined): ErrorCopy {
+  return (code && (ERROR_COPY as Record<string, ErrorCopy>)[code]) || ERROR_COPY.INTERNAL;
+}

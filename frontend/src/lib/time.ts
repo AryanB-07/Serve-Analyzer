@@ -6,6 +6,7 @@
 const EPSILON = 1e-3;
 
 export function clampFrame(frame: number, nFrames: number): number {
+  if (Number.isNaN(frame)) return 0;
   return Math.min(Math.max(Math.trunc(frame), 0), Math.max(nFrames - 1, 0));
 }
 

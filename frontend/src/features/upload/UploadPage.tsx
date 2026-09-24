@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import { USE_MOCKS } from "../../api";
@@ -88,6 +88,7 @@ export function UploadPage() {
   const [fileError, setFileError] = useState<string | null>(null);
   const { upload, cancel, reset, isUploading, progress, error, cancelled } = useUploadAnalysis();
   const location = useLocation();
+  const latestPick = useRef(0);
 
   useEffect(() => {
     if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
@@ -98,6 +99,7 @@ export function UploadPage() {
   }, [selected]);
 
   async function onFile(file: File) {
+    const pick = ++latestPick.current;
     reset();
     setFileError(null);
     setSelected(null);
@@ -105,6 +107,7 @@ export function UploadPage() {
     if (!basic.ok) return setFileError(basic.message);
     setChecking(true);
     const meta = await readVideoMetadata(file);
+    if (pick !== latestPick.current) return; // a newer file was chosen meanwhile
     setChecking(false);
     const problem = checkMetadata(meta);
     if (problem) return setFileError(problem);

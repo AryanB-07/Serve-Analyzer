@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import type { AnalysisStatus, AnalysisSummary } from "../../api/types";
-import { ERROR_COPY } from "./errorCopy";
+import { errorCopyFor } from "./errorCopy";
 
 export const STAGES: { status: AnalysisStatus; label: string; detail: string }[] = [
   { status: "queued", label: "Queued", detail: "Waiting for a worker" },
@@ -97,8 +97,7 @@ function Failed({
   retrying: boolean;
   retryError: string | null;
 }) {
-  const code = summary.error?.code ?? "INTERNAL";
-  const copy = ERROR_COPY[code];
+  const copy = errorCopyFor(summary.error?.code);
   const primary = "rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-50";
   const secondary = "rounded-lg border border-border px-4 py-2 font-medium hover:bg-surface-2 disabled:opacity-50";
   return (

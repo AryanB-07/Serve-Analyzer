@@ -174,7 +174,11 @@ export function TimeSeriesChart({
           drag: { x: false, y: false },
           points: { size: 7, fill: colors.ink, stroke: colors.ink },
         },
-        scales: { x: { time: false }, y: { range: () => [yMin, yMax] } },
+        // Explicit x range: a one-frame clip would otherwise give a zero-width axis.
+        scales: {
+          x: { time: false, range: () => [0, Math.max((nFrames - 1) / fps, 1 / fps)] },
+          y: { range: () => [yMin, yMax] },
+        },
         axes: [
           { ...axis, size: 26, values: (_u, vals) => vals.map((v) => `${v.toFixed(1)}s`) },
           {

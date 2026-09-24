@@ -154,6 +154,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         content_type = request.headers.get("content-type", "")
         if not storage.verify("PUT", key, expires, sig, content_type):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Invalid or expired upload URL")
+        # A signed URL stays valid until it expires; refuse to replace the video
+        # once the analysis has been started (the worker may be reading it).
+        analysis_id = key.split("/")[1] if key.startswith("uploads/") else ""
+        row = db.get(analysis_id)
+        if row is None or row["status"] != "awaiting_upload":
+            raise HTTPException(status.HTTP_409_CONFLICT, "This upload is closed")
         try:
             await storage.write_stream(key, request.stream(), settings.max_upload_bytes)
         except StorageError as exc:

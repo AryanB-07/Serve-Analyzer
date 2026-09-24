@@ -141,7 +141,7 @@ export function ResultsPage() {
     );
   }
   if (!analysis.data) return <CenteredMessage title="Loading…" />;
-  if (!succeeded) return <Processing summary={analysis.data} />;
+  if (!succeeded) return <Processing key={id} summary={analysis.data} />;
   if (result.isError || frames.isError) {
     return (
       <CenteredMessage title="We couldn't load the results">

@@ -21,12 +21,12 @@ export function FeedbackPanel({ result }: { result: AnalysisResult }) {
         Coaching feedback
       </h2>
       <ol className="space-y-2">
-        {result.feedback.map((item) => {
+        {result.feedback.map((item, index) => {
           const frame = item.phase ? result.phases[item.phase] : null;
           if (item.phase && frame !== null) {
             const label = PHASE_LABELS[item.phase];
             return (
-              <li key={item.text}>
+              <li key={index}>
                 <button
                   type="button"
                   onClick={() => store.seek(frame)}
@@ -41,7 +41,7 @@ export function FeedbackPanel({ result }: { result: AnalysisResult }) {
             );
           }
           return (
-            <li key={item.text} className="grid grid-cols-[auto_1fr] gap-x-2.5 p-2">
+            <li key={index} className="grid grid-cols-[auto_1fr] gap-x-2.5 p-2">
               <FeedbackBody item={item} />
             </li>
           );

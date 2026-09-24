@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 import { usePlayhead, usePlayheadStore } from "../../playhead/context";
 import { SHORTCUT_HELP } from "./shortcuts";
@@ -73,9 +73,31 @@ function SpeedSelector() {
 function ShortcutsHelp() {
   const [open, setOpen] = useState(false);
   const id = useId();
+  const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      button.current?.focus();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={root}>
       <button
+        ref={button}
         type="button"
         aria-expanded={open}
         aria-controls={id}
@@ -90,7 +112,6 @@ function ShortcutsHelp() {
         <div
           id={id}
           className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-border bg-surface p-3 shadow-xl"
-          onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
         >
           <h3 className="mb-2 text-sm font-semibold">Keyboard shortcuts</h3>
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">

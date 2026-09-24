@@ -33,8 +33,13 @@ describe("checkMetadata", () => {
     expect(checkMetadata({ durationS: 0.2, width: 1920, height: 1080 })).toMatch(/too short/);
   });
 
-  it("lets unreadable metadata through for the server to check", () => {
+  it("lets unreadable metadata or unknown durations through for the server to check", () => {
     expect(checkMetadata(null)).toBeNull();
-    expect(checkMetadata({ durationS: Infinity, width: 0, height: 0 })).toBeNull();
+    expect(checkMetadata({ durationS: Infinity, width: 1080, height: 1920 })).toBeNull();
+    expect(checkMetadata({ durationS: NaN, width: 1080, height: 1920 })).toBeNull();
+  });
+
+  it("rejects files with no video track", () => {
+    expect(checkMetadata({ durationS: 5, width: 0, height: 0 })).toMatch(/only audio/);
   });
 });

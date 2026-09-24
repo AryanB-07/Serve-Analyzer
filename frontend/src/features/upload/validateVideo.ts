@@ -41,7 +41,9 @@ export function checkFile(file: Pick<File, "name" | "type" | "size">): Check {
 
 /** Duration check; null metadata (browser can't read the file) is allowed through. */
 export function checkMetadata(meta: VideoMetadata | null): string | null {
-  if (meta === null || !Number.isFinite(meta.durationS)) return null;
+  if (meta === null) return null;
+  if (meta.width === 0 && meta.height === 0) return "This file has no video in it (only audio).";
+  if (!Number.isFinite(meta.durationS)) return null;
   if (meta.durationS > MAX_DURATION_S) {
     return `This video is ${meta.durationS.toFixed(1)} s long; the limit is ${MAX_DURATION_S} s. Trim it to a single serve.`;
   }

@@ -83,6 +83,7 @@ export function VideoStage({
     const resize = new ResizeObserver(([entry]) => {
       if (!entry) return;
       size = { width: entry.contentRect.width, height: entry.contentRect.height };
+      if (size.width === 0 || size.height === 0) return;
       const backing = canvasBackingSize(size, window.devicePixelRatio);
       canvas.width = backing.width;
       canvas.height = backing.height;
