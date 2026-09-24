@@ -2,6 +2,8 @@ __pycache__/
 *.pyc
 .venv/
 .pytest_cache/
-results/
+/results/
 *.task
 .DS_Store
+/var/
+node_modules/
