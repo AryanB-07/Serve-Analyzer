@@ -86,3 +86,20 @@
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* uPlot charts: playhead line positioned from the playhead store. */
+.chart-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  background: var(--ink);
+  pointer-events: none;
+}
+.uplot {
+  font-family: inherit;
+}
+.uplot .u-cursor-x {
+  border-right: 1px dashed var(--ink-muted);
+}
