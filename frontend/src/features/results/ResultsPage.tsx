@@ -1,8 +1,61 @@
+import { useState } from "react";
 import { useParams } from "react-router";
 
 import { useAnalysis, useFrames, useResult } from "../../api/queries";
+import type { AnalysisResult, AnalysisSummary, FramesPayload } from "../../api/types";
+import { PlayheadProvider } from "../../playhead/context";
+import { OverlayToggles } from "./OverlayToggles";
+import { PlayheadReadout } from "./PlayheadReadout";
+import { VideoStage, type OverlayOptions } from "./VideoStage";
 
-/** Milestone 2 placeholder: proves result + frames load. Replaced in milestone 3. */
+const DEFAULT_OPTIONS: OverlayOptions = { showSkeleton: true, showLabels: true, source: "smoothed" };
+
+function ResultsView({
+  summary,
+  result,
+  frames,
+}: {
+  summary: AnalysisSummary;
+  result: AnalysisResult;
+  frames: FramesPayload;
+}) {
+  const [options, setOptions] = useState(DEFAULT_OPTIONS);
+  return (
+    <PlayheadProvider nFrames={frames.n_frames} fps={frames.fps}>
+      <div className="space-y-5">
+        <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{summary.filename}</h1>
+          <p className="text-sm text-ink-muted">
+            {new Date(summary.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })} ·{" "}
+            {result.hand === "right" ? "Right" : "Left"}-handed · {result.fps} fps
+          </p>
+        </header>
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <section aria-label="Video" className="space-y-3">
+            <VideoStage result={result} frames={frames} options={options} controls />
+            <PlayheadReadout phases={result.phases} nFrames={frames.n_frames} fps={frames.fps} />
+            <OverlayToggles options={options} onChange={setOptions} />
+          </section>
+
+          <aside aria-label="Notes" className="space-y-3">
+            {result.warnings.length > 0 && (
+              <div className="rounded-xl border border-warn/40 bg-surface p-4">
+                <h2 className="mb-2 text-sm font-semibold text-warn">Heads up</h2>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-ink-muted">
+                  {result.warnings.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </aside>
+        </div>
+      </div>
+    </PlayheadProvider>
+  );
+}
+
 export function ResultsPage() {
   const { id = "" } = useParams();
   const analysis = useAnalysis(id);
@@ -13,27 +66,8 @@ export function ResultsPage() {
   if (analysis.isError) return <p role="alert">Could not load this analysis: {analysis.error.message}</p>;
   if (!analysis.data) return <p>Loading…</p>;
   if (!succeeded) return <p>Status: {analysis.data.status}</p>;
+  if (result.isError || frames.isError) return <p role="alert">Could not load the results.</p>;
   if (!result.data || !frames.data) return <p>Loading results…</p>;
 
-  const r = result.data;
-  const f = frames.data;
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{analysis.data.filename}</h1>
-      <video src={r.video_url} controls playsInline className="w-full max-w-3xl rounded-xl bg-black" />
-      <dl className="grid max-w-3xl grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        {[
-          ["Frames", f.n_frames],
-          ["FPS", r.fps],
-          ["Trophy", r.phases.trophy ?? "—"],
-          ["Contact", r.phases.contact ?? "—"],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-border bg-surface p-3">
-            <dt className="text-ink-muted">{label}</dt>
-            <dd className="tabular text-lg font-semibold">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
+  return <ResultsView key={id} summary={analysis.data} result={result.data} frames={frames.data} />;
 }
