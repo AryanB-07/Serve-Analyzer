@@ -21,6 +21,11 @@
   --warn: #f0a92b;
   --bad: #f06363;
   --neutral: #8b98aa;
+  /* Phase colours: distinct from status green/amber/red; always paired with text labels. */
+  --phase-stance: #3a4556;
+  --phase-trophy: #3987e5;
+  --phase-racket_drop: #9085e9;
+  --phase-contact: #d55181;
 }
 
 :root[data-theme="light"] {
@@ -38,6 +43,10 @@
   --warn: #a95a06;
   --bad: #c02626;
   --neutral: #5f6c80;
+  --phase-stance: #c3ccd8;
+  --phase-trophy: #2a78d6;
+  --phase-racket_drop: #6a5cd0;
+  --phase-contact: #c73a70;
 }
 
 @theme inline {

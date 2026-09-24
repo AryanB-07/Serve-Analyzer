@@ -88,7 +88,7 @@ export function VideoStage({
 
   return (
     <div
-      className="relative w-full max-h-[70vh] overflow-hidden rounded-xl bg-black"
+      className="relative w-full max-h-[min(60vh,720px)] overflow-hidden rounded-xl bg-black"
       style={{ aspectRatio: `${frames.width} / ${frames.height}` }}
     >
       <video
@@ -98,6 +98,7 @@ export function VideoStage({
         playsInline
         preload="auto"
         controls={controls}
+        onClick={controls ? undefined : store.togglePlay}
         aria-label="Serve video"
       />
       <canvas

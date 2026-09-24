@@ -55,6 +55,7 @@ export function useVideoClock(video: HTMLVideoElement | null, store: PlayheadSto
           video.currentTime = timeForFrame(command.frame, fps, nFrames);
           break;
         case "play":
+          if (video.ended) video.currentTime = 0;
           // Rejects if interrupted by a pause; the pause event keeps state right.
           video.play().catch(() => {});
           break;

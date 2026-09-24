@@ -3,12 +3,20 @@ import { useParams } from "react-router";
 
 import { useAnalysis, useFrames, useResult } from "../../api/queries";
 import type { AnalysisResult, AnalysisSummary, FramesPayload } from "../../api/types";
-import { PlayheadProvider } from "../../playhead/context";
+import { PlayheadProvider, usePlayheadStore } from "../../playhead/context";
+import { FrameControls } from "./FrameControls";
 import { OverlayToggles } from "./OverlayToggles";
-import { PlayheadReadout } from "./PlayheadReadout";
+import { PhaseTimeline } from "./PhaseTimeline";
+import { CurrentPhase, FrameCounter, StatusKey } from "./PlayheadReadout";
+import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { VideoStage, type OverlayOptions } from "./VideoStage";
 
 const DEFAULT_OPTIONS: OverlayOptions = { showSkeleton: true, showLabels: true, source: "smoothed" };
+
+function KeyboardShortcuts({ result }: { result: AnalysisResult }) {
+  useKeyboardShortcuts(usePlayheadStore(), result.phases);
+  return null;
+}
 
 function ResultsView({
   summary,
@@ -22,6 +30,7 @@ function ResultsView({
   const [options, setOptions] = useState(DEFAULT_OPTIONS);
   return (
     <PlayheadProvider nFrames={frames.n_frames} fps={frames.fps}>
+      <KeyboardShortcuts result={result} />
       <div className="space-y-5">
         <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{summary.filename}</h1>
@@ -33,9 +42,16 @@ function ResultsView({
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <section aria-label="Video" className="space-y-3">
-            <VideoStage result={result} frames={frames} options={options} controls />
-            <PlayheadReadout phases={result.phases} nFrames={frames.n_frames} fps={frames.fps} />
-            <OverlayToggles options={options} onChange={setOptions} />
+            <VideoStage result={result} frames={frames} options={options} />
+            <FrameControls>
+              <CurrentPhase phases={result.phases} />
+              <FrameCounter />
+            </FrameControls>
+            <PhaseTimeline phases={result.phases} />
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+              <OverlayToggles options={options} onChange={setOptions} />
+              <StatusKey />
+            </div>
           </section>
 
           <aside aria-label="Notes" className="space-y-3">
