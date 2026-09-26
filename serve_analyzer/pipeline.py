@@ -33,7 +33,6 @@ PLAYBACK_FILE = "playback.mp4"
 ANNOTATED_FILE = "annotated.mp4"
 THUMBNAIL_FILE = "thumbnail.jpg"
 
-
 @dataclass
 class SequenceAnalysis:
     result: AnalysisResult

@@ -52,6 +52,11 @@ export function AppShell() {
       <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
         <Outlet />
       </main>
+      <footer className="border-t border-border">
+        <div className="mx-auto max-w-7xl px-4 py-4 text-xs text-ink-muted">
+          Serve Analyzer · Tennis serve biomechanics, frame by frame
+        </div>
+      </footer>
     </div>
   );
 }
