@@ -34,12 +34,18 @@ class PoseSequence:
 
     ``landmarks`` has shape (frames, 33, 3) holding [x, y, visibility].
     Missing or low-confidence points are NaN in x and y.
+
+    ``world`` optionally holds MediaPipe world landmarks, (frames, 33, 3):
+    metres, centred on the hips, axes aligned with the camera (x right,
+    y down, z away from the camera). Its depth comes from a model fit, so
+    use it for angles and ratios, not absolute distances.
     """
 
     landmarks: np.ndarray
     fps: float
     width: int
     height: int
+    world: np.ndarray | None = None
 
     @property
     def n_frames(self) -> int:

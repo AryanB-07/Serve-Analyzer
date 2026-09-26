@@ -40,7 +40,6 @@ class SequenceAnalysis:
     pose: PoseSequence
     series: A.Series
 
-
 def analyze_sequence(
     raw: PoseSequence, hand: Hand, config: AnalysisConfig, ranges: RangeTable
 ) -> SequenceAnalysis:
@@ -48,15 +47,7 @@ def analyze_sequence(
     if np.isnan(raw.landmarks[:, :, :2]).all():
         raise AnalysisError("No person was detected in the video.", code="NO_PERSON_DETECTED")
 
-    pose = clean(
-        raw,
-        config.visibility_threshold,
-        config.max_gap_frames,
-        config.smoothing_window_ms if config.smoothing_enabled else None,
-        config.smoothing_polyorder,
-    )
-    series = A.compute_series(pose, hand)
-    phases = detect_phases(series)
+    pose, series, phases = measure(raw, hand, config)
     metrics = compute_metrics(series, phases)
     assessments = assess(metrics, ranges)
 
@@ -71,15 +62,55 @@ def analyze_sequence(
         labels=to_labels(assessments),
         ranges=ranges_to_dict(ranges),
         feedback=feedback.generate(assessments),
-        warnings=_warnings(phases, raw.n_frames, hand),
+        warnings=_warnings(phases, raw.n_frames, hand, config.require_complete_serve),
     )
     return SequenceAnalysis(result, pose, series)
+
+
+def measure(
+    raw: PoseSequence, hand: Hand, config: AnalysisConfig
+) -> tuple[PoseSequence, A.Series, PhaseFrames]:
+    """Clean the landmarks, compute the per-frame series and detect the phases.
+
+    Phases are timed from ``phase_signal_space`` series (2D by default: on real
+    MediaPipe output the 2D knee curve times the trophy better, even when the
+    3D angles measure its size better). Contact can use its own, looser
+    visibility threshold, because only the wrist's height matters there.
+    """
+    window_ms = config.smoothing_window_ms if config.smoothing_enabled else None
+
+    def cleaned(threshold: float) -> PoseSequence:
+        return clean(raw, threshold, config.max_gap_frames, window_ms, config.smoothing_polyorder)
+
+    pose = cleaned(config.visibility_threshold)
+    series = A.compute_series(pose, hand, config.angle_space)
+    if config.phase_signal_space == "image2d" and config.angle_space != "image2d":
+        phase_series = A.compute_series(pose, hand, "image2d")
+    else:
+        phase_series = series
+    contact_series = None
+    ct = config.contact_visibility_threshold
+    if ct is not None and ct != config.visibility_threshold:
+        contact_series = A.compute_series(cleaned(ct), hand, "image2d")
+    window = round(config.trophy_window_s * raw.fps) if config.trophy_window_s else None
+    phases = detect_phases(
+        phase_series, config.trophy_method, config.racket_drop_method, config.require_complete_serve,
+        window, config.trophy_fallback, contact_series, config.trophy_plateau_deg,
+    )
+    return pose, series, phases
 
 
 EDGE_FRAMES = 2
 
 
-def _warnings(phases: PhaseFrames, n_frames: int, hand: Hand) -> list[str]:
+def _warnings(
+    phases: PhaseFrames, n_frames: int, hand: Hand, require_complete_serve: bool = False
+) -> list[str]:
+    if require_complete_serve and phases.contact is None:
+        return [
+            "We couldn't find a complete serve (a toss and then contact above the head) "
+            "in this clip. Make sure the clip runs until just after contact."
+        ]
     out = []
     for name, frame in phases.as_dict().items():
         if frame is None:

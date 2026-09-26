@@ -57,6 +57,7 @@ def extract_pose_sequence(info: VideoInfo, model_path: Path) -> PoseSequence:
         num_poses=1,
     )
     rows: list[np.ndarray] = []
+    world_rows: list[np.ndarray] = []
     last_ts = -1
     with PoseLandmarker.create_from_options(options) as landmarker:
         for i, frame in enumerate(iter_frames(info.path)):
@@ -68,9 +69,19 @@ def extract_pose_sequence(info: VideoInfo, model_path: Path) -> PoseSequence:
                 mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb), ts
             )
             rows.append(_to_pixel_array(result.pose_landmarks, info.width, info.height))
+            world_rows.append(_to_world_array(result.pose_world_landmarks))
 
     landmarks = np.stack(rows) if rows else np.empty((0, NUM_LANDMARKS, 3))
-    return PoseSequence(landmarks, info.fps, info.width, info.height)
+    world = np.stack(world_rows) if world_rows else np.empty((0, NUM_LANDMARKS, 3))
+    return PoseSequence(landmarks, info.fps, info.width, info.height, world=world)
+
+
+def _to_world_array(poses: list) -> np.ndarray:
+    out = np.full((NUM_LANDMARKS, 3), np.nan)
+    if poses:
+        for j, lm in enumerate(poses[0]):
+            out[j] = (lm.x, lm.y, lm.z)
+    return out
 
 
 def _to_pixel_array(poses: list, width: int, height: int) -> np.ndarray:

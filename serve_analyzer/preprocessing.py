@@ -74,10 +74,20 @@ def clean(
     window = (
         window_frames(smoothing_window_ms, seq.fps, polyorder) if smoothing_window_ms else None
     )
+
+    def filt(s: np.ndarray) -> np.ndarray:
+        s = interpolate_gaps(s, max_gap_frames)
+        return smooth_series(s, window, polyorder) if window is not None else s
+
     for j in range(lm.shape[1]):
         for c in (0, 1):
-            s = interpolate_gaps(lm[:, j, c], max_gap_frames)
-            if window is not None:
-                s = smooth_series(s, window, polyorder)
-            lm[:, j, c] = s
-    return replace(seq, landmarks=lm)
+            lm[:, j, c] = filt(lm[:, j, c])
+
+    world = None
+    if seq.world is not None:
+        world = seq.world.copy()
+        world[seq.landmarks[..., 2] < visibility_threshold] = np.nan
+        for j in range(world.shape[1]):
+            for c in range(3):
+                world[:, j, c] = filt(world[:, j, c])
+    return replace(seq, landmarks=lm, world=world)

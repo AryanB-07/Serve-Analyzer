@@ -9,8 +9,8 @@
   "thumbnail_url": "/mock/demo-serve-2/thumbnail.jpg",
   "counts": {
     "good": 3,
-    "borderline": 2,
+    "borderline": 1,
     "off": 0,
-    "unknown": 5
+    "unknown": 6
   }
 }
