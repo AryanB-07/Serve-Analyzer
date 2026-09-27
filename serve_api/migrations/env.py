@@ -6,9 +6,16 @@ from alembic import context
 from sqlalchemy import create_engine
 
 from serve_api.settings import Settings
-from serve_api.tables import metadata
+from serve_api.tables import UTCDateTime, metadata
 
 config = context.config
+
+
+def _render_item(type_, obj, autogen_context):
+    """Keep generated migrations free of app imports."""
+    if type_ == "type" and isinstance(obj, UTCDateTime):
+        return "sa.DateTime(timezone=True)"
+    return False
 
 
 def _configure(connection) -> None:
@@ -18,6 +25,7 @@ def _configure(connection) -> None:
         # SQLite can't ALTER most things; batch mode rebuilds the table instead.
         render_as_batch=connection.dialect.name == "sqlite",
         compare_type=True,
+        render_item=_render_item,
     )
 
 

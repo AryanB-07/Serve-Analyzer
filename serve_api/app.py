@@ -12,6 +12,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 
 from . import keys, migrate
+from .auth import Auth, origin_guard
 from .convert import result_from_file, summary_from_row
 from .db import Database
 from .schemas import (
@@ -50,9 +51,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if settings.auto_migrate:
         migrate.upgrade(db.engine)
     storage = LocalStorage(settings)
+    auth = Auth(db, settings)
 
     app = FastAPI(title="Serve Analyzer API", version="1.0.0")
     app.add_middleware(GZipMiddleware, minimum_size=1024)
+    app.middleware("http")(origin_guard(settings))
+    app.include_router(auth.router())
+    app.state.auth = auth
 
     def get_row(analysis_id: str) -> dict:
         row = db.get(analysis_id)

@@ -26,6 +26,15 @@ class Settings:
     auto_migrate: bool = field(default_factory=lambda: _env("AUTO_MIGRATE", "1") != "0")
     # Prefix the browser uses to reach this API (the Vite dev server proxies /api).
     public_base: str = field(default_factory=lambda: _env("PUBLIC_BASE", "/api"))
+    # Session cookies are HTTPS-only except in development. Default: on unless ENV=development.
+    cookie_secure: bool | None = field(
+        default_factory=lambda: {"1": True, "0": False}.get(_env("COOKIE_SECURE", ""))
+    )
+    # Unsafe requests (POST/PUT/DELETE) must come from the API's own origin (Origin matching
+    # Host), or from one of these, comma-separated. Needed only if a proxy rewrites Host.
+    allowed_origins: tuple[str, ...] = field(default_factory=lambda: tuple(
+        o.strip().rstrip("/") for o in _env("ALLOWED_ORIGINS", "").split(",") if o.strip()
+    ))
     max_upload_bytes: int = 200 * 1024 * 1024
     upload_url_ttl_s: int = 15 * 60
     # Long enough that seeking (new Range requests) keeps working while a results page is open.
@@ -38,6 +47,10 @@ class Settings:
             if url.startswith(prefix):
                 return "postgresql+psycopg://" + url.removeprefix(prefix)
         return url
+
+    @property
+    def secure_cookies(self) -> bool:
+        return self.environment != "development" if self.cookie_secure is None else self.cookie_secure
 
     @property
     def objects_dir(self) -> Path:

@@ -1,4 +1,4 @@
-"""Persistence for analysis records (SQLite or Postgres). The table doubles as the job queue."""
+"""Persistence (SQLite or Postgres): analyses, which double as the job queue, users and sessions."""
 
 from __future__ import annotations
 
@@ -7,10 +7,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Engine, create_engine, event, insert, select, tuple_, update
+from sqlalchemy import Engine, create_engine, delete, event, insert, select, tuple_, update
 from sqlalchemy.engine import make_url
+from sqlalchemy.exc import IntegrityError
 
-from .tables import analyses
+from .tables import analyses, sessions, users
 
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
 
@@ -115,3 +116,57 @@ class Database:
                 .values(status="queued", updated_at=now())
             )
         return result.rowcount
+
+    # --- users and sessions ----------------------------------------------------
+
+    def create_user(self, email: str, password_hash: str) -> dict[str, Any] | None:
+        """Returns None if the email is already registered. ``email`` must be normalised."""
+        row = {"id": uuid.uuid4().hex, "email": email, "password_hash": password_hash,
+               "created_at": now()}
+        try:
+            with self.engine.begin() as conn:
+                conn.execute(insert(users).values(row))
+        except IntegrityError:
+            return None
+        return row
+
+    def get_user_by_email(self, email: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(users).where(users.c.email == email)).mappings().first()
+        return dict(row) if row else None
+
+    def set_password_hash(self, user_id: str, password_hash: str) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(update(users).where(users.c.id == user_id).values(password_hash=password_hash))
+
+    def create_session(self, user_id: str, token_hash: str, expires_at: datetime) -> None:
+        ts = now()
+        with self.engine.begin() as conn:
+            # Housekeeping: a login is a natural moment to drop this user's dead sessions.
+            conn.execute(delete(sessions).where(sessions.c.user_id == user_id,
+                                                sessions.c.expires_at < ts))
+            conn.execute(insert(sessions).values(
+                id=uuid.uuid4().hex, user_id=user_id, token_hash=token_hash,
+                created_at=ts, expires_at=expires_at, last_seen_at=ts,
+            ))
+
+    def get_session(self, token_hash: str) -> dict[str, Any] | None:
+        """The live session for a token, joined with its user (``user_*`` keys), or None."""
+        query = (
+            select(sessions, users.c.email.label("user_email"),
+                   users.c.created_at.label("user_created_at"))
+            .join(users, users.c.id == sessions.c.user_id)
+            .where(sessions.c.token_hash == token_hash, sessions.c.expires_at > now())
+        )
+        with self.engine.connect() as conn:
+            row = conn.execute(query).mappings().first()
+        return dict(row) if row else None
+
+    def extend_session(self, session_id: str, expires_at: datetime) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(update(sessions).where(sessions.c.id == session_id)
+                         .values(expires_at=expires_at, last_seen_at=now()))
+
+    def delete_session(self, token_hash: str) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(delete(sessions).where(sessions.c.token_hash == token_hash))

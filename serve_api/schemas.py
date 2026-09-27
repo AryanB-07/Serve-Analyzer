@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, EmailStr, Field, create_model
 
 from serve_analyzer.angles import METRIC_NAMES
 from serve_analyzer.errors import ErrorCode
@@ -158,3 +158,23 @@ class FramesPayload(BaseModel):
 
 class ErrorResponse(BaseModel):
     detail: str
+
+
+MIN_PASSWORD_LENGTH = 8
+
+
+class SignupRequest(BaseModel):
+    email: EmailStr = Field(max_length=320)
+    # No composition rules (NIST SP 800-63B); the upper bound caps hashing cost.
+    password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=256)
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr = Field(max_length=320)
+    password: str = Field(min_length=1, max_length=256)
+
+
+class User(BaseModel):
+    id: str
+    email: str
+    created_at: datetime

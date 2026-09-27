@@ -143,6 +143,23 @@ uv run alembic revision --autogenerate -m "add users table"
 | `SERVE_API_SECRET` | a development-only value | Signs upload and download URLs |
 | `SERVE_API_AUTO_MIGRATE` | `1` | `0` stops the API from migrating at startup |
 | `SERVE_API_DATA_DIR` | `var` | Where uploads, results and the SQLite file are stored |
+| `SERVE_API_COOKIE_SECURE` | on unless `SERVE_API_ENV=development` | `1`/`0` forces the session cookie's `Secure` flag |
+| `SERVE_API_ALLOWED_ORIGINS` | none | Extra origins allowed to send POST/PUT/DELETE, comma-separated; only needed if a proxy rewrites `Host` |
+
+### Accounts
+
+`POST /auth/signup`, `POST /auth/login`, `POST /auth/logout` and `GET /auth/me` provide email
+and password accounts:
+
+- Passwords are hashed with argon2id: at least 8 characters, no composition rules.
+- A session is an HttpOnly, `SameSite=Lax` cookie holding a random token. The database stores
+  only the token's SHA-256, so a database leak doesn't expose live sessions. Logging out deletes
+  the session on the server.
+- Sessions last 30 days from the last visit, extended at most once a day.
+- Login is limited to 10 failed attempts per email per 15 minutes, and signup plus login to 30
+  requests per IP per 10 minutes. The counters live in each API process's memory.
+- POST, PUT and DELETE requests from another origin are refused (CSRF protection on top of
+  `SameSite`).
 
 ## Filming a serve that analyses well
 
