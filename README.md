@@ -51,9 +51,10 @@ and a React frontend.
 - **`serve_analyzer/`: the pipeline.** Plain Python with no web dependencies. It writes
   `results.json` (metrics, labels, feedback), `frames.json` (per-frame landmarks and angle
   series), an H.264 playback copy of the video, an annotated video and a thumbnail.
-- **`serve_api/`: the backend.** FastAPI, SQLite (the table doubles as the job queue), local
-  storage with S3-style signed URLs, and a separate worker process. Swapping in S3 and SQS
-  changes the storage and queue code, not the frontend.
+- **`serve_api/`: the backend.** FastAPI, Postgres or SQLite through SQLAlchemy with Alembic
+  migrations (the analyses table doubles as the job queue), local storage with S3-style signed
+  URLs, and a separate worker process. Swapping in S3 and SQS changes the storage and queue
+  code, not the frontend.
 - **`frontend/`: React, TypeScript and Vite.** Tailwind for styling, TanStack Query for
   server data, uPlot for charts. The TypeScript types are generated from the API's OpenAPI
   schema.
@@ -112,6 +113,36 @@ results are stored in `var/`; delete that folder to reset.
 | Upload finishes but stays on "Queued" | The worker (terminal 2) isn't running. |
 | The page loads but data never appears | The API (terminal 1) isn't running; check its output. |
 | `Address already in use` on :8000 | `lsof -ti:8000 \| xargs kill` |
+| Worker logs "waiting for database migrations" | Start the API (it applies them), or run `uv run python -m serve_api.migrate`. |
+
+### Database
+
+With no configuration the app uses a SQLite file, `var/serve_api.sqlite3`, which needs no setup.
+To use Postgres instead (as in production), set `SERVE_API_DATABASE_URL` for both the API and
+the worker:
+
+```bash
+docker compose up -d                 # local Postgres 16, or use any Postgres you have
+export SERVE_API_DATABASE_URL=postgresql://serve:serve@localhost:5432/serve_analyzer
+```
+
+The API applies pending migrations when it starts, and the worker waits until they're done. To
+run them as a separate step instead (for example during a deploy), set
+`SERVE_API_AUTO_MIGRATE=0` and run `uv run python -m serve_api.migrate`.
+
+To change the schema, edit `serve_api/tables.py`, then generate and review a migration:
+
+```bash
+uv run alembic revision --autogenerate -m "add users table"
+```
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `SERVE_API_DATABASE_URL` | SQLite in `var/` | `postgresql://user:password@host:5432/db` or `sqlite:///path` |
+| `SERVE_API_ENV` | `development` | Any other value requires `SERVE_API_SECRET` to be set |
+| `SERVE_API_SECRET` | a development-only value | Signs upload and download URLs |
+| `SERVE_API_AUTO_MIGRATE` | `1` | `0` stops the API from migrating at startup |
+| `SERVE_API_DATA_DIR` | `var` | Where uploads, results and the SQLite file are stored |
 
 ## Filming a serve that analyses well
 
@@ -154,6 +185,7 @@ print(result.phases, [item.text for item in result.feedback])
 ```bash
 uv run pytest                        # Python: pipeline, API, worker, schema sync
 uv run pytest -m "not integration"   # skip the tests that run the real pipeline on video
+SERVE_API_DATABASE_URL=postgresql://… uv run pytest   # the same suite on an empty Postgres database
 
 cd frontend
 npx vitest run                       # unit and component tests (`npm test` to watch)

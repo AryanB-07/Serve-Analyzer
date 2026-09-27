@@ -1,58 +1,48 @@
-"""SQLite persistence for analysis records. The table doubles as the job queue."""
+"""Persistence for analysis records (SQLite or Postgres). The table doubles as the job queue."""
 
 from __future__ import annotations
 
-import json
-import sqlite3
 import uuid
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import Engine, create_engine, event, insert, select, tuple_, update
+from sqlalchemy.engine import make_url
+
+from .tables import analyses
+
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS analyses (
-    id TEXT PRIMARY KEY,
-    hand TEXT NOT NULL,
-    filename TEXT NOT NULL,
-    content_type TEXT NOT NULL,
-    size_bytes INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    error_code TEXT,
-    error_message TEXT,
-    counts TEXT,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS analyses_status ON analyses (status, updated_at);
-CREATE INDEX IF NOT EXISTS analyses_created ON analyses (created_at DESC, id DESC);
-"""
+
+def now() -> datetime:
+    return datetime.now(UTC)
 
 
-def now() -> str:
-    return datetime.now(UTC).isoformat(timespec="milliseconds")
+def make_engine(url: str) -> Engine:
+    parsed = make_url(url)
+    if parsed.get_backend_name() != "sqlite":
+        return create_engine(url, pool_pre_ping=True)
+    if parsed.database and parsed.database != ":memory:":
+        Path(parsed.database).parent.mkdir(parents=True, exist_ok=True)
+    # FastAPI runs sync endpoints in a thread pool, so connections cross threads.
+    engine = create_engine(url, connect_args={"check_same_thread": False, "timeout": 10})
+
+    @event.listens_for(engine, "connect")
+    def _sqlite_pragmas(dbapi_conn, _record) -> None:
+        cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA journal_mode=WAL")
+        cur.execute("PRAGMA foreign_keys=ON")
+        cur.close()
+
+    return engine
 
 
 class Database:
-    def __init__(self, path: Path) -> None:
-        self.path = path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with self.connect() as conn:
-            conn.execute("PRAGMA journal_mode=WAL")
-            conn.executescript(SCHEMA)
-
-    @contextmanager
-    def connect(self) -> Iterator[sqlite3.Connection]:
-        conn = sqlite3.connect(self.path, timeout=10)
-        conn.row_factory = sqlite3.Row
-        try:
-            with conn:
-                yield conn
-        finally:
-            conn.close()
+    def __init__(self, url_or_engine: str | Engine) -> None:
+        self.engine = (
+            url_or_engine if isinstance(url_or_engine, Engine) else make_engine(url_or_engine)
+        )
 
     def create(self, hand: str, filename: str, content_type: str, size_bytes: int) -> dict[str, Any]:
         ts = now()
@@ -62,67 +52,66 @@ class Database:
             "status": "awaiting_upload", "error_code": None, "error_message": None,
             "counts": None, "created_at": ts, "updated_at": ts,
         }
-        with self.connect() as conn:
-            conn.execute(
-                f"INSERT INTO analyses ({', '.join(row)}) VALUES ({', '.join('?' * len(row))})",
-                tuple(row.values()),
-            )
+        with self.engine.begin() as conn:
+            conn.execute(insert(analyses).values(row))
         return row
 
     def get(self, analysis_id: str) -> dict[str, Any] | None:
-        with self.connect() as conn:
-            row = conn.execute("SELECT * FROM analyses WHERE id = ?", (analysis_id,)).fetchone()
+        with self.engine.connect() as conn:
+            row = conn.execute(select(analyses).where(analyses.c.id == analysis_id)).mappings().first()
         return dict(row) if row else None
 
-    def list(self, limit: int, before: tuple[str, str] | None = None) -> list[dict[str, Any]]:
+    def list(self, limit: int, before: tuple[datetime, str] | None = None) -> list[dict[str, Any]]:
         """Newest first. ``before`` is a (created_at, id) keyset cursor."""
-        query, params = "SELECT * FROM analyses", []
+        query = select(analyses)
         if before:
-            query += " WHERE (created_at, id) < (?, ?)"
-            params += list(before)
-        query += " ORDER BY created_at DESC, id DESC LIMIT ?"
-        with self.connect() as conn:
-            rows = conn.execute(query, (*params, limit)).fetchall()
-        return [dict(r) for r in rows]
+            query = query.where(tuple_(analyses.c.created_at, analyses.c.id) < tuple_(*before))
+        query = query.order_by(analyses.c.created_at.desc(), analyses.c.id.desc()).limit(limit)
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(query).mappings()]
 
     def transition(self, analysis_id: str, from_statuses: tuple[str, ...], to_status: str) -> bool:
         """Atomically move to ``to_status`` only if currently in ``from_statuses``."""
-        marks = ", ".join("?" * len(from_statuses))
-        with self.connect() as conn:
-            cur = conn.execute(
-                f"UPDATE analyses SET status = ?, error_code = NULL, error_message = NULL, "
-                f"updated_at = ? WHERE id = ? AND status IN ({marks})",
-                (to_status, now(), analysis_id, *from_statuses),
+        with self.engine.begin() as conn:
+            result = conn.execute(
+                update(analyses)
+                .where(analyses.c.id == analysis_id, analyses.c.status.in_(from_statuses))
+                .values(status=to_status, error_code=None, error_message=None, updated_at=now())
             )
-        return cur.rowcount == 1
+        return result.rowcount == 1
 
     def set_status(self, analysis_id: str, status: str, **fields: Any) -> None:
-        if "counts" in fields and fields["counts"] is not None:
-            fields["counts"] = json.dumps(fields["counts"])
-        assignments = ", ".join(f"{k} = ?" for k in ("status", "updated_at", *fields))
-        with self.connect() as conn:
+        with self.engine.begin() as conn:
             conn.execute(
-                f"UPDATE analyses SET {assignments} WHERE id = ?",
-                (status, now(), *fields.values(), analysis_id),
+                update(analyses).where(analyses.c.id == analysis_id)
+                .values(status=status, updated_at=now(), **fields)
             )
 
     def claim_next(self) -> dict[str, Any] | None:
-        """Take the oldest queued job; the single UPDATE makes the claim atomic."""
-        with self.connect() as conn:
+        """Take the oldest queued job.
+
+        One UPDATE makes the claim atomic. On Postgres, SKIP LOCKED lets
+        concurrent workers pass over a row another worker is claiming instead
+        of waiting for it; SQLite serialises writers, so it needs neither.
+        """
+        oldest = (
+            select(analyses.c.id).where(analyses.c.status == "queued")
+            .order_by(analyses.c.updated_at).limit(1)
+            .with_for_update(skip_locked=True).scalar_subquery()
+        )
+        with self.engine.begin() as conn:
             row = conn.execute(
-                "UPDATE analyses SET status = 'extracting_pose', updated_at = ? WHERE id = ("
-                "SELECT id FROM analyses WHERE status = 'queued' ORDER BY updated_at LIMIT 1"
-                ") RETURNING *",
-                (now(),),
-            ).fetchone()
+                update(analyses).where(analyses.c.id == oldest)
+                .values(status="extracting_pose", updated_at=now())
+                .returning(*analyses.c)
+            ).mappings().first()
         return dict(row) if row else None
 
     def requeue_interrupted(self) -> int:
         """Put jobs a crashed worker left mid-flight back on the queue."""
-        marks = ", ".join("?" * len(IN_PROGRESS))
-        with self.connect() as conn:
-            cur = conn.execute(
-                f"UPDATE analyses SET status = 'queued', updated_at = ? WHERE status IN ({marks})",
-                (now(), *IN_PROGRESS),
+        with self.engine.begin() as conn:
+            result = conn.execute(
+                update(analyses).where(analyses.c.status.in_(IN_PROGRESS))
+                .values(status="queued", updated_at=now())
             )
-        return cur.rowcount
+        return result.rowcount

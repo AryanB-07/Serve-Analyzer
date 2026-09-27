@@ -6,22 +6,46 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+DEV_SECRET = "dev-only-secret"
+
+
+def _env(name: str, default: str) -> str:
+    return os.getenv(f"SERVE_API_{name}", default)
+
 
 @dataclass(frozen=True)
 class Settings:
-    data_dir: Path = field(default_factory=lambda: Path(os.getenv("SERVE_API_DATA_DIR", "var")))
-    secret: str = field(default_factory=lambda: os.getenv("SERVE_API_SECRET", "dev-only-secret"))
+    data_dir: Path = field(default_factory=lambda: Path(_env("DATA_DIR", "var")))
+    secret: str = field(default_factory=lambda: _env("SECRET", DEV_SECRET))
+    # "development" allows the built-in secret; anything else requires SERVE_API_SECRET.
+    environment: str = field(default_factory=lambda: _env("ENV", "development"))
+    # Empty means a SQLite file in data_dir. Postgres: postgresql://user:password@host/db
+    database_url: str = field(default_factory=lambda: _env("DATABASE_URL", ""))
+    # Apply pending migrations when the API starts. Turn off to run them as a
+    # separate release step (python -m serve_api.migrate).
+    auto_migrate: bool = field(default_factory=lambda: _env("AUTO_MIGRATE", "1") != "0")
     # Prefix the browser uses to reach this API (the Vite dev server proxies /api).
-    public_base: str = field(default_factory=lambda: os.getenv("SERVE_API_PUBLIC_BASE", "/api"))
+    public_base: str = field(default_factory=lambda: _env("PUBLIC_BASE", "/api"))
     max_upload_bytes: int = 200 * 1024 * 1024
     upload_url_ttl_s: int = 15 * 60
     # Long enough that seeking (new Range requests) keeps working while a results page is open.
     download_url_ttl_s: int = 6 * 60 * 60
 
     @property
-    def db_path(self) -> Path:
-        return self.data_dir / "serve_api.sqlite3"
+    def sqlalchemy_url(self) -> str:
+        url = self.database_url or f"sqlite:///{self.data_dir / 'serve_api.sqlite3'}"
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return "postgresql+psycopg://" + url.removeprefix(prefix)
+        return url
 
     @property
     def objects_dir(self) -> Path:
         return self.data_dir / "objects"
+
+    def check(self) -> None:
+        """Refuse to run a non-development deployment with the public default secret."""
+        if self.environment != "development" and self.secret == DEV_SECRET:
+            raise RuntimeError(
+                f"SERVE_API_SECRET must be set when SERVE_API_ENV is {self.environment!r}"
+            )

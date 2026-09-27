@@ -13,7 +13,7 @@ import time
 from serve_analyzer.errors import PipelineError
 from serve_analyzer.pipeline import analyze
 
-from . import keys
+from . import keys, migrate
 from .convert import counts_from_labels, public_message
 from .db import Database
 from .settings import Settings
@@ -47,7 +47,9 @@ def process(job: dict, db: Database, storage: LocalStorage) -> None:
 
 
 def run(settings: Settings, poll_s: float = 1.0, once: bool = False) -> None:
-    db = Database(settings.db_path)
+    settings.check()
+    db = Database(settings.sqlalchemy_url)
+    migrate.wait_until_current(db.engine)
     storage = LocalStorage(settings)
     if requeued := db.requeue_interrupted():
         log.warning("requeued %d interrupted analyses", requeued)
@@ -66,6 +68,7 @@ def main() -> None:
     parser.add_argument("--once", action="store_true", help="exit when the queue is empty")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.getLogger("alembic").setLevel(logging.WARNING)
     run(Settings(), once=args.once)
 
 

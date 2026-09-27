@@ -1,0 +1,22 @@
+# Local Postgres for development. Start it, then point the API and worker at it:
+#   docker compose up -d
+#   export SERVE_API_DATABASE_URL=postgresql://serve:serve@localhost:5432/serve_analyzer
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: serve
+      POSTGRES_PASSWORD: serve
+      POSTGRES_DB: serve_analyzer
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U serve -d serve_analyzer"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  postgres-data:

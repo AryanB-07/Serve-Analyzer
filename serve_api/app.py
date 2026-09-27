@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 
-from . import keys
+from . import keys, migrate
 from .convert import result_from_file, summary_from_row
 from .db import Database
 from .schemas import (
@@ -32,20 +32,23 @@ ERRORS = {404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}}
 
 
 def _encode_cursor(row: dict) -> str:
-    return base64.urlsafe_b64encode(f"{row['created_at']}|{row['id']}".encode()).decode()
+    return base64.urlsafe_b64encode(f"{row['created_at'].isoformat()}|{row['id']}".encode()).decode()
 
 
-def _decode_cursor(cursor: str) -> tuple[str, str]:
+def _decode_cursor(cursor: str) -> tuple[datetime, str]:
     try:
         created_at, analysis_id = base64.urlsafe_b64decode(cursor).decode().split("|")
+        return datetime.fromisoformat(created_at), analysis_id
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid cursor") from exc
-    return created_at, analysis_id
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
-    db = Database(settings.db_path)
+    settings.check()
+    db = Database(settings.sqlalchemy_url)
+    if settings.auto_migrate:
+        migrate.upgrade(db.engine)
     storage = LocalStorage(settings)
 
     app = FastAPI(title="Serve Analyzer API", version="1.0.0")

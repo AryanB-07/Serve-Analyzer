@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections import Counter
 from collections.abc import Callable
 from typing import Any
@@ -41,7 +40,7 @@ def summary_from_row(row: dict[str, Any], url_for: UrlFor) -> AnalysisSummary:
         error=ApiError(code=row["error_code"], message=row["error_message"] or "")
         if row["error_code"] else None,
         thumbnail_url=url_for(keys.output_key(row["id"], keys.THUMBNAIL)) if succeeded else None,
-        counts=StatusCounts(**json.loads(row["counts"])) if row["counts"] else None,
+        counts=StatusCounts(**row["counts"]) if row["counts"] else None,
     )
 
 

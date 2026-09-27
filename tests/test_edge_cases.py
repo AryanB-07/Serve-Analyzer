@@ -14,6 +14,7 @@ from serve_analyzer.phases import detect_contact, detect_phases, detect_racket_d
 from serve_analyzer.pipeline import analyze_sequence
 from serve_analyzer.preprocessing import clean, interpolate_gaps, smooth_series
 from serve_analyzer.reference import load_ranges
+from serve_api import migrate
 from serve_api.app import create_app
 from serve_api.db import Database
 from serve_api.settings import Settings
@@ -141,7 +142,8 @@ def test_list_rejects_malformed_cursors_and_limits(client):
 
 
 def test_worker_requeues_jobs_left_mid_flight(settings):
-    db = Database(settings.db_path)
+    db = Database(settings.sqlalchemy_url)
+    migrate.upgrade(db.engine)
     stuck = db.create("right", "a.mp4", "video/mp4", 10)
     db.set_status(stuck["id"], "extracting_pose")
     waiting = db.create("right", "b.mp4", "video/mp4", 10)
