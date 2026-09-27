@@ -31,5 +31,5 @@ class AnalysisConfig:
     phase_signal_space: str = "image2d"   # image2d | angle_space: which series times the phases
     contact_visibility_threshold: float | None = 0.1  # None = use visibility_threshold
     trophy_window_s: float | None = 0.8   # only consider trophy frames this close before contact
-    trophy_fallback: bool = False         # use the toss-hand peak when knees can't be measured
+    trophy_fallback: bool = True          # use the toss-hand peak when knees can't be measured
     trophy_plateau_deg: float | None = None  # centre of the near-peak knee plateau instead of the argmax

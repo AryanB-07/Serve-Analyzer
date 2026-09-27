@@ -73,10 +73,14 @@ def fetch() -> None:
                 _download(url, tmp)
                 downloads[url] = tmp
             src = downloads[url]
-            if "trim_s" in clip.meta:
-                start, end = clip.meta["trim_s"]
+            if "trim_s" in clip.meta or "trim_frames" in clip.meta:
                 info = probe(src)
-                frames = list(iter_frames(src))[int(start * info.fps):int(end * info.fps)]
+                if "trim_frames" in clip.meta:
+                    first, last = clip.meta["trim_frames"]
+                else:
+                    start, end = clip.meta["trim_s"]
+                    first, last = int(start * info.fps), int(end * info.fps)
+                frames = list(iter_frames(src))[first:last]
                 writer = open_writer(clip.path, info.fps, info.width, info.height)
                 for f in frames:
                     writer.write(f)

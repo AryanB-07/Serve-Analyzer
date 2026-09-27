@@ -36,7 +36,7 @@ The full numbers are in `evaluation/reports/20260925-185925_54c7b94-dirty.md` (r
 | Trophy rule | knee + toss arm, toss-hand peak | Toss-hand peak: real error 37 frames. | Keep knee + toss arm |
 | Trophy search window | none, 0.6–1.2 s | 0.8 s: real trophy error 3.6 → 2.2, synthetic 1.6 → 1.4. It removes an early knee bend picked 16 frames too soon. 0.6 s scores the same, but 0.8 s leaves margin for slower servers. | **New default 0.8 s** |
 | Trophy plateau centre | argmax, 2–6° | Synthetic 1.4 → 1.0, but real 2.2 → 2.7. The sources disagree. | Rejected (option kept) |
-| Trophy fallback (toss-hand peak when knees are missing) | off, on | Recovers the one missed real trophy, but 6 frames off. | Off by default |
+| Trophy fallback (toss-hand peak when knees are missing) | off, on | Recovers the one missed real trophy, but 6 frames off. | Off at first; **on since the enlarged retest** (see below) |
 | Racket-drop rule | smallest elbow angle, lowest wrist | Lowest wrist: synthetic error 0.9 → 1.5. | Keep smallest elbow angle |
 | Complete-serve check | off, on | Rejects the clip that ends mid-toss (it previously reported a phantom contact). No real or synthetic serve lost once contact uses its own threshold. | **New default on** |
 | Borderline band width | ×0.5–×2 | Label accuracy 54% → 60%, feedback overlap 0.27 → 0.37. That's an artefact: vaguer bands and longer lists agree more by chance. | No change |
@@ -78,6 +78,52 @@ The full numbers are in `evaluation/reports/20260925-185925_54c7b94-dirty.md` (r
    alone.
 4. **The simulator's visibility model is simplified.** It can't evaluate the visibility threshold;
    only the real clips can.
+
+## Retest on a larger real set
+
+The real set was enlarged from 10 serves (3 players) to 24 serves (5 players), plus a second clip
+with no complete serve: 10 serves and a trophy-position demonstration from a coaching video on clay
+and in a dark studio (one serve is a slow-motion replay), two clips from a published study filmed
+across the net, and two more Pexels clips (one filmed from below with the legs cut off, one through
+a fence). Labels were made the same way (by eye, about ±1–2 frames); the detected contact agrees
+with them within 0–3 frames on every new clip.
+
+Every combination of the phase and cleaning settings was then scored: 96,000 configurations
+(visibility 0.3–0.5, contact visibility 0–0.3, smoothing off/100–250 ms, gap 0–8 frames, trophy
+window 0.5–1.2 s or none, plateau off/1–4°, fallback off/on, both racket-drop rules), on the real
+clips and on synthetic serves with fresh noise seeds.
+
+**The search does not generalise, so the defaults stay, with one exception.**
+
+- Choosing the best configuration without one player and scoring it on that player is slightly
+  *worse* than the defaults on average (3.80 vs 3.68).
+- No configuration beats the defaults clip by clip by more than chance (best one-sided sign test
+  p = 0.12). The in-sample "best" combination (smoothing off, 0.6 s window, 4° plateau, fallback,
+  lowest-wrist racket drop) wins on 10 clips and loses on 6.
+- **Trophy fallback is now on.** It can only change a clip whose trophy would otherwise be missing,
+  so it can't make any clip worse; it recovered both such clips (legs out of frame), each 6 frames
+  early, and it lets racket drop be detected there too. Every held-out selection picked it.
+
+Settings that looked promising but were not adopted:
+
+| Setting | Why not |
+|---|---|
+| Smoothing off | 8 clips better, 4 worse (p = 0.19). Most of the gain is one clip; worse for the player with the most clips. |
+| Shorter trophy window (0.5–0.6 s) | Helps fast serves but cuts off slower ones. Synthetic serves all share one tempo, so they can't judge it. |
+| Longer trophy window (0.9 s or more) | Fixes the slow-motion clip but picks an early knee bend on an old clip at 1.0 s and above. |
+| Plateau centre | Worse on real clips at every value (e.g. 3 better, 8 worse at 3°). |
+| Visibility, contact visibility, gap | At most one clip changes by a frame. |
+
+Failure modes no setting can fix:
+
+- **Left/right swaps.** On the trophy-position demonstration (front view), MediaPipe swaps the
+  wrists partway through, so the raised toss arm is read as the hitting arm and the clip is accepted
+  as a serve.
+- **Slow-motion footage.** The trophy window is in seconds of video, so on a slow-motion replay the
+  trophy is found 10 frames late. Scaling the window by the serve's measured tempo would fix this
+  better than any fixed value.
+
+Remaining caveat: 24 serves is still small, and 11 of them come from one person.
 
 ## Reproducing
 
