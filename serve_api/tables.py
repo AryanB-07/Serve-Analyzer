@@ -45,6 +45,7 @@ analyses = Table(
     "analyses",
     metadata,
     Column("id", String(32), primary_key=True),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("hand", String(8), nullable=False),
     Column("filename", String(255), nullable=False),
     Column("content_type", String(64), nullable=False),
@@ -58,7 +59,7 @@ analyses = Table(
     Column("created_at", UTCDateTime, nullable=False),
     Column("updated_at", UTCDateTime, nullable=False),
     Index("analyses_status", "status", "updated_at"),
-    Index("analyses_created", "created_at", "id"),
+    Index("analyses_user_created", "user_id", "created_at", "id"),  # a user's History page
 )
 
 users = Table(

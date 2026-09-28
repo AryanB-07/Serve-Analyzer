@@ -15,6 +15,7 @@ from serve_api import migrate
 from serve_api.db import Database, now
 from serve_api.settings import DEV_SECRET, Settings
 from serve_api.tables import metadata
+from tests.conftest import make_user
 
 LEGACY_SCHEMA = """
 CREATE TABLE analyses (
@@ -69,25 +70,27 @@ def test_a_database_from_before_migrations_is_converted_in_place(tmp_path):
 
 
 def test_timestamps_round_trip_as_utc_and_listing_pages_by_cursor(db):
-    ids = [db.create("right", f"{i}.mp4", "video/mp4", 10)["id"] for i in range(3)]
+    user = make_user(db)
+    ids = [db.create(user, "right", f"{i}.mp4", "video/mp4", 10)["id"] for i in range(3)]
     row = db.get(ids[0])
     assert row["created_at"].utcoffset() == timedelta(0)
     assert abs(now() - row["created_at"]) < timedelta(minutes=1)
-    first = db.list(2)
+    first = db.list(user, 2)
     assert [r["id"] for r in first] == ids[::-1][:2]
-    rest = db.list(2, (first[-1]["created_at"], first[-1]["id"]))
+    rest = db.list(user, 2, (first[-1]["created_at"], first[-1]["id"]))
     assert [r["id"] for r in rest] == [ids[0]]
 
 
 def test_counts_are_stored_as_json(db):
-    created = db.create("right", "a.mp4", "video/mp4", 10)
+    created = db.create(make_user(db), "right", "a.mp4", "video/mp4", 10)
     db.set_status(created["id"], "succeeded", counts={"good": 1, "borderline": 0, "off": 2, "unknown": 0})
     assert db.get(created["id"])["counts"]["off"] == 2
 
 
 def test_concurrent_workers_never_claim_the_same_job(db):
+    user = make_user(db)
     for i in range(3):
-        job = db.create("right", f"{i}.mp4", "video/mp4", 10)
+        job = db.create(user, "right", f"{i}.mp4", "video/mp4", 10)
         assert db.transition(job["id"], ("awaiting_upload",), "queued")
     with ThreadPoolExecutor(8) as pool:
         claims = [c for c in pool.map(lambda _: db.claim_next(), range(8)) if c]

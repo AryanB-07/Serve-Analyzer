@@ -45,10 +45,12 @@ class Database:
             url_or_engine if isinstance(url_or_engine, Engine) else make_engine(url_or_engine)
         )
 
-    def create(self, hand: str, filename: str, content_type: str, size_bytes: int) -> dict[str, Any]:
+    def create(
+        self, user_id: str, hand: str, filename: str, content_type: str, size_bytes: int
+    ) -> dict[str, Any]:
         ts = now()
         row = {
-            "id": uuid.uuid4().hex, "hand": hand, "filename": filename,
+            "id": uuid.uuid4().hex, "user_id": user_id, "hand": hand, "filename": filename,
             "content_type": content_type, "size_bytes": size_bytes,
             "status": "awaiting_upload", "error_code": None, "error_message": None,
             "counts": None, "created_at": ts, "updated_at": ts,
@@ -58,13 +60,23 @@ class Database:
         return row
 
     def get(self, analysis_id: str) -> dict[str, Any] | None:
+        """Any user's analysis. For the worker and internal checks; API routes use get_owned."""
         with self.engine.connect() as conn:
             row = conn.execute(select(analyses).where(analyses.c.id == analysis_id)).mappings().first()
         return dict(row) if row else None
 
-    def list(self, limit: int, before: tuple[datetime, str] | None = None) -> list[dict[str, Any]]:
-        """Newest first. ``before`` is a (created_at, id) keyset cursor."""
-        query = select(analyses)
+    def get_owned(self, analysis_id: str, user_id: str) -> dict[str, Any] | None:
+        """The analysis if it belongs to ``user_id``; None if it doesn't exist or isn't theirs."""
+        query = select(analyses).where(analyses.c.id == analysis_id, analyses.c.user_id == user_id)
+        with self.engine.connect() as conn:
+            row = conn.execute(query).mappings().first()
+        return dict(row) if row else None
+
+    def list(
+        self, user_id: str, limit: int, before: tuple[datetime, str] | None = None
+    ) -> list[dict[str, Any]]:
+        """A user's analyses, newest first. ``before`` is a (created_at, id) keyset cursor."""
+        query = select(analyses).where(analyses.c.user_id == user_id)
         if before:
             query = query.where(tuple_(analyses.c.created_at, analyses.c.id) < tuple_(*before))
         query = query.order_by(analyses.c.created_at.desc(), analyses.c.id.desc()).limit(limit)

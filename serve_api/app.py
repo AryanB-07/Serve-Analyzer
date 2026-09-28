@@ -7,7 +7,7 @@ import json
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Query, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 
@@ -24,12 +24,14 @@ from .schemas import (
     ErrorResponse,
     FramesPayload,
     UploadTarget,
+    User,
 )
 from .settings import Settings
 from .storage import LocalStorage, StorageError
 
 IMMUTABLE = "private, max-age=31536000, immutable"
-ERRORS = {404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}}
+UNAUTHORIZED = {401: {"model": ErrorResponse}}
+ERRORS = {**UNAUTHORIZED, 404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}}
 
 
 def _encode_cursor(row: dict) -> str:
@@ -58,9 +60,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.middleware("http")(origin_guard(settings))
     app.include_router(auth.router())
     app.state.auth = auth
+    signed_in = Depends(auth.current_user)
 
-    def get_row(analysis_id: str) -> dict:
-        row = db.get(analysis_id)
+    def get_row(analysis_id: str, user: User) -> dict:
+        # Someone else's analysis is "not found" too, so IDs can't be probed.
+        row = db.get_owned(analysis_id, user.id)
         if row is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
         return row
@@ -68,8 +72,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def signed_get(key: str) -> str:
         return storage.presign("GET", key)[0]
 
-    def succeeded_row(analysis_id: str) -> dict:
-        row = get_row(analysis_id)
+    def succeeded_row(analysis_id: str, user: User) -> dict:
+        row = get_row(analysis_id, user)
         if row["status"] != "succeeded":
             raise HTTPException(status.HTTP_409_CONFLICT, f"Analysis is {row['status']}")
         return row
@@ -79,15 +83,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"status": "ok"}
 
     @app.post("/analyses", status_code=201, response_model=CreateAnalysisResponse,
-              responses={413: {"model": ErrorResponse}})
-    def create_analysis(body: CreateAnalysisRequest) -> CreateAnalysisResponse:
+              responses={**UNAUTHORIZED, 413: {"model": ErrorResponse}})
+    def create_analysis(
+        body: CreateAnalysisRequest, user: User = signed_in
+    ) -> CreateAnalysisResponse:
         """Create a record and return a presigned URL to PUT the video to."""
         if body.size_bytes > settings.max_upload_bytes:
             raise HTTPException(
                 status.HTTP_413_CONTENT_TOO_LARGE,
                 f"Videos must be under {settings.max_upload_bytes // (1024 * 1024)} MB",
             )
-        row = db.create(body.hand, body.filename, body.content_type, body.size_bytes)
+        row = db.create(user.id, body.hand, body.filename, body.content_type, body.size_bytes)
         key = keys.input_key(row["id"], body.content_type)
         url, expires = storage.presign("PUT", key, body.content_type)
         return CreateAnalysisResponse(
@@ -99,11 +105,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ),
         )
 
-    @app.get("/analyses", response_model=AnalysisList)
+    @app.get("/analyses", response_model=AnalysisList, responses=UNAUTHORIZED)
     def list_analyses(
-        limit: Annotated[int, Query(ge=1, le=100)] = 20, cursor: str | None = None
+        limit: Annotated[int, Query(ge=1, le=100)] = 20, cursor: str | None = None,
+        user: User = signed_in,
     ) -> AnalysisList:
-        rows = db.list(limit + 1, _decode_cursor(cursor) if cursor else None)
+        rows = db.list(user.id, limit + 1, _decode_cursor(cursor) if cursor else None)
         page = rows[:limit]
         return AnalysisList(
             items=[summary_from_row(r, signed_get) for r in page],
@@ -111,46 +118,46 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     @app.get("/analyses/{analysis_id}", response_model=AnalysisSummary, responses=ERRORS)
-    def get_analysis(analysis_id: str) -> AnalysisSummary:
-        return summary_from_row(get_row(analysis_id), signed_get)
+    def get_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
+        return summary_from_row(get_row(analysis_id, user), signed_get)
 
     @app.post("/analyses/{analysis_id}/start", status_code=202, response_model=AnalysisSummary,
               responses=ERRORS)
-    def start_analysis(analysis_id: str) -> AnalysisSummary:
+    def start_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
         """Queue the analysis once the upload has finished."""
-        row = get_row(analysis_id)
+        row = get_row(analysis_id, user)
         if not storage.exists(keys.input_key(analysis_id, row["content_type"])):
             raise HTTPException(status.HTTP_409_CONFLICT, "The video has not been uploaded yet")
         if not db.transition(analysis_id, ("awaiting_upload",), "queued"):
             raise HTTPException(status.HTTP_409_CONFLICT, f"Analysis is already {row['status']}")
-        return summary_from_row(get_row(analysis_id), signed_get)
+        return summary_from_row(get_row(analysis_id, user), signed_get)
 
     @app.post("/analyses/{analysis_id}/retry", status_code=202, response_model=AnalysisSummary,
               responses=ERRORS)
-    def retry_analysis(analysis_id: str) -> AnalysisSummary:
-        row = get_row(analysis_id)
+    def retry_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
+        row = get_row(analysis_id, user)
         if not db.transition(analysis_id, ("failed",), "queued"):
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
                 f"Only failed analyses can be retried; this one is {row['status']}",
             )
-        return summary_from_row(get_row(analysis_id), signed_get)
+        return summary_from_row(get_row(analysis_id, user), signed_get)
 
     @app.get("/analyses/{analysis_id}/result", response_model=AnalysisResult, responses=ERRORS)
-    def get_result(analysis_id: str) -> AnalysisResult:
-        succeeded_row(analysis_id)
+    def get_result(analysis_id: str, user: User = signed_in) -> AnalysisResult:
+        succeeded_row(analysis_id, user)
         results = json.loads(storage.path(keys.output_key(analysis_id, keys.RESULTS)).read_text())
         return result_from_file(analysis_id, results, signed_get)
 
     @app.get("/analyses/{analysis_id}/frames", response_model=FramesPayload,
              responses=ERRORS)
-    def get_frames(analysis_id: str) -> Response:
+    def get_frames(analysis_id: str, user: User = signed_in) -> Response:
         """Per-frame landmarks and metric series.
 
         Served straight from the pipeline's frames.json (validated against
         FramesPayload in tests) to avoid re-parsing a large payload per request.
         """
-        succeeded_row(analysis_id)
+        succeeded_row(analysis_id, user)
         path = storage.path(keys.output_key(analysis_id, keys.FRAMES))
         return Response(
             path.read_bytes(), media_type="application/json",

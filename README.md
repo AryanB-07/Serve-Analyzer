@@ -161,6 +161,15 @@ and password accounts:
 - POST, PUT and DELETE requests from another origin are refused (CSRF protection on top of
   `SameSite`).
 
+Every `/analyses` route requires a session and only works on the signed-in user's own analyses.
+Anyone else's analysis returns 404, exactly like an ID that doesn't exist, so IDs can't be
+probed. Video and image URLs are signed and short-lived (15 minutes to upload, up to 6 hours to
+view), and they're only issued after the ownership check. Like S3 presigned URLs, anyone holding
+one can use it until it expires.
+
+Analyses created before accounts existed are assigned to the oldest account when the database is
+migrated. If there are no accounts yet, they go to a placeholder owner that can't be signed in to.
+
 ## Filming a serve that analyses well
 
 - Film **side-on**: the camera at right angles to the direction you serve.

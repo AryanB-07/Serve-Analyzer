@@ -10,6 +10,7 @@ from serve_api import schemas
 from serve_api.app import create_app
 from serve_api.settings import Settings
 from serve_api.worker import run
+from tests.conftest import sign_in
 
 CLIP = Path(__file__).parent / "fixtures" / "sample_serve.mp4"
 
@@ -21,7 +22,7 @@ def settings(tmp_path) -> Settings:
 
 @pytest.fixture
 def client(settings) -> TestClient:
-    return TestClient(create_app(settings))
+    return sign_in(TestClient(create_app(settings)))
 
 
 def create(client: TestClient, size: int = 1000, content_type: str = "video/mp4") -> dict:

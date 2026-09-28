@@ -19,6 +19,7 @@ from serve_api.app import create_app
 from serve_api.db import Database
 from serve_api.settings import Settings
 from serve_api.storage import LocalStorage
+from tests.conftest import make_user, sign_in
 
 nan = np.nan
 
@@ -89,7 +90,7 @@ def settings(tmp_path) -> Settings:
 
 @pytest.fixture
 def client(settings) -> TestClient:
-    return TestClient(create_app(settings))
+    return sign_in(TestClient(create_app(settings)))
 
 
 def _create(client: TestClient, size: int = 10) -> dict:
@@ -144,9 +145,10 @@ def test_list_rejects_malformed_cursors_and_limits(client):
 def test_worker_requeues_jobs_left_mid_flight(settings):
     db = Database(settings.sqlalchemy_url)
     migrate.upgrade(db.engine)
-    stuck = db.create("right", "a.mp4", "video/mp4", 10)
+    user = make_user(db)
+    stuck = db.create(user, "right", "a.mp4", "video/mp4", 10)
     db.set_status(stuck["id"], "extracting_pose")
-    waiting = db.create("right", "b.mp4", "video/mp4", 10)
+    waiting = db.create(user, "right", "b.mp4", "video/mp4", 10)
     assert db.requeue_interrupted() == 1
     assert db.get(stuck["id"])["status"] == "queued"
     assert db.get(waiting["id"])["status"] == "awaiting_upload"
