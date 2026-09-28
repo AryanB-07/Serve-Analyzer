@@ -147,6 +147,8 @@ uv run alembic revision --autogenerate -m "add users table"
 | `SERVE_API_DATA_DIR` | `var` | Where uploads, results and the SQLite file are stored |
 | `SERVE_API_COOKIE_SECURE` | on unless `SERVE_API_ENV=development` | `1`/`0` forces the session cookie's `Secure` flag |
 | `SERVE_API_ALLOWED_ORIGINS` | none | Extra origins allowed to send POST/PUT/DELETE, comma-separated; only needed if a proxy rewrites `Host` |
+| `SERVE_API_DAILY_ANALYSIS_LIMIT` | `20` | New analyses each user may create per rolling 24 hours |
+| `SERVE_API_MAX_ACTIVE_ANALYSES` | `2` | Analyses each user may have queued or processing at once |
 
 ### Accounts
 
@@ -171,6 +173,30 @@ one can use it until it expires.
 
 Analyses created before accounts existed are assigned to the oldest account when the database is
 migrated. If there are no accounts yet, they go to a placeholder owner that can't be signed in to.
+
+### Job queue and limits
+
+The `analyses` table doubles as the job queue, and any number of workers can share it:
+
+```bash
+uv run python -m serve_api.worker   # start as many as you like, on one machine or several
+```
+
+- A worker claims one queued job at a time. On Postgres, `FOR UPDATE SKIP LOCKED` means two
+  workers never get the same job.
+- While a job is processing, its worker refreshes a heartbeat every 20 seconds. If a worker
+  crashes or loses its connection, the job goes back on the queue once its heartbeat is 2 minutes
+  old, and another worker picks it up.
+- Each claim carries a random token, and a worker can only update a job while it still holds that
+  claim. A worker that stalled past the 2 minutes can't overwrite the result of the worker that
+  took over.
+- A job that has been claimed 3 times without finishing (for example, a video that crashes the
+  worker) is marked failed instead of being retried forever. Retrying it from the app gives it 3
+  fresh attempts.
+
+Each analysis costs real CPU time, so each user is limited to 20 new analyses per rolling 24 hours
+and 2 queued or processing at once. Going over either limit returns 429 with a message the app
+shows. Both limits are configurable (see the table above).
 
 ## Filming a serve that analyses well
 
@@ -238,7 +264,7 @@ The fixture clip `tests/fixtures/sample_serve.mp4` is CC BY 4.0 (see
 ```
 serve_analyzer/          pipeline: pose, cleaning, angles, phases, metrics, feedback, export
   data/reference_ranges.json
-serve_api/               FastAPI app, schemas, SQLite store/queue, signed-URL storage, worker
+serve_api/               FastAPI app, auth, schemas, database and job queue, migrations, signed-URL storage, worker
 scripts/                 export_openapi.py, make_mock_fixtures.py
 tests/                   Python tests and the sample clip
 frontend/
@@ -328,9 +354,11 @@ that the UI turns into specific advice.
 
 **Web app**
 
-- **Local storage and SQLite stand in for S3 and SQS.** Run only one worker: on startup it
-  re-queues any job left mid-flight.
-- **No accounts.** Everyone sees the same history.
+- **Uploads are stored on local disk, not S3,** so the API and workers must share a filesystem.
+- **No password reset or email verification yet.** Signup also reveals whether an email is
+  already registered.
+- **Login rate limits are kept in each API process's memory,** so they aren't shared between
+  several API servers.
 - **Abandoned uploads stay in history** as "Upload not finished".
 - **Mock mode keeps new uploads in memory,** so they disappear on page reload.
 - **The upload limits (200 MB, 15 s) are defined in both the frontend and the backend.**

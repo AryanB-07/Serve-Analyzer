@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse
 from . import keys, migrate
 from .auth import Auth, origin_guard
 from .convert import result_from_file, summary_from_row
-from .db import Database
+from .db import Database, now
 from .schemas import (
     AnalysisList,
     AnalysisResult,
@@ -32,6 +32,7 @@ from .storage import LocalStorage, StorageError
 IMMUTABLE = "private, max-age=31536000, immutable"
 UNAUTHORIZED = {401: {"model": ErrorResponse}}
 ERRORS = {**UNAUTHORIZED, 404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}}
+LIMITED = {**ERRORS, 429: {"model": ErrorResponse}}
 
 
 def _encode_cursor(row: dict) -> str:
@@ -69,6 +70,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
         return row
 
+    def check_active_limit(user: User) -> None:
+        if db.count_active(user.id) >= settings.max_active_analyses:
+            n = settings.max_active_analyses
+            raise HTTPException(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                f"You already have {n} {'analysis' if n == 1 else 'analyses'} in progress. "
+                "Wait for one to finish, then try again.",
+            )
+
     def signed_get(key: str) -> str:
         return storage.presign("GET", key)[0]
 
@@ -83,7 +93,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"status": "ok"}
 
     @app.post("/analyses", status_code=201, response_model=CreateAnalysisResponse,
-              responses={**UNAUTHORIZED, 413: {"model": ErrorResponse}})
+              responses={**UNAUTHORIZED, 413: {"model": ErrorResponse},
+                         429: {"model": ErrorResponse}})
     def create_analysis(
         body: CreateAnalysisRequest, user: User = signed_in
     ) -> CreateAnalysisResponse:
@@ -92,6 +103,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(
                 status.HTTP_413_CONTENT_TOO_LARGE,
                 f"Videos must be under {settings.max_upload_bytes // (1024 * 1024)} MB",
+            )
+        created_today = db.count_created_since(user.id, now() - timedelta(days=1))
+        if created_today >= settings.daily_analysis_limit:
+            raise HTTPException(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                f"You can analyze up to {settings.daily_analysis_limit} serves a day. "
+                "Try again tomorrow.",
             )
         row = db.create(user.id, body.hand, body.filename, body.content_type, body.size_bytes)
         key = keys.input_key(row["id"], body.content_type)
@@ -122,21 +140,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return summary_from_row(get_row(analysis_id, user), signed_get)
 
     @app.post("/analyses/{analysis_id}/start", status_code=202, response_model=AnalysisSummary,
-              responses=ERRORS)
+              responses=LIMITED)
     def start_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
         """Queue the analysis once the upload has finished."""
         row = get_row(analysis_id, user)
         if not storage.exists(keys.input_key(analysis_id, row["content_type"])):
             raise HTTPException(status.HTTP_409_CONFLICT, "The video has not been uploaded yet")
+        if row["status"] == "awaiting_upload":
+            check_active_limit(user)
         if not db.transition(analysis_id, ("awaiting_upload",), "queued"):
             raise HTTPException(status.HTTP_409_CONFLICT, f"Analysis is already {row['status']}")
         return summary_from_row(get_row(analysis_id, user), signed_get)
 
     @app.post("/analyses/{analysis_id}/retry", status_code=202, response_model=AnalysisSummary,
-              responses=ERRORS)
+              responses=LIMITED)
     def retry_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
         row = get_row(analysis_id, user)
-        if not db.transition(analysis_id, ("failed",), "queued"):
+        if row["status"] == "failed":
+            check_active_limit(user)
+        if not db.transition(analysis_id, ("failed",), "queued", attempts=0):
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
                 f"Only failed analyses can be retried; this one is {row['status']}",

@@ -11,6 +11,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     MetaData,
     String,
     Table,
@@ -58,6 +59,11 @@ analyses = Table(
     Column("counts", JSONType),
     Column("created_at", UTCDateTime, nullable=False),
     Column("updated_at", UTCDateTime, nullable=False),
+    # Job claims. A worker holds a job while it keeps heartbeat_at fresh; its writes
+    # only count while claim_token is still its own. attempts counts claims so far.
+    Column("claim_token", String(32)),
+    Column("heartbeat_at", UTCDateTime),
+    Column("attempts", Integer, nullable=False, server_default="0"),
     Index("analyses_status", "status", "updated_at"),
     Index("analyses_user_created", "user_id", "created_at", "id"),  # a user's History page
 )

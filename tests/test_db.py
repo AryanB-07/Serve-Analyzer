@@ -93,10 +93,11 @@ def test_concurrent_workers_never_claim_the_same_job(db):
         job = db.create(user, "right", f"{i}.mp4", "video/mp4", 10)
         assert db.transition(job["id"], ("awaiting_upload",), "queued")
     with ThreadPoolExecutor(8) as pool:
-        claims = [c for c in pool.map(lambda _: db.claim_next(), range(8)) if c]
+        claims = [c for c in pool.map(lambda i: db.claim_next(f"worker-{i}"), range(8)) if c]
     assert len(claims) == 3
     assert len({c["id"] for c in claims}) == 3
     assert all(c["status"] == "extracting_pose" for c in claims)
+    assert len({c["claim_token"] for c in claims}) == 3
 
 
 def test_the_worker_refuses_an_out_of_date_schema(tmp_path):

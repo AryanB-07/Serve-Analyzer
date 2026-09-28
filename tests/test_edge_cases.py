@@ -14,12 +14,10 @@ from serve_analyzer.phases import detect_contact, detect_phases, detect_racket_d
 from serve_analyzer.pipeline import analyze_sequence
 from serve_analyzer.preprocessing import clean, interpolate_gaps, smooth_series
 from serve_analyzer.reference import load_ranges
-from serve_api import migrate
 from serve_api.app import create_app
-from serve_api.db import Database
 from serve_api.settings import Settings
 from serve_api.storage import LocalStorage
-from tests.conftest import make_user, sign_in
+from tests.conftest import sign_in
 
 nan = np.nan
 
@@ -140,18 +138,3 @@ def test_list_rejects_malformed_cursors_and_limits(client):
     assert client.get("/analyses", params={"cursor": "!!!"}).status_code == 400
     assert client.get("/analyses", params={"limit": 0}).status_code == 422
     assert client.get("/analyses", params={"limit": 101}).status_code == 422
-
-
-def test_worker_requeues_jobs_left_mid_flight(settings):
-    db = Database(settings.sqlalchemy_url)
-    migrate.upgrade(db.engine)
-    user = make_user(db)
-    stuck = db.create(user, "right", "a.mp4", "video/mp4", 10)
-    db.set_status(stuck["id"], "extracting_pose")
-    waiting = db.create(user, "right", "b.mp4", "video/mp4", 10)
-    assert db.requeue_interrupted() == 1
-    assert db.get(stuck["id"])["status"] == "queued"
-    assert db.get(waiting["id"])["status"] == "awaiting_upload"
-    claimed = db.claim_next()
-    assert claimed["id"] == stuck["id"] and claimed["status"] == "extracting_pose"
-    assert db.claim_next() is None

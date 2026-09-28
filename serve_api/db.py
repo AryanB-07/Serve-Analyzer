@@ -3,17 +3,28 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Engine, create_engine, delete, event, insert, select, tuple_, update
+from sqlalchemy import (
+    Engine,
+    create_engine,
+    delete,
+    event,
+    func,
+    insert,
+    select,
+    tuple_,
+    update,
+)
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 
 from .tables import analyses, sessions, users
 
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
+ACTIVE = ("queued", *IN_PROGRESS)
 
 
 def now() -> datetime:
@@ -54,6 +65,7 @@ class Database:
             "content_type": content_type, "size_bytes": size_bytes,
             "status": "awaiting_upload", "error_code": None, "error_message": None,
             "counts": None, "created_at": ts, "updated_at": ts,
+            "claim_token": None, "heartbeat_at": None, "attempts": 0,
         }
         with self.engine.begin() as conn:
             conn.execute(insert(analyses).values(row))
@@ -83,25 +95,31 @@ class Database:
         with self.engine.connect() as conn:
             return [dict(r) for r in conn.execute(query).mappings()]
 
-    def transition(self, analysis_id: str, from_statuses: tuple[str, ...], to_status: str) -> bool:
+    def transition(
+        self, analysis_id: str, from_statuses: tuple[str, ...], to_status: str, **fields: Any
+    ) -> bool:
         """Atomically move to ``to_status`` only if currently in ``from_statuses``."""
         with self.engine.begin() as conn:
             result = conn.execute(
                 update(analyses)
                 .where(analyses.c.id == analysis_id, analyses.c.status.in_(from_statuses))
-                .values(status=to_status, error_code=None, error_message=None, updated_at=now())
+                .values(status=to_status, error_code=None, error_message=None, updated_at=now(),
+                        **fields)
             )
         return result.rowcount == 1
 
     def set_status(self, analysis_id: str, status: str, **fields: Any) -> None:
+        """Unconditional status write, for tests and maintenance. Workers use update_claimed."""
         with self.engine.begin() as conn:
             conn.execute(
                 update(analyses).where(analyses.c.id == analysis_id)
                 .values(status=status, updated_at=now(), **fields)
             )
 
-    def claim_next(self) -> dict[str, Any] | None:
-        """Take the oldest queued job.
+    # --- the job queue ---------------------------------------------------------
+
+    def claim_next(self, token: str) -> dict[str, Any] | None:
+        """Take the oldest queued job, marking it with the worker's claim ``token``.
 
         One UPDATE makes the claim atomic. On Postgres, SKIP LOCKED lets
         concurrent workers pass over a row another worker is claiming instead
@@ -112,22 +130,79 @@ class Database:
             .order_by(analyses.c.updated_at).limit(1)
             .with_for_update(skip_locked=True).scalar_subquery()
         )
+        ts = now()
         with self.engine.begin() as conn:
             row = conn.execute(
                 update(analyses).where(analyses.c.id == oldest)
-                .values(status="extracting_pose", updated_at=now())
+                .values(status=IN_PROGRESS[0], claim_token=token, heartbeat_at=ts,
+                        attempts=analyses.c.attempts + 1, updated_at=ts)
                 .returning(*analyses.c)
             ).mappings().first()
         return dict(row) if row else None
 
-    def requeue_interrupted(self) -> int:
-        """Put jobs a crashed worker left mid-flight back on the queue."""
+    def _claimed(self, analysis_id: str, token: str):
+        return (analyses.c.id == analysis_id, analyses.c.claim_token == token,
+                analyses.c.status.in_(IN_PROGRESS))
+
+    def update_claimed(self, analysis_id: str, token: str, status: str, **fields: Any) -> bool:
+        """A worker's status write. Returns False, changing nothing, if the job is no
+        longer claimed with ``token`` (the claim lapsed and the job moved on)."""
+        ts = now()
+        if status not in IN_PROGRESS:
+            fields["claim_token"] = None
         with self.engine.begin() as conn:
             result = conn.execute(
-                update(analyses).where(analyses.c.status.in_(IN_PROGRESS))
-                .values(status="queued", updated_at=now())
+                update(analyses).where(*self._claimed(analysis_id, token))
+                .values(status=status, updated_at=ts, heartbeat_at=ts, **fields)
             )
-        return result.rowcount
+        return result.rowcount == 1
+
+    def heartbeat(self, analysis_id: str, token: str) -> bool:
+        """Keep a claim alive. False if it has already lapsed."""
+        with self.engine.begin() as conn:
+            result = conn.execute(
+                update(analyses).where(*self._claimed(analysis_id, token))
+                .values(heartbeat_at=now())
+            )
+        return result.rowcount == 1
+
+    def release_stale(
+        self, lease: timedelta, max_attempts: int, failure_message: str
+    ) -> tuple[int, int]:
+        """Return abandoned jobs (no heartbeat for ``lease``) to the queue.
+
+        A job that has already been claimed ``max_attempts`` times is failed
+        instead, so a video that crashes workers can't loop forever.
+        Returns (requeued, failed).
+        """
+        stale = (analyses.c.status.in_(IN_PROGRESS),
+                 (analyses.c.heartbeat_at < now() - lease) | analyses.c.heartbeat_at.is_(None))
+        with self.engine.begin() as conn:
+            failed = conn.execute(
+                update(analyses).where(*stale, analyses.c.attempts >= max_attempts)
+                .values(status="failed", error_code="INTERNAL", error_message=failure_message,
+                        claim_token=None, updated_at=now())
+            ).rowcount
+            requeued = conn.execute(
+                update(analyses).where(*stale)
+                .values(status="queued", claim_token=None, updated_at=now())
+            ).rowcount
+        return requeued, failed
+
+    # --- per-user limits ---------------------------------------------------------
+
+    def count_created_since(self, user_id: str, since: datetime) -> int:
+        query = select(func.count()).select_from(analyses).where(
+            analyses.c.user_id == user_id, analyses.c.created_at >= since)
+        with self.engine.connect() as conn:
+            return conn.execute(query).scalar_one()
+
+    def count_active(self, user_id: str) -> int:
+        """Analyses waiting in the queue or being processed."""
+        query = select(func.count()).select_from(analyses).where(
+            analyses.c.user_id == user_id, analyses.c.status.in_(ACTIVE))
+        with self.engine.connect() as conn:
+            return conn.execute(query).scalar_one()
 
     # --- users and sessions ----------------------------------------------------
 

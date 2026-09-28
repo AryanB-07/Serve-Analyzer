@@ -220,6 +220,16 @@
             },
             "description": "Request Entity Too Large"
           },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -425,6 +435,16 @@
             },
             "description": "Conflict"
           },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -493,6 +513,16 @@
               }
             },
             "description": "Conflict"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
           },
           "422": {
             "description": "Validation Error",

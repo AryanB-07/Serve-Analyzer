@@ -7,6 +7,7 @@ import type { Hand } from "../../api/types";
 import { Dropzone } from "./Dropzone";
 import { FilmingGuide } from "./FilmingGuide";
 import { HandSelector } from "./HandSelector";
+import { uploadErrorText } from "./uploadError";
 import { useUploadAnalysis, type UploadProgress } from "./useUploadAnalysis";
 import { checkFile, checkMetadata, readVideoMetadata, type VideoMetadata } from "./validateVideo";
 
@@ -155,7 +156,7 @@ export function UploadPage() {
           {isUploading && selected && <UploadProgressBar progress={progress} size={selected.file.size} onCancel={cancel} />}
           {error && (
             <p role="alert" className="rounded-lg border border-bad/40 bg-surface p-3 text-sm">
-              <span className="font-medium text-bad">Upload failed.</span> {error.message} Check your connection and try again.
+              <span className="font-medium text-bad">{uploadErrorText(error).title}</span> {uploadErrorText(error).detail}
             </p>
           )}
           {cancelled && <p role="status" className="text-sm text-ink-muted">Upload cancelled.</p>}
