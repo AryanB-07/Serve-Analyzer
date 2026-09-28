@@ -9,7 +9,8 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy import text
 
 from . import keys, migrate
 from .auth import Auth, origin_guard
@@ -27,7 +28,7 @@ from .schemas import (
     User,
 )
 from .settings import Settings
-from .storage import LocalStorage, StorageError
+from .storage import LocalStorage, StorageError, make_storage
 
 IMMUTABLE = "private, max-age=31536000, immutable"
 UNAUTHORIZED = {401: {"model": ErrorResponse}}
@@ -53,7 +54,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     db = Database(settings.sqlalchemy_url)
     if settings.auto_migrate:
         migrate.upgrade(db.engine)
-    storage = LocalStorage(settings)
+    storage = make_storage(settings)
     auth = Auth(db, settings)
 
     app = FastAPI(title="Serve Analyzer API", version="1.0.0")
@@ -70,8 +71,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
         return row
 
-    def check_active_limit(user: User) -> None:
-        if db.count_active(user.id) >= settings.max_active_analyses:
+    def queue_within_limit(analysis_id: str, user: User, from_status: str, conflict: str,
+                           **fields) -> None:
+        outcome = db.transition_within_limit(
+            analysis_id, user.id, (from_status,), "queued", settings.max_active_analyses, **fields)
+        if outcome == "conflict":
+            raise HTTPException(status.HTTP_409_CONFLICT, conflict)
+        if outcome == "limit":
             n = settings.max_active_analyses
             raise HTTPException(
                 status.HTTP_429_TOO_MANY_REQUESTS,
@@ -89,8 +95,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return row
 
     @app.get("/health", include_in_schema=False)
-    def health() -> dict[str, str]:
-        return {"status": "ok"}
+    def health() -> JSONResponse:
+        """For load balancers and uptime checks: fails if the database is unreachable."""
+        try:
+            with db.engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+        except Exception:
+            return JSONResponse({"status": "database unavailable"}, status_code=503)
+        return JSONResponse({"status": "ok"})
 
     @app.post("/analyses", status_code=201, response_model=CreateAnalysisResponse,
               responses={**UNAUTHORIZED, 413: {"model": ErrorResponse},
@@ -104,14 +116,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 status.HTTP_413_CONTENT_TOO_LARGE,
                 f"Videos must be under {settings.max_upload_bytes // (1024 * 1024)} MB",
             )
-        created_today = db.count_created_since(user.id, now() - timedelta(days=1))
-        if created_today >= settings.daily_analysis_limit:
+        row = db.create_within_limit(
+            user.id, body.hand, body.filename, body.content_type, body.size_bytes,
+            since=now() - timedelta(days=1), limit=settings.daily_analysis_limit,
+        )
+        if row is None:
             raise HTTPException(
                 status.HTTP_429_TOO_MANY_REQUESTS,
                 f"You can analyze up to {settings.daily_analysis_limit} serves a day. "
                 "Try again tomorrow.",
             )
-        row = db.create(user.id, body.hand, body.filename, body.content_type, body.size_bytes)
         key = keys.input_key(row["id"], body.content_type)
         url, expires = storage.presign("PUT", key, body.content_type)
         return CreateAnalysisResponse(
@@ -144,31 +158,34 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def start_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
         """Queue the analysis once the upload has finished."""
         row = get_row(analysis_id, user)
-        if not storage.exists(keys.input_key(analysis_id, row["content_type"])):
+        input_key = keys.input_key(analysis_id, row["content_type"])
+        size = storage.size(input_key)
+        if size is None:
             raise HTTPException(status.HTTP_409_CONFLICT, "The video has not been uploaded yet")
-        if row["status"] == "awaiting_upload":
-            check_active_limit(user)
-        if not db.transition(analysis_id, ("awaiting_upload",), "queued"):
-            raise HTTPException(status.HTTP_409_CONFLICT, f"Analysis is already {row['status']}")
+        if size > settings.max_upload_bytes:
+            # A presigned S3 PUT can't cap the size, so it's checked here instead.
+            storage.delete_prefix(keys.upload_prefix(analysis_id))
+            raise HTTPException(
+                status.HTTP_413_CONTENT_TOO_LARGE,
+                f"Videos must be under {settings.max_upload_bytes // (1024 * 1024)} MB",
+            )
+        queue_within_limit(analysis_id, user, "awaiting_upload",
+                           f"Analysis is already {row['status']}")
         return summary_from_row(get_row(analysis_id, user), signed_get)
 
     @app.post("/analyses/{analysis_id}/retry", status_code=202, response_model=AnalysisSummary,
               responses=LIMITED)
     def retry_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
         row = get_row(analysis_id, user)
-        if row["status"] == "failed":
-            check_active_limit(user)
-        if not db.transition(analysis_id, ("failed",), "queued", attempts=0):
-            raise HTTPException(
-                status.HTTP_409_CONFLICT,
-                f"Only failed analyses can be retried; this one is {row['status']}",
-            )
+        queue_within_limit(analysis_id, user, "failed",
+                           f"Only failed analyses can be retried; this one is {row['status']}",
+                           attempts=0)
         return summary_from_row(get_row(analysis_id, user), signed_get)
 
     @app.get("/analyses/{analysis_id}/result", response_model=AnalysisResult, responses=ERRORS)
     def get_result(analysis_id: str, user: User = signed_in) -> AnalysisResult:
         succeeded_row(analysis_id, user)
-        results = json.loads(storage.path(keys.output_key(analysis_id, keys.RESULTS)).read_text())
+        results = json.loads(storage.read_bytes(keys.output_key(analysis_id, keys.RESULTS)))
         return result_from_file(analysis_id, results, signed_get)
 
     @app.get("/analyses/{analysis_id}/frames", response_model=FramesPayload,
@@ -180,11 +197,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         FramesPayload in tests) to avoid re-parsing a large payload per request.
         """
         succeeded_row(analysis_id, user)
-        path = storage.path(keys.output_key(analysis_id, keys.FRAMES))
         return Response(
-            path.read_bytes(), media_type="application/json",
+            storage.read_bytes(keys.output_key(analysis_id, keys.FRAMES)),
+            media_type="application/json",
             headers={"Cache-Control": IMMUTABLE},
         )
+
+    if isinstance(storage, LocalStorage):
+        _mount_local_storage(app, storage, db, settings)
+    return app
+
+
+def _mount_local_storage(
+    app: FastAPI, storage: LocalStorage, db: Database, settings: Settings
+) -> None:
+    """Serve the local backend's presigned URLs. (With S3 the bucket serves them.)"""
 
     @app.put("/storage/{key:path}", status_code=204, include_in_schema=False)
     async def put_object(key: str, request: Request, expires: int, sig: str) -> Response:
@@ -211,5 +238,3 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if not path.is_file():
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
         return FileResponse(path, headers={"Cache-Control": "private, max-age=3600"})
-
-    return app

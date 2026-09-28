@@ -24,9 +24,9 @@ from serve_analyzer.pipeline import analyze
 
 from . import keys, migrate
 from .convert import counts_from_labels, public_message
-from .db import Database
+from .db import Database, now
 from .settings import Settings
-from .storage import LocalStorage
+from .storage import Storage, make_storage
 
 log = logging.getLogger("serve_api.worker")
 
@@ -34,6 +34,9 @@ LEASE = timedelta(minutes=2)
 HEARTBEAT = timedelta(seconds=20)
 MAX_ATTEMPTS = 3
 SWEEP_EVERY_S = 30.0
+HOUSEKEEPING_EVERY_S = 3600.0
+ABANDONED_AFTER = timedelta(days=1)   # an upload that never arrived
+ATTEMPTS_KEPT = timedelta(days=1)     # longer than any rate-limit window
 
 
 class Heartbeat:
@@ -65,19 +68,28 @@ class Heartbeat:
         self._thread.join()
 
 
-def process(job: dict, db: Database, storage: LocalStorage, token: str,
+def process(job: dict, db: Database, storage: Storage, token: str,
             heartbeat_every: timedelta = HEARTBEAT) -> None:
+    """Run the pipeline for one claimed job.
+
+    Outputs are written to a private scratch folder and published only if the
+    claim is still ours, so a worker that stalled past its lease can't
+    overwrite the files of the worker that took the job over.
+    """
     analysis_id = job["id"]
-    video = storage.path(keys.input_key(analysis_id, job["content_type"]))
-    out_dir = storage.path(keys.output_prefix(analysis_id))
 
-    def write(status: str, **fields) -> None:
-        if not db.update_claimed(analysis_id, token, status, **fields):
-            log.warning("analysis %s: claim lost, %s not recorded", analysis_id, status)
+    def write(status: str, **fields) -> bool:
+        if db.update_claimed(analysis_id, token, status, **fields):
+            return True
+        log.warning("analysis %s: claim lost, %s not recorded", analysis_id, status)
+        return False
 
-    with Heartbeat(db, analysis_id, token, heartbeat_every):
+    input_key = keys.input_key(analysis_id, job["content_type"])
+    with Heartbeat(db, analysis_id, token, heartbeat_every), storage.scratch_dir() as work:
         try:
-            result = analyze(video, job["hand"], out_dir, on_stage=write)
+            with storage.local_copy(input_key) as video:
+                result = analyze(video, job["hand"], work, on_stage=write)
+            counts = counts_from_labels(json.loads((work / keys.RESULTS).read_text())["labels"])
         except PipelineError as exc:
             log.info("analysis %s failed: %s (%s)", analysis_id, exc.code, exc)
             write("failed", error_code=exc.code, error_message=public_message(exc.code, str(exc)))
@@ -86,9 +98,12 @@ def process(job: dict, db: Database, storage: LocalStorage, token: str,
             log.exception("analysis %s crashed", analysis_id)
             write("failed", error_code="INTERNAL", error_message=public_message("INTERNAL", ""))
             return
-    counts = counts_from_labels(json.loads((out_dir / keys.RESULTS).read_text())["labels"])
-    write("succeeded", counts=counts)
-    log.info("analysis %s succeeded (contact frame %s)", analysis_id, result.phases.contact)
+        if not db.heartbeat(analysis_id, token):
+            log.warning("analysis %s: claim lost before publishing; outputs discarded", analysis_id)
+            return
+        storage.publish(work, keys.output_prefix(analysis_id))
+    if write("succeeded", counts=counts):
+        log.info("analysis %s succeeded (contact frame %s)", analysis_id, result.phases.contact)
 
 
 def sweep(db: Database, lease: timedelta = LEASE, max_attempts: int = MAX_ATTEMPTS) -> None:
@@ -99,16 +114,29 @@ def sweep(db: Database, lease: timedelta = LEASE, max_attempts: int = MAX_ATTEMP
         log.warning("failed %d analyses after %d attempts", failed, max_attempts)
 
 
+def housekeeping(db: Database, storage: Storage) -> None:
+    """Delete what nobody will use again: abandoned uploads, dead sessions, old attempts."""
+    for analysis_id in db.delete_abandoned_uploads(now() - ABANDONED_AFTER):
+        storage.delete_prefix(keys.upload_prefix(analysis_id))
+        log.info("deleted abandoned upload %s", analysis_id)
+    sessions, attempts = db.delete_expired(attempts_before=now() - ATTEMPTS_KEPT)
+    if sessions or attempts:
+        log.info("deleted %d expired sessions and %d old sign-in attempts", sessions, attempts)
+
+
 def run(settings: Settings, poll_s: float = 1.0, once: bool = False) -> None:
     settings.check()
     db = Database(settings.sqlalchemy_url)
     migrate.wait_until_current(db.engine)
-    storage = LocalStorage(settings)
-    last_sweep = float("-inf")
+    storage = make_storage(settings)
+    last_sweep = last_housekeeping = float("-inf")
     while True:
         if time.monotonic() - last_sweep >= SWEEP_EVERY_S:
             sweep(db)
             last_sweep = time.monotonic()
+        if time.monotonic() - last_housekeeping >= HOUSEKEEPING_EVERY_S:
+            housekeeping(db, storage)
+            last_housekeeping = time.monotonic()
         job = db.claim_next(uuid.uuid4().hex)
         if job is not None:
             process(job, db, storage, job["claim_token"])

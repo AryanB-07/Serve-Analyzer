@@ -7,8 +7,12 @@ from serve_analyzer import pipeline
 EXTENSIONS = {"video/mp4": ".mp4", "video/quicktime": ".mov"}
 
 
+def upload_prefix(analysis_id: str) -> str:
+    return f"uploads/{analysis_id}"
+
+
 def input_key(analysis_id: str, content_type: str) -> str:
-    return f"uploads/{analysis_id}/input{EXTENSIONS[content_type]}"
+    return f"{upload_prefix(analysis_id)}/input{EXTENSIONS[content_type]}"
 
 
 def output_prefix(analysis_id: str) -> str:

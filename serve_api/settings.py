@@ -40,6 +40,12 @@ class Settings:
         default_factory=lambda: int(_env("DAILY_ANALYSIS_LIMIT", "20")))
     max_active_analyses: int = field(
         default_factory=lambda: int(_env("MAX_ACTIVE_ANALYSES", "2")))
+    # Where uploads and results live: "local" (data_dir/objects) or "s3".
+    storage: str = field(default_factory=lambda: _env("STORAGE", "local"))
+    s3_bucket: str = field(default_factory=lambda: _env("S3_BUCKET", ""))
+    s3_region: str = field(default_factory=lambda: _env("S3_REGION", ""))
+    # Only for S3-compatible services (R2, MinIO); empty means AWS.
+    s3_endpoint_url: str = field(default_factory=lambda: _env("S3_ENDPOINT_URL", ""))
     max_upload_bytes: int = 200 * 1024 * 1024
     upload_url_ttl_s: int = 15 * 60
     # Long enough that seeking (new Range requests) keeps working while a results page is open.

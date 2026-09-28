@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from sqlalchemy import (
+    Connection,
     Engine,
     create_engine,
     delete,
@@ -21,7 +24,7 @@ from sqlalchemy import (
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 
-from .tables import analyses, sessions, users
+from .tables import analyses, auth_attempts, sessions, users
 
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
 ACTIVE = ("queued", *IN_PROGRESS)
@@ -56,8 +59,61 @@ class Database:
             url_or_engine if isinstance(url_or_engine, Engine) else make_engine(url_or_engine)
         )
 
+    @contextmanager
+    def _locked_for(self, user_id: str) -> Iterator[Connection]:
+        """A transaction that holds a lock for ``user_id`` until it commits.
+
+        Check-then-write sequences (count this user's analyses, then add one)
+        run inside it, so two concurrent requests from the same user can't both
+        pass the check. Postgres locks the user's row, so other users aren't
+        blocked; SQLite has no row locks and takes its database write lock.
+        """
+        with self.engine.connect() as conn:
+            if conn.dialect.name == "sqlite":
+                conn.exec_driver_sql("BEGIN IMMEDIATE")
+            else:
+                conn.execute(select(users.c.id).where(users.c.id == user_id).with_for_update())
+            try:
+                yield conn
+            except BaseException:
+                conn.rollback()
+                raise
+            conn.commit()
+
+    def create_within_limit(
+        self, user_id: str, hand: str, filename: str, content_type: str, size_bytes: int,
+        since: datetime, limit: int,
+    ) -> dict[str, Any] | None:
+        """Create an analysis unless the user already created ``limit`` since ``since``."""
+        with self._locked_for(user_id) as conn:
+            if self._count_created_since(conn, user_id, since) >= limit:
+                return None
+            return self._insert(conn, user_id, hand, filename, content_type, size_bytes)
+
+    def transition_within_limit(
+        self, analysis_id: str, user_id: str, from_statuses: tuple[str, ...], to_status: str,
+        max_active: int, **fields: Any,
+    ) -> Literal["ok", "limit", "conflict"]:
+        """Queue an analysis unless the user already has ``max_active`` queued or running."""
+        with self._locked_for(user_id) as conn:
+            current = conn.execute(
+                select(analyses.c.status).where(analyses.c.id == analysis_id)).scalar_one_or_none()
+            if current not in from_statuses:
+                return "conflict"
+            if self._count_active(conn, user_id) >= max_active:
+                return "limit"
+            self._transition(conn, analysis_id, from_statuses, to_status, **fields)
+            return "ok"
+
     def create(
         self, user_id: str, hand: str, filename: str, content_type: str, size_bytes: int
+    ) -> dict[str, Any]:
+        with self.engine.begin() as conn:
+            return self._insert(conn, user_id, hand, filename, content_type, size_bytes)
+
+    def _insert(
+        self, conn: Connection, user_id: str, hand: str, filename: str, content_type: str,
+        size_bytes: int,
     ) -> dict[str, Any]:
         ts = now()
         row = {
@@ -67,8 +123,7 @@ class Database:
             "counts": None, "created_at": ts, "updated_at": ts,
             "claim_token": None, "heartbeat_at": None, "attempts": 0,
         }
-        with self.engine.begin() as conn:
-            conn.execute(insert(analyses).values(row))
+        conn.execute(insert(analyses).values(row))
         return row
 
     def get(self, analysis_id: str) -> dict[str, Any] | None:
@@ -100,12 +155,19 @@ class Database:
     ) -> bool:
         """Atomically move to ``to_status`` only if currently in ``from_statuses``."""
         with self.engine.begin() as conn:
-            result = conn.execute(
-                update(analyses)
-                .where(analyses.c.id == analysis_id, analyses.c.status.in_(from_statuses))
-                .values(status=to_status, error_code=None, error_message=None, updated_at=now(),
-                        **fields)
-            )
+            return self._transition(conn, analysis_id, from_statuses, to_status, **fields)
+
+    @staticmethod
+    def _transition(
+        conn: Connection, analysis_id: str, from_statuses: tuple[str, ...], to_status: str,
+        **fields: Any,
+    ) -> bool:
+        result = conn.execute(
+            update(analyses)
+            .where(analyses.c.id == analysis_id, analyses.c.status.in_(from_statuses))
+            .values(status=to_status, error_code=None, error_message=None, updated_at=now(),
+                    **fields)
+        )
         return result.rowcount == 1
 
     def set_status(self, analysis_id: str, status: str, **fields: Any) -> None:
@@ -191,18 +253,16 @@ class Database:
 
     # --- per-user limits ---------------------------------------------------------
 
-    def count_created_since(self, user_id: str, since: datetime) -> int:
-        query = select(func.count()).select_from(analyses).where(
-            analyses.c.user_id == user_id, analyses.c.created_at >= since)
-        with self.engine.connect() as conn:
-            return conn.execute(query).scalar_one()
+    @staticmethod
+    def _count_created_since(conn: Connection, user_id: str, since: datetime) -> int:
+        return conn.execute(select(func.count()).select_from(analyses).where(
+            analyses.c.user_id == user_id, analyses.c.created_at >= since)).scalar_one()
 
-    def count_active(self, user_id: str) -> int:
+    @staticmethod
+    def _count_active(conn: Connection, user_id: str) -> int:
         """Analyses waiting in the queue or being processed."""
-        query = select(func.count()).select_from(analyses).where(
-            analyses.c.user_id == user_id, analyses.c.status.in_(ACTIVE))
-        with self.engine.connect() as conn:
-            return conn.execute(query).scalar_one()
+        return conn.execute(select(func.count()).select_from(analyses).where(
+            analyses.c.user_id == user_id, analyses.c.status.in_(ACTIVE))).scalar_one()
 
     # --- users and sessions ----------------------------------------------------
 
@@ -253,6 +313,39 @@ class Database:
         with self.engine.begin() as conn:
             conn.execute(update(sessions).where(sessions.c.id == session_id)
                          .values(expires_at=expires_at, last_seen_at=now()))
+
+    # --- rate limiting and housekeeping ------------------------------------------
+
+    def record_attempt(self, key_hash: str) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(insert(auth_attempts).values(key_hash=key_hash, at=now()))
+
+    def attempts_since(self, key_hash: str, since: datetime) -> tuple[int, datetime | None]:
+        """How many attempts for ``key_hash`` since ``since``, and the oldest of them."""
+        query = select(func.count(), func.min(auth_attempts.c.at)).where(
+            auth_attempts.c.key_hash == key_hash, auth_attempts.c.at > since)
+        with self.engine.connect() as conn:
+            count, oldest = conn.execute(query).one()
+        if oldest is not None and oldest.tzinfo is None:
+            oldest = oldest.replace(tzinfo=UTC)  # min() comes back untyped on SQLite
+        return count, oldest
+
+    def delete_expired(self, attempts_before: datetime) -> tuple[int, int]:
+        """Drop expired sessions and old rate-limit rows. Returns how many of each."""
+        with self.engine.begin() as conn:
+            dead_sessions = conn.execute(delete(sessions).where(sessions.c.expires_at < now())).rowcount
+            old_attempts = conn.execute(
+                delete(auth_attempts).where(auth_attempts.c.at < attempts_before)).rowcount
+        return dead_sessions, old_attempts
+
+    def delete_abandoned_uploads(self, created_before: datetime) -> list[str]:
+        """Remove analyses whose video never arrived. Returns their ids (to delete any files)."""
+        stale = (analyses.c.status == "awaiting_upload", analyses.c.created_at < created_before)
+        with self.engine.begin() as conn:
+            ids = list(conn.execute(select(analyses.c.id).where(*stale)).scalars())
+            if ids:
+                conn.execute(delete(analyses).where(analyses.c.id.in_(ids), *stale))
+        return ids
 
     def delete_session(self, token_hash: str) -> None:
         with self.engine.begin() as conn:

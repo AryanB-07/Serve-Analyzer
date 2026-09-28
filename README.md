@@ -149,6 +149,9 @@ uv run alembic revision --autogenerate -m "add users table"
 | `SERVE_API_ALLOWED_ORIGINS` | none | Extra origins allowed to send POST/PUT/DELETE, comma-separated; only needed if a proxy rewrites `Host` |
 | `SERVE_API_DAILY_ANALYSIS_LIMIT` | `20` | New analyses each user may create per rolling 24 hours |
 | `SERVE_API_MAX_ACTIVE_ANALYSES` | `2` | Analyses each user may have queued or processing at once |
+| `SERVE_API_STORAGE` | `local` | `local` keeps files in `SERVE_API_DATA_DIR`; `s3` uses a bucket |
+| `SERVE_API_S3_BUCKET`, `SERVE_API_S3_REGION` | none | The bucket, when `SERVE_API_STORAGE=s3` (credentials come from the usual AWS variables or a role) |
+| `SERVE_API_S3_ENDPOINT_URL` | AWS | Only for S3-compatible services (R2, MinIO) |
 
 ### Accounts
 
@@ -193,10 +196,25 @@ uv run python -m serve_api.worker   # start as many as you like, on one machine 
 - A job that has been claimed 3 times without finishing (for example, a video that crashes the
   worker) is marked failed instead of being retried forever. Retrying it from the app gives it 3
   fresh attempts.
+- A worker runs the pipeline in a private scratch folder and publishes the outputs only if it
+  still holds the claim, so a stalled worker can't overwrite files either.
+- Once an hour, each worker deletes uploads that never arrived within a day, expired sessions,
+  and old sign-in attempts.
 
 Each analysis costs real CPU time, so each user is limited to 20 new analyses per rolling 24 hours
 and 2 queued or processing at once. Going over either limit returns 429 with a message the app
-shows. Both limits are configurable (see the table above).
+shows. Both limits are configurable (see the table above). The check and the write happen in one
+transaction that locks the user's row (`SELECT … FOR UPDATE` on Postgres; SQLite takes its
+write lock), so simultaneous requests can't slip past a limit.
+
+Login rate limits are stored in the database, so every API server shares them and they survive
+restarts. Rows store a hash of the IP or email, not the address itself.
+
+## Deploying
+
+`docs/deployment.md` walks through running the app on a server with HTTPS, managed Postgres and
+S3: `docker compose -f deploy/docker-compose.yml up -d --build`, after filling in
+`deploy/.env`.
 
 ## Filming a serve that analyses well
 
@@ -354,11 +372,13 @@ that the UI turns into specific advice.
 
 **Web app**
 
-- **Uploads are stored on local disk, not S3,** so the API and workers must share a filesystem.
 - **No password reset or email verification yet.** Signup also reveals whether an email is
   already registered.
-- **Login rate limits are kept in each API process's memory,** so they aren't shared between
-  several API servers.
-- **Abandoned uploads stay in history** as "Upload not finished".
+- **Uploads that never arrive stay in history** as "Upload not finished" for up to a day before
+  the worker deletes them.
+- **Signed video URLs work for anyone holding one** until they expire (up to 6 hours), like any
+  S3 presigned URL.
+- **With S3, a video can be replaced after its analysis has started,** until the 15-minute upload
+  link expires. That only affects the uploader's own analysis.
 - **Mock mode keeps new uploads in memory,** so they disappear on page reload.
 - **The upload limits (200 MB, 15 s) are defined in both the frontend and the backend.**

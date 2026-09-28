@@ -1,0 +1,78 @@
+# Production stack. From the repository root:
+#   cp deploy/.env.example deploy/.env     # then fill it in
+#   docker compose -f deploy/docker-compose.yml up -d --build
+# See docs/deployment.md for the full walkthrough.
+
+x-app: &app
+  build:
+    context: ..
+    target: app
+  image: serve-analyzer-app
+  env_file: .env
+  restart: unless-stopped
+  volumes:
+    # Only used with SERVE_API_STORAGE=local; harmless with S3.
+    - objects:/data
+
+services:
+  web:
+    build:
+      context: ..
+      target: web
+    image: serve-analyzer-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in deploy/.env}
+    env_file: .env
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    # Applies pending migrations at startup (under a Postgres lock, so replicas are safe).
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "serve_api.worker"]
+    deploy:
+      replicas: ${WORKERS:-2}
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # A bundled Postgres for a single-server setup. Production should prefer a managed
+  # database with backups; enable this with: --profile bundled-db
+  postgres:
+    image: postgres:16
+    profiles: ["bundled-db"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: serve
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: serve_analyzer
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U serve -d serve_analyzer"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  objects:
+  caddy-data:
+  caddy-config:
+  postgres-data:

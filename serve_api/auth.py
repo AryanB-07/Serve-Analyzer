@@ -10,10 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-import threading
-import time
-from collections import deque
-from collections.abc import Callable
 from datetime import timedelta
 from urllib.parse import urlsplit
 
@@ -52,37 +48,29 @@ def verify_password(password_hash: str, password: str) -> bool:
 
 
 class RateLimiter:
-    """Sliding-window counter per key, in process memory.
+    """Sliding-window limit per key, counted in the database.
 
-    Each API process keeps its own counts; with several replicas the effective
-    limit is multiplied, which is acceptable until a shared store is added.
+    Every API process shares the same counts, and they survive restarts. Keys
+    are stored hashed (with the limiter's scope), so no IPs or emails are kept.
+    Two requests racing the limit can both get through; for rate limiting that
+    is harmless.
     """
 
-    def __init__(self, limit: int, window_s: float, clock: Callable[[], float] = time.monotonic,
-                 max_keys: int = 100_000) -> None:
-        self.limit, self.window_s, self.clock, self.max_keys = limit, window_s, clock, max_keys
-        self._hits: dict[str, deque[float]] = {}
-        self._lock = threading.Lock()
+    def __init__(self, db: Database, scope: str, limit: int, window: timedelta) -> None:
+        self.db, self.scope, self.limit, self.window = db, scope, limit, window
 
-    def _live(self, key: str, t: float) -> deque[float]:
-        hits = self._hits.setdefault(key, deque())
-        while hits and hits[0] <= t - self.window_s:
-            hits.popleft()
-        return hits
+    def _hash(self, key: str) -> str:
+        return hashlib.sha256(f"{self.scope}:{key}".encode()).hexdigest()
 
     def retry_after(self, key: str) -> float | None:
         """Seconds until ``key`` may try again, or None if it's under the limit."""
-        with self._lock:
-            t = self.clock()
-            hits = self._live(key, t)
-            return hits[0] + self.window_s - t if len(hits) >= self.limit else None
+        count, oldest = self.db.attempts_since(self._hash(key), now() - self.window)
+        if count < self.limit or oldest is None:
+            return None
+        return max(1.0, (oldest + self.window - now()).total_seconds())
 
     def hit(self, key: str) -> None:
-        with self._lock:
-            t = self.clock()
-            if len(self._hits) >= self.max_keys:
-                self._hits = {k: v for k, v in self._hits.items() if v and v[-1] > t - self.window_s}
-            self._live(key, t).append(t)
+        self.db.record_attempt(self._hash(key))
 
 
 def _too_many(seconds: float) -> HTTPException:
@@ -99,8 +87,9 @@ def _user(row: dict) -> User:
 class Auth:
     def __init__(self, db: Database, settings: Settings) -> None:
         self.db, self.settings = db, settings
-        self.per_ip = RateLimiter(limit=30, window_s=10 * 60)
-        self.failures_per_email = RateLimiter(limit=10, window_s=15 * 60)
+        self.per_ip = RateLimiter(db, "ip", limit=30, window=timedelta(minutes=10))
+        self.failures_per_email = RateLimiter(
+            db, "login-failure", limit=10, window=timedelta(minutes=15))
 
     def _set_cookie(self, response: Response, token: str) -> None:
         response.set_cookie(

@@ -3,19 +3,20 @@
 import json
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import update
+from sqlalchemy import insert, select, update
 
 from serve_api import keys, migrate, worker
 from serve_api.app import create_app
 from serve_api.db import Database, now
 from serve_api.settings import Settings
 from serve_api.storage import LocalStorage
-from serve_api.tables import analyses
+from serve_api.tables import analyses, auth_attempts
 from tests.conftest import make_user, sign_in
 
 LEASE = timedelta(minutes=2)
@@ -146,10 +147,13 @@ def test_a_worker_that_lost_its_claim_discards_its_result(db, settings, monkeypa
         db.claim_next("new-worker")
 
     monkeypatch.setattr(worker, "analyze", fake_analyze(0.1, during=taken_over))
-    worker.process(job, db, LocalStorage(settings), "slow-worker")
+    storage = LocalStorage(settings)
+    worker.process(job, db, storage, "slow-worker")
     row = db.get(job_id)  # still exactly as the new worker's claim left it
     assert row["claim_token"] == "new-worker" and row["status"] == "extracting_pose"
     assert row["attempts"] == 2 and row["counts"] is None
+    assert storage.size(keys.output_key(job_id, keys.RESULTS)) is None  # nothing published
+    assert not any((storage.root / ".scratch").iterdir())  # and its scratch folder is gone
 
 
 def test_two_workers_share_the_queue_without_overlap(db, settings, monkeypatch):
@@ -231,3 +235,95 @@ def test_retrying_gives_the_job_fresh_attempts(tmp_path):
     db.set_status(analysis_id, "failed", error_code="INTERNAL", error_message="x", attempts=3)
     assert alice.post(f"/analyses/{analysis_id}/retry").status_code == 202
     assert db.get(analysis_id)["attempts"] == 0
+
+
+# --- limits hold under concurrent requests --------------------------------------------
+
+def slow_counts(monkeypatch, db: Database) -> None:
+    """Widen the gap between counting and writing, so unlocked requests would overlap."""
+    for name in ("_count_active", "_count_created_since"):
+        real = getattr(Database, name)
+
+        def slow(*args, _real=real):
+            n = _real(*args)
+            time.sleep(0.2)
+            return n
+
+        monkeypatch.setattr(Database, name, staticmethod(slow))
+
+
+def race(fn, n: int) -> list:
+    barrier = threading.Barrier(n)
+
+    def go(i):
+        barrier.wait()
+        return fn(i)
+
+    with ThreadPoolExecutor(n) as pool:
+        return list(pool.map(go, range(n)))
+
+
+def test_simultaneous_starts_cannot_exceed_the_in_progress_limit(db, monkeypatch):
+    user = make_user(db)
+    jobs = [db.create(user, "right", f"{i}.mp4", "video/mp4", 10)["id"] for i in range(5)]
+    slow_counts(monkeypatch, db)
+    outcomes = race(lambda i: db.transition_within_limit(
+        jobs[i], user, ("awaiting_upload",), "queued", max_active=2), 5)
+    assert sorted(outcomes) == ["limit", "limit", "limit", "ok", "ok"]
+    assert sum(db.get(j)["status"] == "queued" for j in jobs) == 2
+
+
+def test_simultaneous_creates_cannot_exceed_the_daily_limit(db, monkeypatch):
+    user = make_user(db)
+    slow_counts(monkeypatch, db)
+    rows = race(lambda i: db.create_within_limit(
+        user, "right", f"{i}.mp4", "video/mp4", 10, since=now() - timedelta(days=1), limit=3), 5)
+    assert sum(r is not None for r in rows) == 3
+
+
+def test_one_users_lock_does_not_hold_up_another(db, monkeypatch):
+    if db.engine.dialect.name == "sqlite":
+        pytest.skip("SQLite has no row locks; it serialises all writers")
+    alice, bob = make_user(db), make_user(db)
+    alice_job = db.create(alice, "right", "a.mp4", "video/mp4", 10)["id"]
+    bob_job = db.create(bob, "right", "b.mp4", "video/mp4", 10)["id"]
+    slow_counts(monkeypatch, db)
+    started = time.monotonic()
+    race(lambda i: db.transition_within_limit(
+        [alice_job, bob_job][i], [alice, bob][i], ("awaiting_upload",), "queued", max_active=1), 2)
+    assert time.monotonic() - started < 0.35  # ran side by side, not one after the other
+
+
+def test_a_second_start_of_the_same_job_is_a_conflict_not_a_limit(db):
+    user = make_user(db)
+    job = db.create(user, "right", "a.mp4", "video/mp4", 10)["id"]
+    assert db.transition_within_limit(job, user, ("awaiting_upload",), "queued", max_active=1) == "ok"
+    assert db.transition_within_limit(job, user, ("awaiting_upload",), "queued", max_active=1) == "conflict"
+
+
+# --- housekeeping -------------------------------------------------------------------
+
+def test_housekeeping_removes_only_what_is_dead(db, settings):
+    storage = LocalStorage(settings)
+    user = make_user(db)
+    old = db.create(user, "right", "old.mp4", "video/mp4", 10)["id"]
+    fresh = db.create(user, "right", "fresh.mp4", "video/mp4", 10)["id"]
+    finished = queued_job(db, user)
+    storage.path(keys.input_key(old, "video/mp4")).parent.mkdir(parents=True)
+    storage.path(keys.input_key(old, "video/mp4")).write_bytes(b"partial")
+    with db.engine.begin() as conn:
+        conn.execute(update(analyses).where(analyses.c.id.in_([old, finished]))
+                     .values(created_at=now() - timedelta(days=2)))
+        conn.execute(insert(auth_attempts).values(key_hash="x" * 64, at=now() - timedelta(days=2)))
+        conn.execute(insert(auth_attempts).values(key_hash="y" * 64, at=now()))
+    db.create_session(user, "dead-token", now() - timedelta(seconds=1))
+    db.create_session(user, "live-token", now() + timedelta(days=1))
+
+    worker.housekeeping(db, storage)
+
+    assert db.get(old) is None and not storage.path(keys.upload_prefix(old)).exists()
+    assert db.get(fresh) is not None          # still within its day
+    assert db.get(finished) is not None       # old, but it was started
+    assert db.get_session("live-token") and not db.get_session("dead-token")
+    with db.engine.connect() as conn:
+        assert [r.key_hash for r in conn.execute(select(auth_attempts))] == ["y" * 64]

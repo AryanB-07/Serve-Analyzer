@@ -78,6 +78,16 @@ users = Table(
     Column("created_at", UTCDateTime, nullable=False),
 )
 
+auth_attempts = Table(
+    "auth_attempts",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    # SHA-256 of "scope:key" (an IP, or an email), so no addresses are stored.
+    Column("key_hash", String(64), nullable=False),
+    Column("at", UTCDateTime, nullable=False),
+    Index("auth_attempts_key_at", "key_hash", "at"),
+)
+
 sessions = Table(
     "sessions",
     metadata,

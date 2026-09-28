@@ -10,7 +10,7 @@ from serve_api.app import create_app
 from serve_api.auth import SESSION_COOKIE, RateLimiter, hash_token
 from serve_api.db import now
 from serve_api.settings import Settings
-from serve_api.tables import sessions, users
+from serve_api.tables import auth_attempts, sessions, users
 
 PASSWORD = "correct horse battery"
 
@@ -151,16 +151,27 @@ def test_each_ip_is_limited_across_signup_and_login(client):
     assert login(client, email="u0@example.com").status_code == 429
 
 
-def test_rate_limiter_window_slides():
-    t = [0.0]
-    limiter = RateLimiter(limit=2, window_s=60, clock=lambda: t[0])
+def test_rate_limits_are_shared_through_the_database(client):
+    database = db(client)
+    limiter = RateLimiter(database, "test", limit=2, window=timedelta(minutes=1))
     limiter.hit("k")
-    t[0] = 30
     limiter.hit("k")
-    assert limiter.retry_after("k") == pytest.approx(30)
-    t[0] = 61
-    assert limiter.retry_after("k") is None
+    assert 55 < limiter.retry_after("k") <= 60
     assert limiter.retry_after("other") is None
+    # A second API process (another limiter on the same database) sees the same count.
+    assert RateLimiter(database, "test", limit=2, window=timedelta(minutes=1)).retry_after("k")
+    assert RateLimiter(database, "another-scope", limit=2, window=timedelta(minutes=1)).retry_after("k") is None
+    with database.engine.begin() as conn:  # a minute later the window has moved on
+        conn.execute(update(auth_attempts).values(at=now() - timedelta(minutes=1, seconds=1)))
+    assert limiter.retry_after("k") is None
+
+
+def test_rate_limit_rows_do_not_store_emails(client):
+    signup(client)
+    login(TestClient(client.app), password="wrong password")
+    with db(client).engine.connect() as conn:
+        stored = [r.key_hash for r in conn.execute(select(auth_attempts))]
+    assert stored and all(len(h) == 64 and "@" not in h for h in stored)
 
 
 def test_cross_origin_writes_are_refused(settings):
