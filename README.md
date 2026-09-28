@@ -92,7 +92,8 @@ npm run dev:mock
 ```
 
 Open http://localhost:5173 and click **Or open the demo analysis**. To see the error screen,
-upload a file whose name contains `fail`.
+upload a file whose name contains `fail`. Mock mode starts signed in as a demo user. After
+signing out, any email and password signs back in.
 
 ### Option B: full app
 
@@ -104,8 +105,9 @@ uv run python -m serve_api.worker                            # 2. worker
 cd frontend && npm run dev                                   # 3. UI on :5173 (proxies /api to :8000)
 ```
 
-Open http://localhost:5173, choose your serving hand, and upload a clip. To try it without
-your own footage, use `tests/fixtures/sample_serve.mp4` with **Right-handed**. Uploads and
+Open http://localhost:5173 and create an account (any email and a password of 8 or more
+characters). Then choose your serving hand and upload a clip. To try it without your own
+footage, use `tests/fixtures/sample_serve.mp4` with **Right-handed**. Accounts, uploads and
 results are stored in `var/`; delete that folder to reset.
 
 | Problem | Fix |

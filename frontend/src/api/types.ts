@@ -15,6 +15,8 @@ export type FeedbackItem = Schemas["FeedbackItem"];
 export type MetricRange = Schemas["MetricRange"];
 export type ErrorCode = Schemas["ApiError"]["code"];
 export type Hand = AnalysisSummary["hand"];
+export type User = Schemas["User"];
+export type Credentials = Schemas["LoginRequest"];
 
 export type PhaseName = keyof Schemas["PhaseMetrics"];
 export type MetricName = keyof Schemas["MetricValues"];
