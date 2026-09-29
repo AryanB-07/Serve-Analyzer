@@ -308,7 +308,9 @@ def write_report(baseline: dict, groups: list[tuple[str, list[dict]]], combined:
 
 
 # The pipeline as it was before tuning; every report compares against this.
-ORIGINAL_DEFAULTS = AnalysisConfig(require_complete_serve=False, contact_visibility_threshold=None, trophy_window_s=None)
+ORIGINAL_DEFAULTS = AnalysisConfig(
+    require_complete_serve=False, contact_visibility_threshold=None, trophy_window_s=None, trophy_fallback=False
+)
 
 
 def main() -> None:

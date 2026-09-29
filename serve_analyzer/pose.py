@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import tempfile
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 
 import cv2
@@ -44,11 +45,18 @@ def ensure_model(variant: str, model_dir: Path) -> Path:
     return path
 
 
-def extract_pose_sequence(info: VideoInfo, model_path: Path) -> PoseSequence:
+def extract_pose_sequence(
+    info: VideoInfo,
+    model_path: Path,
+    transform: Callable[[np.ndarray], np.ndarray] | None = None,
+) -> PoseSequence:
     """Run the landmarker on every frame.
 
     Frames with no detected person get NaN coordinates and zero visibility.
+    ``transform`` optionally alters each BGR frame first (the evaluation uses
+    it to flip or downscale video); pixel coordinates follow the transformed size.
     """
+    width, height = info.width, info.height
     options = PoseLandmarkerOptions(
         base_options=BaseOptions(
             model_asset_path=str(model_path), delegate=BaseOptions.Delegate.CPU
@@ -61,6 +69,9 @@ def extract_pose_sequence(info: VideoInfo, model_path: Path) -> PoseSequence:
     last_ts = -1
     with PoseLandmarker.create_from_options(options) as landmarker:
         for i, frame in enumerate(iter_frames(info.path)):
+            if transform is not None:
+                frame = transform(frame)
+                height, width = frame.shape[:2]
             # VIDEO mode requires strictly increasing integer timestamps.
             ts = max(round(i * 1000 / info.fps), last_ts + 1)
             last_ts = ts
@@ -68,12 +79,12 @@ def extract_pose_sequence(info: VideoInfo, model_path: Path) -> PoseSequence:
             result = landmarker.detect_for_video(
                 mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb), ts
             )
-            rows.append(_to_pixel_array(result.pose_landmarks, info.width, info.height))
+            rows.append(_to_pixel_array(result.pose_landmarks, width, height))
             world_rows.append(_to_world_array(result.pose_world_landmarks))
 
     landmarks = np.stack(rows) if rows else np.empty((0, NUM_LANDMARKS, 3))
     world = np.stack(world_rows) if world_rows else np.empty((0, NUM_LANDMARKS, 3))
-    return PoseSequence(landmarks, info.fps, info.width, info.height, world=world)
+    return PoseSequence(landmarks, info.fps, width, height, world=world)
 
 
 def _to_world_array(poses: list) -> np.ndarray:
