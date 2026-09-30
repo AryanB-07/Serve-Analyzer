@@ -313,8 +313,9 @@ frontend/
 | `GET /analyses/{id}/frames` | Per-frame landmarks (raw and smoothed) and angle series |
 
 Interactive docs are at http://localhost:8000/docs while the API is running. Failures carry
-a code (`NO_PERSON_DETECTED`, `VIDEO_TOO_LONG`, `FPS_TOO_LOW`, `UNREADABLE_VIDEO`, `INTERNAL`)
-that the UI turns into specific advice.
+a code (`NO_PERSON_DETECTED`, `NOT_A_SERVE`, `VIDEO_TOO_LONG`, `FPS_TOO_LOW`, `UNREADABLE_VIDEO`,
+`INTERNAL`) that the UI turns into specific advice. `NOT_A_SERVE` says which part of a serve is
+missing (for example, no ball toss before the swing).
 
 ## How the analysis works
 
@@ -324,6 +325,7 @@ that the UI turns into specific advice.
 | Pose | `pose.py` | MediaPipe Tasks `PoseLandmarker` in VIDEO mode |
 | Clean | `preprocessing.py` | Drops low-visibility points, fills gaps of ≤5 frames, Savitzky–Golay smoothing |
 | Angles | `angles.py` | Front/back knee flexion, hitting elbow angle, trunk tilt, wrist height in body heights |
+| Serve check | `phases.py` | Rejects clips that aren't a serve: the toss must rise and peak before contact, and at contact the hitting wrist must be above the head with the toss arm down (see `docs/serve-check.md`) |
 | Phases | `phases.py` | Contact = hitting wrist highest; trophy = deepest knee bend before contact with the toss arm raised; racket drop = most flexed elbow in between |
 | Assess | `metrics.py`, `reference.py`, `feedback.py` | Values at each phase, labels from `reference_ranges.json`, ranked feedback rules |
 | Export | `export.py`, `render.py`, `pipeline.py` | `results.json`, `frames.json`, playback/annotated videos, thumbnail |

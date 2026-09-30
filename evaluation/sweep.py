@@ -155,15 +155,15 @@ def evaluate_synthetic(v: Variant, base_ranges: RangeTable) -> dict:
 
 
 def evaluate_real(v: Variant) -> dict:
-    trophy_err, contact_err, misses, phantom_rejected, real_serve_lost = [], [], 0, None, 0
+    trophy_err, contact_err, misses, phantoms, real_serve_lost = [], [], 0, [], 0
     per_clip = {}
     values: dict[str, dict[str, list]] = {}
     for clip in real.load_clips():
-        seq = real.load_pose(clip)
+        seq = real.load_pose(clip, v.config.model_variant)
         _, phases, metrics = run(seq, clip.hand, v.config)
         per_clip[clip.id] = phases.as_dict()
         if clip.contact is None:
-            phantom_rejected = phases.contact is None
+            phantoms.append(phases.contact is None)
             continue
         if phases.contact is None:
             real_serve_lost += 1
@@ -189,7 +189,8 @@ def evaluate_real(v: Variant) -> dict:
         "contact_mae": float(np.mean(contact_err)) if contact_err else float("nan"),
         "contact_within_1": float(np.mean([e <= 1 for e in contact_err] + [False] * real_serve_lost)),
         "real_serves_lost": real_serve_lost,
-        "phantom_rejected": phantom_rejected,
+        "phantom_rejected": sum(phantoms),
+        "phantom_total": len(phantoms),
         "metric_spread": spread,
         "phases": per_clip,
     }
@@ -207,7 +208,7 @@ def experiments(base: AnalysisConfig) -> list[tuple[str, list[Variant]]]:
         ("Smoothing polynomial order", [Variant(f"order {o}", cfg(smoothing_polyorder=o)) for o in (2, 3)]),
         ("Visibility threshold", [Variant(f"{t}", cfg(visibility_threshold=t)) for t in (0.0, 0.1, 0.3, 0.5, 0.7)]),
         ("Max gap filled", [Variant(f"{g} frames", cfg(max_gap_frames=g)) for g in (0, 5, 10, 20)]),
-        ("Angle space", [Variant(s, cfg(angle_space=s)) for s in ("image2d", "world3d")]),
+        ("Angle space", [Variant(s, cfg(angle_space=s)) for s in ("image2d", "world3d", "bone3d")]),
         ("Angle space x visibility threshold (interaction)",
          [Variant(f"world3d, vis {t}", cfg(angle_space="world3d", visibility_threshold=t)) for t in (0.0, 0.1, 0.3, 0.5)]),
         ("Phase timing signals (with 3D angles)",
@@ -217,6 +218,9 @@ def experiments(base: AnalysisConfig) -> list[tuple[str, list[Variant]]]:
         ("Trophy rule", [Variant(m, cfg(trophy_method=m)) for m in ("knee_toss", "toss_peak")]),
         ("Trophy search window before contact", [Variant(f"{w} s" if w else "none", cfg(trophy_window_s=w)) for w in (None, 1.2, 1.0, 0.8, 0.6)]),
         ("Trophy fallback when knees are unmeasurable", [Variant(str(b), cfg(trophy_fallback=b)) for b in (False, True)]),
+        ("Trophy window stretch for slow swings (torso lengths/s)",
+         [Variant(f"{r}" if r else "off", cfg(trophy_window_s=0.8, trophy_window_min_swing_speed=r)) for r in (None, 8.0, 10.0, 13.0, 16.0)]),
+        ("Pose model (real clips only; synthetic is unaffected)", [Variant(m, cfg(model_variant=m)) for m in ("lite", "full", "heavy")]),
         ("Trophy plateau centre (deg below peak)", [Variant(f"{d}" if d else "argmax", cfg(trophy_plateau_deg=d)) for d in (None, 2.0, 4.0, 6.0)]),
         ("Racket-drop rule", [Variant(m, cfg(racket_drop_method=m)) for m in ("min_elbow", "wrist_low")]),
         ("Complete-serve check", [Variant(str(b), cfg(require_complete_serve=b)) for b in (False, True)]),
@@ -232,6 +236,8 @@ def candidates(base: AnalysisConfig) -> list[Variant]:
     return [
         Variant("NEW DEFAULTS (phase changes, 2D angles)", AnalysisConfig()),
         Variant("new defaults + world3d angles", replace(AnalysisConfig(), angle_space="world3d")),
+        Variant("new defaults + bone3d angles", replace(AnalysisConfig(), angle_space="bone3d")),
+        Variant("new defaults + slow-swing stretch (10)", replace(AnalysisConfig(), trophy_window_min_swing_speed=10.0)),
         Variant("combined: all winners", best),
         Variant("combined, no trophy fallback", replace(best, trophy_fallback=False)),
         Variant("combined, no complete-serve check", replace(best, require_complete_serve=False)),
@@ -269,7 +275,7 @@ def row(r: dict) -> str:
             f"{fmt(s['phase_mae']['racket_drop'])} | {fmt(s['phase_mae']['contact'])} | "
             f"{fmt(100 * s['label_accuracy'], 0)}% | {fmt(s['feedback_jaccard'], 2)} | "
             f"{fmt(re_['trophy_mae'])} ({re_['trophy_missed']} missed) | {fmt(re_['contact_mae'])} | "
-            f"{'yes' if re_['phantom_rejected'] else 'no'} |")
+            f"{re_['phantom_rejected']}/{re_['phantom_total']} |")
 
 
 HEADER = ("| Setting | Angle MAE ° | View spread ° | Trophy err / miss (syn) | Drop err (syn) | Contact err (syn) "
@@ -281,7 +287,7 @@ def write_report(baseline: dict, groups: list[tuple[str, list[dict]]], combined:
     lines = [f"# Parameter sweep — {stamp}", "",
              "Synthetic: 12 exact serves × 10 virtual cameras with a detector-noise model. Metric errors are",
              "measured at the true phase frames; view spread = std of the same serve's metric across cameras,",
-             "at detected phases. Real: 11 labelled clips, phase errors in frames. Wrist height is excluded from",
+             "at detected phases. Real: 26 labelled clips, phase errors in frames. Wrist height is excluded from",
              "the angle averages. Lower is better except label accuracy, feedback overlap and phantom rejection.",
              "", "## Baseline", "", HEADER, row(baseline), ""]
     for title, results in groups:
@@ -309,7 +315,8 @@ def write_report(baseline: dict, groups: list[tuple[str, list[dict]]], combined:
 
 # The pipeline as it was before tuning; every report compares against this.
 ORIGINAL_DEFAULTS = AnalysisConfig(
-    require_complete_serve=False, contact_visibility_threshold=None, trophy_window_s=None, trophy_fallback=False
+    require_complete_serve=False, contact_visibility_threshold=None, trophy_window_s=None, trophy_fallback=False,
+    trophy_window_min_swing_speed=None,
 )
 
 

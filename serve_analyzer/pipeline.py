@@ -6,7 +6,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, NamedTuple
 
 import numpy as np
 
@@ -17,7 +17,7 @@ from .errors import AnalysisError
 from .export import build_frames_payload
 from .metrics import compute_metrics
 from .models import AnalysisResult, Hand, PhaseFrames, PoseSequence
-from .phases import detect_phases
+from .phases import REJECTION_MESSAGES, detect_contact, detect_phases, serve_rejection
 from .pose import ensure_model, extract_pose_sequence
 from .preprocessing import clean
 from .reference import RangeTable, assess, load_ranges, ranges_to_dict, to_labels
@@ -46,7 +46,12 @@ def analyze_sequence(
     if np.isnan(raw.landmarks[:, :, :2]).all():
         raise AnalysisError("No person was detected in the video.", code="NO_PERSON_DETECTED")
 
-    pose, series, phases = measure(raw, hand, config)
+    m = measure_detailed(raw, hand, config)
+    if m.rejection is not None:
+        raise AnalysisError(
+            f"This doesn't look like a serve. {REJECTION_MESSAGES[m.rejection]}", code="NOT_A_SERVE"
+        )
+    pose, series, phases = m.pose, m.series, m.phases
     metrics = compute_metrics(series, phases)
     assessments = assess(metrics, ranges)
 
@@ -61,14 +66,27 @@ def analyze_sequence(
         labels=to_labels(assessments),
         ranges=ranges_to_dict(ranges),
         feedback=feedback.generate(assessments),
-        warnings=_warnings(phases, raw.n_frames, hand, config.require_complete_serve),
+        warnings=_warnings(phases, raw.n_frames, hand),
     )
     return SequenceAnalysis(result, pose, series)
+
+
+class Measurement(NamedTuple):
+    pose: PoseSequence
+    series: A.Series
+    phases: PhaseFrames
+    rejection: str | None  # why the clip isn't a serve (a REJECTION_MESSAGES key), or None
 
 
 def measure(
     raw: PoseSequence, hand: Hand, config: AnalysisConfig
 ) -> tuple[PoseSequence, A.Series, PhaseFrames]:
+    """``measure_detailed`` without the rejection reason; rejected clips have no phases."""
+    m = measure_detailed(raw, hand, config)
+    return m.pose, m.series, m.phases
+
+
+def measure_detailed(raw: PoseSequence, hand: Hand, config: AnalysisConfig) -> Measurement:
     """Clean the landmarks, compute the per-frame series and detect the phases.
 
     Phases are timed from ``phase_signal_space`` series (2D by default: on real
@@ -96,20 +114,53 @@ def measure(
         phase_series, config.trophy_method, config.racket_drop_method, config.require_complete_serve,
         window, config.trophy_fallback, contact_series, config.trophy_plateau_deg,
     )
-    return pose, series, phases
+    slow = config.trophy_window_min_swing_speed
+    if window is not None and slow is not None and phases.contact is not None:
+        speed = swing_speed(pose, hand, phases.contact)
+        if speed is not None and speed < slow:
+            phases = detect_phases(
+                phase_series, config.trophy_method, config.racket_drop_method, config.require_complete_serve,
+                round(window * slow / speed), config.trophy_fallback, contact_series, config.trophy_plateau_deg,
+            )
+    rejection = None
+    if config.require_complete_serve:
+        cs = contact_series if contact_series is not None else phase_series
+        contact = detect_contact(cs[A.WRIST_ELEVATION_PX])
+        if phases.contact is None:
+            tossed = contact is not None and bool(
+                (np.nan_to_num(phase_series[A.TOSS_ARM_RAISE_PX][:contact], nan=-np.inf) > 0).any()
+            )
+            rejection = "no_contact" if contact is None else ("wrist_not_above_head" if tossed else "no_toss")
+        elif config.serve_shape_check:
+            rejection = serve_rejection(cs, phases.contact, raw.fps)
+        if rejection is not None:
+            phases = PhaseFrames()
+    return Measurement(pose, series, phases, rejection)
+
+
+def swing_speed(pose: PoseSequence, hand: Hand, contact: int) -> float | None:
+    """Peak speed of the hitting wrist just before contact, in torso lengths per second.
+
+    Real-time serves measure 11-32 on the evaluation clips; slow-motion replays far less,
+    which is how ``trophy_window_min_swing_speed`` recognises them.
+    """
+    arm = landmarks.hitting_arm(hand)
+    hip = landmarks.LEFT_HIP if arm.shoulder == landmarks.LEFT_SHOULDER else landmarks.RIGHT_HIP
+    xy = pose.landmarks[:, :, :2]
+    torso = np.nanmedian(np.linalg.norm(xy[:, arm.shoulder] - xy[:, hip], axis=1))
+    lo, hi = max(0, contact - round(0.5 * pose.fps)), min(pose.n_frames, contact + round(0.2 * pose.fps) + 1)
+    step = np.linalg.norm(np.diff(xy[lo:hi, arm.wrist], axis=0), axis=1)
+    if not np.isfinite(torso) or torso <= 0 or np.isnan(step).all():
+        return None
+    return float(np.nanmax(step)) * pose.fps / float(torso)
 
 
 EDGE_FRAMES = 2
 
 
 def _warnings(
-    phases: PhaseFrames, n_frames: int, hand: Hand, require_complete_serve: bool = False
+    phases: PhaseFrames, n_frames: int, hand: Hand
 ) -> list[str]:
-    if require_complete_serve and phases.contact is None:
-        return [
-            "We couldn't find a complete serve (a toss and then contact above the head) "
-            "in this clip. Make sure the clip runs until just after contact."
-        ]
     out = []
     for name, frame in phases.as_dict().items():
         if frame is None:

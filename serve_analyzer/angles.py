@@ -18,8 +18,9 @@ WRIST_ELEVATION_PX = "wrist_elevation_px"
 TOSS_ARM_RAISE_PX = "toss_arm_raise_px"
 TOSS_WRIST_ELEVATION_PX = "toss_wrist_elevation_px"
 NOSE_ELEVATION_PX = "nose_elevation_px"
+TORSO_LENGTH_PX = "torso_length_px"
 
-ANGLE_SPACES = ("image2d", "world3d")
+ANGLE_SPACES = ("image2d", "world3d", "bone3d")
 
 METRIC_NAMES = [FRONT_KNEE_FLEXION, BACK_KNEE_FLEXION, ELBOW_ANGLE, TRUNK_TILT, WRIST_HEIGHT]
 
@@ -53,6 +54,36 @@ def tilt_from_vertical(bottom: np.ndarray, top: np.ndarray) -> np.ndarray:
     up = np.zeros_like(np.asarray(bottom, float))
     up[..., 1] = -1.0
     return joint_angle(np.asarray(bottom, float) + up, bottom, top)
+
+
+LIMB_CHAINS = [
+    (L.LEFT_SHOULDER, L.LEFT_ELBOW, L.LEFT_WRIST), (L.RIGHT_SHOULDER, L.RIGHT_ELBOW, L.RIGHT_WRIST),
+    (L.LEFT_HIP, L.LEFT_KNEE, L.LEFT_ANKLE), (L.RIGHT_HIP, L.RIGHT_KNEE, L.RIGHT_ANKLE),
+]
+BONE_LENGTH_PERCENTILE = 85.0
+
+
+def rebuild_limb_depth(world: np.ndarray, percentile: float = BONE_LENGTH_PERCENTILE) -> np.ndarray:
+    """World landmarks with each limb bone's depth rebuilt from its length.
+
+    MediaPipe's x and y are far more self-consistent than its depth (see
+    docs/mediapipe-depth.md). A bone never changes length, so its true depth
+    extent is sqrt(L^2 - dx^2 - dy^2), where L is the bone's length. L is taken as
+    a high percentile of the bone's x-y length over the clip: at some point in a serve
+    each limb lies roughly across the image. Only the sign of the depth
+    comes from MediaPipe. Shoulders and hips keep MediaPipe's positions.
+    """
+    out = world.copy()
+    for chain in LIMB_CHAINS:
+        for a, b in zip(chain, chain[1:]):
+            d = world[:, b] - world[:, a]
+            dxy = np.linalg.norm(d[:, :2], axis=1)
+            if np.isnan(dxy).all():
+                continue
+            length = np.nanpercentile(dxy, percentile)
+            dz = np.sign(d[:, 2]) * np.sqrt(np.clip(length ** 2 - dxy ** 2, 0, None))
+            out[:, b] = out[:, a] + np.stack([d[:, 0], d[:, 1], dz], axis=1)
+    return out
 
 
 def _nanmean(*arrays: np.ndarray) -> np.ndarray:
@@ -94,10 +125,11 @@ def compute_series(seq: PoseSequence, hand: Hand, space: str = "image2d") -> Ser
     def height(index: int) -> np.ndarray:
         return (ground_y - p(index)[:, 1]) / body_height
 
-    use_world = space == "world3d" and seq.world is not None
+    use_world = space in ("world3d", "bone3d") and seq.world is not None
+    world = rebuild_limb_depth(seq.world) if use_world and space == "bone3d" else seq.world
 
     def q(index: int) -> np.ndarray:
-        return seq.world[:, index, :] if use_world else p(index)
+        return world[:, index, :] if use_world else p(index)
 
     shoulder_mid = _nanmean(q(L.LEFT_SHOULDER), q(L.RIGHT_SHOULDER)) if use_world else mid_shoulder
     hip_mid = _nanmean(q(L.LEFT_HIP), q(L.RIGHT_HIP)) if use_world else mid_hip
@@ -115,4 +147,8 @@ def compute_series(seq: PoseSequence, hand: Hand, space: str = "image2d") -> Ser
         TOSS_ARM_RAISE_PX: p(toss.shoulder)[:, 1] - p(toss.wrist)[:, 1],
         TOSS_WRIST_ELEVATION_PX: -p(toss.wrist)[:, 1],
         NOSE_ELEVATION_PX: -p(L.NOSE)[:, 1],
+        TORSO_LENGTH_PX: _nanmean(
+            np.linalg.norm(p(L.LEFT_SHOULDER) - p(L.LEFT_HIP), axis=1),
+            np.linalg.norm(p(L.RIGHT_SHOULDER) - p(L.RIGHT_HIP), axis=1),
+        ),
     }

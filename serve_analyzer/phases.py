@@ -8,6 +8,7 @@ replaced by a learned classifier with the same signature.
 from __future__ import annotations
 
 import warnings
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -105,6 +106,68 @@ def is_complete_serve(series: A.Series, contact: int | None) -> bool:
     wrist = series[A.WRIST_ELEVATION_PX][contact]
     nose = series[A.NOSE_ELEVATION_PX][contact]
     return bool(tossed.any()) and not np.isnan(wrist) and not np.isnan(nose) and wrist > nose
+
+
+@dataclass(frozen=True)
+class ServeShape:
+    """Thresholds for ``serve_rejection``, in torso lengths and seconds.
+
+    Each is about 70% of the weakest value measured on 24 real serves (see
+    docs/serve-check.md), so it sits clear of every serve rather than being tuned
+    to the non-serve clips.
+    """
+
+    wrist_above_nose: float = 0.3   # serves: >= 0.43
+    toss_below_hitting_wrist: float = 0.5  # serves: >= 1.09
+    toss_lead_s: float = 0.2        # serves: >= 0.30
+    toss_rise: float = 0.9          # serves: >= 1.26
+    toss_search_s: float = 1.5      # the toss peak is looked for this long before contact
+
+
+REJECTION_MESSAGES = {
+    "no_contact": "We couldn't find a swing that reaches above the head.",
+    "no_toss": "We couldn't find a ball toss before the swing.",
+    "wrist_not_above_head": "The hitting arm doesn't reach above the head, as it does at serve contact.",
+    "both_hands_up": "Both hands are up at the highest point of the swing; in a serve the tossing arm has come down by contact.",
+    "toss_too_late": "The tossing hand peaks at the same moment as the swing, rather than before it.",
+    "no_toss_rise": "The tossing hand doesn't rise enough to toss a ball.",
+}
+
+
+def serve_rejection(
+    series: A.Series, contact: int | None, fps: float, shape: ServeShape = ServeShape()
+) -> str | None:
+    """Why this doesn't look like a serve (a ``REJECTION_MESSAGES`` key), or None if it does.
+
+    A serve is a toss that rises and peaks first, then a swing that reaches well above the
+    head while the tossing arm drops. Forehands, backhands, smashes, throws and exercises
+    miss at least one of these on the evaluation clips. Checks whose joints are hidden pass,
+    so an occluded toss arm can't reject a real serve.
+    """
+    if contact is None:
+        return "no_contact"
+    torso = np.nanmedian(series[A.TORSO_LENGTH_PX]) if np.any(~np.isnan(series[A.TORSO_LENGTH_PX])) else np.nan
+    if not np.isfinite(torso) or torso <= 0:
+        return None
+    wrist = series[A.WRIST_ELEVATION_PX]
+    toss = series[A.TOSS_WRIST_ELEVATION_PX]
+    nose = series[A.NOSE_ELEVATION_PX][contact]
+    if not np.isnan(nose) and (wrist[contact] - nose) / torso < shape.wrist_above_nose:
+        return "wrist_not_above_head"
+    if not np.isnan(toss[contact]) and (wrist[contact] - toss[contact]) / torso < shape.toss_below_hitting_wrist:
+        return "both_hands_up"
+    start = max(0, contact - round(shape.toss_search_s * fps))
+    window = toss[start:contact]
+    if window.size == 0 or np.isnan(window).all():
+        return None
+    peak = start + int(np.nanargmax(window))
+    if (contact - peak) / fps < shape.toss_lead_s:
+        return "toss_too_late"
+    # The climb is measured from the start of the clip, not the window: in slow motion
+    # the hand starts rising seconds of video before contact.
+    if (toss[peak] - np.nanmin(toss[: peak + 1])) / torso < shape.toss_rise:
+        return "no_toss_rise"
+    return None
 
 
 def combined_knee_flexion(series: A.Series) -> np.ndarray:

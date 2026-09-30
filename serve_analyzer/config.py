@@ -24,12 +24,15 @@ class AnalysisConfig:
     reference_ranges_path: Path | None = None
 
     # Multi-view options; see docs/tuning-results.md for the experiments behind each default.
-    angle_space: str = "image2d"          # image2d | world3d (world3d: experimental)
+    angle_space: str = "image2d"          # image2d | world3d | bone3d (3D options: experimental)
     trophy_method: str = "knee_toss"      # knee_toss | toss_peak
     racket_drop_method: str = "min_elbow"  # min_elbow | wrist_low
-    require_complete_serve: bool = True
+    require_complete_serve: bool = True   # reject clips that aren't a serve (NOT_A_SERVE)
+    serve_shape_check: bool = True        # ...including the toss/swing shape checks in phases.serve_rejection
     phase_signal_space: str = "image2d"   # image2d | angle_space: which series times the phases
     contact_visibility_threshold: float | None = 0.1  # None = use visibility_threshold
     trophy_window_s: float | None = 0.8   # only consider trophy frames this close before contact
     trophy_fallback: bool = True          # use the toss-hand peak when knees can't be measured
     trophy_plateau_deg: float | None = None  # centre of the near-peak knee plateau instead of the argmax
+    # Stretch the trophy window when the swing is slower than this (torso lengths/s), e.g. slow motion.
+    trophy_window_min_swing_speed: float | None = None  # 10.0 fixes the slow-motion clip; see docs

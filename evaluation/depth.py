@@ -26,7 +26,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from serve_analyzer.angles import joint_angle
+from serve_analyzer.angles import joint_angle, rebuild_limb_depth
 from serve_analyzer.config import AnalysisConfig
 from serve_analyzer.models import Hand, PoseSequence
 from serve_analyzer.pose import ensure_model, extract_pose_sequence
@@ -129,7 +129,9 @@ def mirror_angle_disagreement(orig: PoseSequence, flipped: PoseSequence, hand: H
         "elbow": (((12, 14, 16), (11, 13, 15)) if hand is Hand.RIGHT else ((11, 13, 15), (12, 14, 16))),
     }.items():
         ok = np.all(orig.landmarks[:n, list(joints), 2] >= 0.5, axis=1) & np.all(flipped.landmarks[:n, list(joints_m), 2] >= 0.5, axis=1)
-        for space, a, b in (("2d", orig.landmarks[:n, :, :2], flipped.landmarks[:n, :, :2]), ("3d", orig.world[:n], flipped.world[:n])):
+        spaces = (("2d", orig.landmarks[:n, :, :2], flipped.landmarks[:n, :, :2]), ("3d", orig.world[:n], flipped.world[:n]),
+                  ("bone", rebuild_limb_depth(orig.world)[:n], rebuild_limb_depth(flipped.world)[:n]))
+        for space, a, b in spaces:
             ang_a = joint_angle(a[:, joints[0]], a[:, joints[1]], a[:, joints[2]])
             ang_b = joint_angle(b[:, joints_m[0]], b[:, joints_m[1]], b[:, joints_m[2]])
             d = np.abs(ang_a - ang_b)[ok]
@@ -201,20 +203,22 @@ def main() -> None:
 
     print("\n2b. What mirroring does to the angles (median |change|, degrees)")
     lines += ["", "### 2b. Angle change under mirroring (median, degrees)", "",
-              "| Clip | View | Knee 2D | Knee 3D | Elbow 2D | Elbow 3D |", "|---|---|---|---|---|---|"]
+              "| Clip | View | Knee 2D | Knee 3D | Knee bone3d | Elbow 2D | Elbow 3D | Elbow bone3d |", "|---|---|---|---|---|---|---|---|"]
     by_view_ang: dict[str, list[dict]] = {}
     for c in clips:
         r = mirror_angle_disagreement(real.load_pose(c), load_variant(c, "flip", lambda f: cv2.flip(f, 1)), c.hand)
         by_view_ang.setdefault(c.view, []).append(r)
         f = lambda x: "—" if np.isnan(x) else f"{x:.1f}"  # noqa: E731
-        print(f"  {c.id:14s} {c.view:16s} knee 2D {f(r['knee_2d']):>5s} 3D {f(r['knee_3d']):>5s} | elbow 2D {f(r['elbow_2d']):>5s} 3D {f(r['elbow_3d']):>5s}")
-        lines.append(f"| {c.id} | {c.view} | {f(r['knee_2d'])} | {f(r['knee_3d'])} | {f(r['elbow_2d'])} | {f(r['elbow_3d'])} |")
-    lines += ["", "| View | Knee 2D | Knee 3D | Elbow 2D | Elbow 3D |", "|---|---|---|---|---|"]
+        print(f"  {c.id:14s} {c.view:16s} knee 2D {f(r['knee_2d']):>5s} 3D {f(r['knee_3d']):>5s} bone {f(r['knee_bone']):>5s}"
+              f" | elbow 2D {f(r['elbow_2d']):>5s} 3D {f(r['elbow_3d']):>5s} bone {f(r['elbow_bone']):>5s}")
+        lines.append(f"| {c.id} | {c.view} | {f(r['knee_2d'])} | {f(r['knee_3d'])} | {f(r['knee_bone'])} | {f(r['elbow_2d'])} | {f(r['elbow_3d'])} | {f(r['elbow_bone'])} |")
+    lines += ["", "| View | Knee 2D | Knee 3D | Knee bone3d | Elbow 2D | Elbow 3D | Elbow bone3d |", "|---|---|---|---|---|---|---|"]
     print("  by view (median of clip medians):")
     for view, rs in by_view_ang.items():
         m = {k: float(np.nanmedian([r[k] for r in rs])) for k in rs[0]}
-        print(f"    {view:28s} knee {m['knee_2d']:4.1f} -> {m['knee_3d']:4.1f}   elbow {m['elbow_2d']:4.1f} -> {m['elbow_3d']:4.1f}")
-        lines.append(f"| {view} | {m['knee_2d']:.1f} | {m['knee_3d']:.1f} | {m['elbow_2d']:.1f} | {m['elbow_3d']:.1f} |")
+        print(f"    {view:28s} knee 2D {m['knee_2d']:4.1f} 3D {m['knee_3d']:4.1f} bone {m['knee_bone']:4.1f}"
+              f"   elbow 2D {m['elbow_2d']:4.1f} 3D {m['elbow_3d']:4.1f} bone {m['elbow_bone']:4.1f}")
+        lines.append(f"| {view} | {m['knee_2d']:.1f} | {m['knee_3d']:.1f} | {m['knee_bone']:.1f} | {m['elbow_2d']:.1f} | {m['elbow_3d']:.1f} | {m['elbow_bone']:.1f} |")
 
     print("\n3. Distance sensitivity (downscaled frames vs full resolution)")
     lines += ["", "## 3. Distance sensitivity (downscaled frames)", "",

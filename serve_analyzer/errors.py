@@ -9,6 +9,7 @@ ErrorCode = Literal[
     "VIDEO_TOO_LONG",
     "FPS_TOO_LOW",
     "NO_PERSON_DETECTED",
+    "NOT_A_SERVE",
     "INTERNAL",
 ]
 

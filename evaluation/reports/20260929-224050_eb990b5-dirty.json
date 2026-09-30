@@ -1,0 +1,2945 @@
+{
+ "baseline": {
+  "variant": "original defaults (before tuning)",
+  "config": {
+   "max_duration_s": 15.0,
+   "min_fps": 24.0,
+   "model_variant": "heavy",
+   "model_dir": "/Users/aryan/.cache/serve_analyzer",
+   "visibility_threshold": 0.5,
+   "max_gap_frames": 5,
+   "smoothing_enabled": true,
+   "smoothing_window_ms": 150.0,
+   "smoothing_polyorder": 2,
+   "reference_ranges_path": null,
+   "angle_space": "image2d",
+   "trophy_method": "knee_toss",
+   "racket_drop_method": "min_elbow",
+   "require_complete_serve": false,
+   "serve_shape_check": true,
+   "phase_signal_space": "image2d",
+   "contact_visibility_threshold": null,
+   "trophy_window_s": null,
+   "trophy_fallback": false,
+   "trophy_plateau_deg": null,
+   "trophy_window_min_swing_speed": null
+  },
+  "borderline_scale": 1.0,
+  "max_points": 4,
+  "synthetic": {
+   "runs": 120,
+   "phase_mae": {
+    "trophy": 1.6083333333333334,
+    "racket_drop": 0.8666666666666667,
+    "contact": 0.425
+   },
+   "phase_miss_rate": {
+    "trophy": 0.0,
+    "racket_drop": 0.0,
+    "contact": 0.0
+   },
+   "metric_mae": {
+    "F-knee@trophy": 18.444498709511326,
+    "B-knee@trophy": 18.99299358984431,
+    "elbow@trophy": 47.879650700403985,
+    "trunk@trophy": 8.626530463807445,
+    "elbow@racket_drop": 23.144889539634125,
+    "elbow@contact": 4.222739367966781,
+    "wrist-h@contact": 1.7059365304964524
+   },
+   "metric_coverage": {
+    "F-knee@trophy": 1.0,
+    "B-knee@trophy": 1.0,
+    "elbow@trophy": 1.0,
+    "trunk@trophy": 1.0,
+    "elbow@racket_drop": 1.0,
+    "elbow@contact": 1.0,
+    "wrist-h@contact": 1.0
+   },
+   "angle_mae": 20.21855039519466,
+   "view_spread": {
+    "F-knee@trophy": 13.83353674773192,
+    "B-knee@trophy": 15.107961997569754,
+    "elbow@trophy": 53.11651082888495,
+    "trunk@trophy": 6.6378494751768615,
+    "elbow@racket_drop": 22.203312865560175,
+    "elbow@contact": 4.627791719267361,
+    "wrist-h@contact": 1.7902477172839097
+   },
+   "angle_view_spread": 19.254493939031835,
+   "label_accuracy": 0.5808333333333333,
+   "feedback_jaccard": 0.2936111111111111,
+   "by_group": {
+    "behind": {
+     "angle_mae": 16.80755780545057,
+     "phase_mae": 0.6388888888888888,
+     "label_accuracy": 0.49166666666666664
+    },
+    "behind-diagonal": {
+     "angle_mae": 18.534442618026617,
+     "phase_mae": 0.8472222222222222,
+     "label_accuracy": 0.6166666666666667
+    },
+    "side-on": {
+     "angle_mae": 20.264839828868887,
+     "phase_mae": 0.8055555555555556,
+     "label_accuracy": 0.6291666666666667
+    },
+    "front-diagonal": {
+     "angle_mae": 25.168890914884596,
+     "phase_mae": 1.4722222222222223,
+     "label_accuracy": 0.5958333333333333
+    },
+    "front": {
+     "angle_mae": 18.853144981425064,
+     "phase_mae": 1.1388888888888888,
+     "label_accuracy": 0.49166666666666664
+    },
+    "high": {
+     "angle_mae": 19.2942272207554,
+     "phase_mae": 0.8194444444444444,
+     "label_accuracy": 0.5708333333333333
+    }
+   }
+  },
+  "real": {
+   "trophy_mae": 3.227272727272727,
+   "trophy_within_2": 0.5416666666666666,
+   "trophy_missed": 2,
+   "contact_mae": 0.5833333333333334,
+   "contact_within_1": 0.9166666666666666,
+   "real_serves_lost": 0,
+   "phantom_rejected": 0,
+   "phantom_total": 2,
+   "metric_spread": {
+    "fixture": {
+     "F-knee@trophy": NaN,
+     "B-knee@trophy": NaN,
+     "elbow@trophy": NaN,
+     "trunk@trophy": NaN,
+     "elbow@racket_drop": NaN,
+     "elbow@contact": NaN,
+     "wrist-h@contact": NaN
+    },
+    "pexels": {
+     "F-knee@trophy": 47.098,
+     "B-knee@trophy": 38.966,
+     "elbow@trophy": 81.021,
+     "trunk@trophy": 9.496,
+     "elbow@racket_drop": 66.92,
+     "elbow@contact": 59.82000000000001,
+     "wrist-h@contact": 0.3839999999999999
+    },
+    "red-jacket": {
+     "F-knee@trophy": 5.765000000000001,
+     "B-knee@trophy": 3.5690000000000026,
+     "elbow@trophy": 58.943,
+     "trunk@trophy": 6.375,
+     "elbow@racket_drop": 91.136,
+     "elbow@contact": 17.537999999999982,
+     "wrist-h@contact": 0.03400000000000003
+    },
+    "evd-coach": {
+     "F-knee@trophy": 69.40299999999999,
+     "B-knee@trophy": 68.687,
+     "elbow@trophy": 92.702,
+     "trunk@trophy": 18.660999999999998,
+     "elbow@racket_drop": 89.649,
+     "elbow@contact": 8.615999999999985,
+     "wrist-h@contact": 0.15300000000000002
+    },
+    "indoor-white": {
+     "F-knee@trophy": 5.872,
+     "B-knee@trophy": NaN,
+     "elbow@trophy": NaN,
+     "trunk@trophy": 3.033999999999999,
+     "elbow@racket_drop": NaN,
+     "elbow@contact": NaN,
+     "wrist-h@contact": 0.006000000000000005
+    }
+   },
+   "phases": {
+    "fixture_front": {
+     "trophy": 113,
+     "racket_drop": null,
+     "contact": 124
+    },
+    "pex_front": {
+     "trophy": null,
+     "racket_drop": null,
+     "contact": 190
+    },
+    "pex_front_far": {
+     "trophy": 172,
+     "racket_drop": null,
+     "contact": 181
+    },
+    "pex_frontdiag": {
+     "trophy": 229,
+     "racket_drop": 233,
+     "contact": 236
+    },
+    "pex_side": {
+     "trophy": 327,
+     "racket_drop": null,
+     "contact": 341
+    },
+    "pex_side_low": {
+     "trophy": null,
+     "racket_drop": null,
+     "contact": 171
+    },
+    "pex_behind": {
+     "trophy": 115,
+     "racket_drop": 116,
+     "contact": 120
+    },
+    "saque_1": {
+     "trophy": 52,
+     "racket_drop": 53,
+     "contact": 61
+    },
+    "saque_2": {
+     "trophy": 52,
+     "racket_drop": 71,
+     "contact": 80
+    },
+    "saque_3": {
+     "trophy": 85,
+     "racket_drop": 88,
+     "contact": 94
+    },
+    "saque_4": {
+     "trophy": 95,
+     "racket_drop": 96,
+     "contact": 107
+    },
+    "evd_clay_1": {
+     "trophy": 69,
+     "racket_drop": null,
+     "contact": 78
+    },
+    "evd_clay_2": {
+     "trophy": 44,
+     "racket_drop": 48,
+     "contact": 53
+    },
+    "evd_clay_3": {
+     "trophy": 62,
+     "racket_drop": null,
+     "contact": 71
+    },
+    "evd_clay_4": {
+     "trophy": 25,
+     "racket_drop": 33,
+     "contact": 38
+    },
+    "evd_clay_5": {
+     "trophy": 72,
+     "racket_drop": 82,
+     "contact": 91
+    },
+    "evd_studio_1": {
+     "trophy": 50,
+     "racket_drop": 51,
+     "contact": 67
+    },
+    "evd_studio_2": {
+     "trophy": 65,
+     "racket_drop": 81,
+     "contact": 87
+    },
+    "evd_studio_slowmo": {
+     "trophy": 59,
+     "racket_drop": 91,
+     "contact": 102
+    },
+    "evd_studio_3": {
+     "trophy": 56,
+     "racket_drop": 71,
+     "contact": 75
+    },
+    "evd_studio_4": {
+     "trophy": 32,
+     "racket_drop": 42,
+     "contact": 46
+    },
+    "evd_trophy_demo": {
+     "trophy": 9,
+     "racket_drop": 20,
+     "contact": 113
+    },
+    "pex_lowangle": {
+     "trophy": null,
+     "racket_drop": null,
+     "contact": 207
+    },
+    "pex_fence": {
+     "trophy": 199,
+     "racket_drop": 210,
+     "contact": 213
+    },
+    "intent_1": {
+     "trophy": 114,
+     "racket_drop": null,
+     "contact": 123
+    },
+    "intent_2": {
+     "trophy": 114,
+     "racket_drop": null,
+     "contact": 124
+    }
+   }
+  },
+  "seconds": 1.2455568313598633
+ },
+ "groups": [],
+ "combined": [
+  {
+   "variant": "NEW DEFAULTS (phase changes, 2D angles)",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": true,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "image2d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": true,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": true,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": null
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.3666666666666667,
+     "racket_drop": 0.775,
+     "contact": 0.425
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 18.444498709511326,
+     "B-knee@trophy": 18.99299358984431,
+     "elbow@trophy": 47.879650700403985,
+     "trunk@trophy": 8.626530463807445,
+     "elbow@racket_drop": 23.144889539634125,
+     "elbow@contact": 4.222739367966781,
+     "wrist-h@contact": 1.7059365304964524
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 20.21855039519466,
+    "view_spread": {
+     "F-knee@trophy": 13.884671052389223,
+     "B-knee@trophy": 15.193212965587035,
+     "elbow@trophy": 54.09533174587099,
+     "trunk@trophy": 6.691162244278936,
+     "elbow@racket_drop": 22.13686785194747,
+     "elbow@contact": 4.627791719267361,
+     "wrist-h@contact": 1.7902477172839097
+    },
+    "angle_view_spread": 19.438172929890168,
+    "label_accuracy": 0.5833333333333334,
+    "feedback_jaccard": 0.28944444444444445,
+    "by_group": {
+     "behind": {
+      "angle_mae": 16.80755780545057,
+      "phase_mae": 0.6388888888888888,
+      "label_accuracy": 0.49166666666666664
+     },
+     "behind-diagonal": {
+      "angle_mae": 18.534442618026617,
+      "phase_mae": 0.8472222222222222,
+      "label_accuracy": 0.6166666666666667
+     },
+     "side-on": {
+      "angle_mae": 20.264839828868887,
+      "phase_mae": 0.8055555555555556,
+      "label_accuracy": 0.6291666666666667
+     },
+     "front-diagonal": {
+      "angle_mae": 25.168890914884596,
+      "phase_mae": 0.9166666666666666,
+      "label_accuracy": 0.6083333333333333
+     },
+     "front": {
+      "angle_mae": 18.853144981425064,
+      "phase_mae": 1.1388888888888888,
+      "label_accuracy": 0.49166666666666664
+     },
+     "high": {
+      "angle_mae": 19.2942272207554,
+      "phase_mae": 0.8194444444444444,
+      "label_accuracy": 0.5708333333333333
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 3.0,
+    "trophy_within_2": 0.5416666666666666,
+    "trophy_missed": 0,
+    "contact_mae": 0.4583333333333333,
+    "contact_within_1": 0.9583333333333334,
+    "real_serves_lost": 0,
+    "phantom_rejected": 2,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 47.098,
+      "B-knee@trophy": 38.966,
+      "elbow@trophy": 81.021,
+      "trunk@trophy": 9.496,
+      "elbow@racket_drop": 91.654,
+      "elbow@contact": 59.82000000000001,
+      "wrist-h@contact": 0.08699999999999997
+     },
+     "red-jacket": {
+      "F-knee@trophy": 8.963999999999999,
+      "B-knee@trophy": 5.795000000000002,
+      "elbow@trophy": 59.32599999999999,
+      "trunk@trophy": 4.163,
+      "elbow@racket_drop": 97.675,
+      "elbow@contact": 17.537999999999982,
+      "wrist-h@contact": 0.03400000000000003
+     },
+     "evd-coach": {
+      "F-knee@trophy": 69.40299999999999,
+      "B-knee@trophy": 68.687,
+      "elbow@trophy": 92.702,
+      "trunk@trophy": 19.14,
+      "elbow@racket_drop": 89.649,
+      "elbow@contact": 8.615999999999985,
+      "wrist-h@contact": 0.1100000000000001
+     },
+     "indoor-white": {
+      "F-knee@trophy": 5.872,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.033999999999999,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.006000000000000005
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "pex_front": {
+      "trophy": 177,
+      "racket_drop": 178,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 172,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 337
+     },
+     "pex_side_low": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 78,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 69
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 33,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 91
+     },
+     "evd_studio_1": {
+      "trophy": 50,
+      "racket_drop": 51,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 65,
+      "racket_drop": 81,
+      "contact": 87
+     },
+     "evd_studio_slowmo": {
+      "trophy": 78,
+      "racket_drop": 91,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 75
+     },
+     "evd_studio_4": {
+      "trophy": 32,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_lowangle": {
+      "trophy": 194,
+      "racket_drop": 204,
+      "contact": 207
+     },
+     "pex_fence": {
+      "trophy": 199,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 2.3629660606384277
+  },
+  {
+   "variant": "new defaults + world3d angles",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": true,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "world3d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": true,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": true,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": null
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.3666666666666667,
+     "racket_drop": 0.775,
+     "contact": 0.425
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 5.024130438660966,
+     "B-knee@trophy": 5.332934924874166,
+     "elbow@trophy": 6.357673753933539,
+     "trunk@trophy": 3.438763069144001,
+     "elbow@racket_drop": 5.361679471619101,
+     "elbow@contact": 6.595501336593569,
+     "wrist-h@contact": 1.7059365304964524
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 5.351780499137557,
+    "view_spread": {
+     "F-knee@trophy": 4.980954548395212,
+     "B-knee@trophy": 5.4449611217250675,
+     "elbow@trophy": 9.589503492806058,
+     "trunk@trophy": 4.236994965430031,
+     "elbow@racket_drop": 6.614709813816188,
+     "elbow@contact": 6.129267020161734,
+     "wrist-h@contact": 1.7902477172839097
+    },
+    "angle_view_spread": 6.166065160389048,
+    "label_accuracy": 0.8791666666666667,
+    "feedback_jaccard": 0.65625,
+    "by_group": {
+     "behind": {
+      "angle_mae": 4.618945033395777,
+      "phase_mae": 0.6388888888888888,
+      "label_accuracy": 0.8916666666666667
+     },
+     "behind-diagonal": {
+      "angle_mae": 4.920332527844584,
+      "phase_mae": 0.8472222222222222,
+      "label_accuracy": 0.8791666666666667
+     },
+     "side-on": {
+      "angle_mae": 4.814650853545444,
+      "phase_mae": 0.8055555555555556,
+      "label_accuracy": 0.9083333333333333
+     },
+     "front-diagonal": {
+      "angle_mae": 5.857534501008336,
+      "phase_mae": 0.9166666666666666,
+      "label_accuracy": 0.9041666666666667
+     },
+     "front": {
+      "angle_mae": 5.404000751472281,
+      "phase_mae": 1.1388888888888888,
+      "label_accuracy": 0.9
+     },
+     "high": {
+      "angle_mae": 6.154911720855389,
+      "phase_mae": 0.8194444444444444,
+      "label_accuracy": 0.8083333333333333
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 3.0,
+    "trophy_within_2": 0.5416666666666666,
+    "trophy_missed": 0,
+    "contact_mae": 0.4583333333333333,
+    "contact_within_1": 0.9583333333333334,
+    "real_serves_lost": 0,
+    "phantom_rejected": 2,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 32.185,
+      "B-knee@trophy": 54.212,
+      "elbow@trophy": 64.037,
+      "trunk@trophy": 19.506999999999998,
+      "elbow@racket_drop": 64.79500000000002,
+      "elbow@contact": 53.510000000000005,
+      "wrist-h@contact": 0.08699999999999997
+     },
+     "red-jacket": {
+      "F-knee@trophy": 1.850999999999999,
+      "B-knee@trophy": 1.0760000000000005,
+      "elbow@trophy": 11.034000000000006,
+      "trunk@trophy": 5.757999999999999,
+      "elbow@racket_drop": 97.469,
+      "elbow@contact": 5.584000000000003,
+      "wrist-h@contact": 0.03400000000000003
+     },
+     "evd-coach": {
+      "F-knee@trophy": 52.067,
+      "B-knee@trophy": 43.467,
+      "elbow@trophy": 56.78399999999999,
+      "trunk@trophy": 22.0,
+      "elbow@racket_drop": 97.073,
+      "elbow@contact": 16.734999999999985,
+      "wrist-h@contact": 0.1100000000000001
+     },
+     "indoor-white": {
+      "F-knee@trophy": 7.077999999999989,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.863999999999997,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.006000000000000005
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "pex_front": {
+      "trophy": 177,
+      "racket_drop": 178,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 172,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 337
+     },
+     "pex_side_low": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 78,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 69
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 33,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 91
+     },
+     "evd_studio_1": {
+      "trophy": 50,
+      "racket_drop": 51,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 65,
+      "racket_drop": 81,
+      "contact": 87
+     },
+     "evd_studio_slowmo": {
+      "trophy": 78,
+      "racket_drop": 91,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 75
+     },
+     "evd_studio_4": {
+      "trophy": 32,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_lowangle": {
+      "trophy": 194,
+      "racket_drop": 204,
+      "contact": 207
+     },
+     "pex_fence": {
+      "trophy": 199,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 2.3814756870269775
+  },
+  {
+   "variant": "new defaults + bone3d angles",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": true,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "bone3d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": true,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": true,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": null
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.3666666666666667,
+     "racket_drop": 0.775,
+     "contact": 0.425
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 4.568587529499937,
+     "B-knee@trophy": 4.859968717169863,
+     "elbow@trophy": 9.326516754703393,
+     "trunk@trophy": 3.438763069144001,
+     "elbow@racket_drop": 6.51646582077211,
+     "elbow@contact": 10.319493356629145,
+     "wrist-h@contact": 1.7059365304964524
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 6.504965874653075,
+    "view_spread": {
+     "F-knee@trophy": 5.06403740890548,
+     "B-knee@trophy": 6.079839421439277,
+     "elbow@trophy": 12.957875721615556,
+     "trunk@trophy": 4.236994965430031,
+     "elbow@racket_drop": 9.81657389655136,
+     "elbow@contact": 8.779305505635117,
+     "wrist-h@contact": 1.7902477172839097
+    },
+    "angle_view_spread": 7.82243781992947,
+    "label_accuracy": 0.82,
+    "feedback_jaccard": 0.5061111111111111,
+    "by_group": {
+     "behind": {
+      "angle_mae": 5.804896517133138,
+      "phase_mae": 0.6388888888888888,
+      "label_accuracy": 0.8666666666666667
+     },
+     "behind-diagonal": {
+      "angle_mae": 5.243400353403024,
+      "phase_mae": 0.8472222222222222,
+      "label_accuracy": 0.8333333333333334
+     },
+     "side-on": {
+      "angle_mae": 5.896636101610407,
+      "phase_mae": 0.8055555555555556,
+      "label_accuracy": 0.8208333333333333
+     },
+     "front-diagonal": {
+      "angle_mae": 6.509099403208705,
+      "phase_mae": 0.9166666666666666,
+      "label_accuracy": 0.8666666666666667
+     },
+     "front": {
+      "angle_mae": 8.242947531043693,
+      "phase_mae": 1.1388888888888888,
+      "label_accuracy": 0.8416666666666667
+     },
+     "high": {
+      "angle_mae": 7.851771490954821,
+      "phase_mae": 0.8194444444444444,
+      "label_accuracy": 0.725
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 3.0,
+    "trophy_within_2": 0.5416666666666666,
+    "trophy_missed": 0,
+    "contact_mae": 0.4583333333333333,
+    "contact_within_1": 0.9583333333333334,
+    "real_serves_lost": 0,
+    "phantom_rejected": 2,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 29.259,
+      "B-knee@trophy": 56.113,
+      "elbow@trophy": 56.77499999999999,
+      "trunk@trophy": 19.506999999999998,
+      "elbow@racket_drop": 131.81,
+      "elbow@contact": 51.66699999999999,
+      "wrist-h@contact": 0.08699999999999997
+     },
+     "red-jacket": {
+      "F-knee@trophy": 29.705,
+      "B-knee@trophy": 8.175,
+      "elbow@trophy": 15.982,
+      "trunk@trophy": 5.757999999999999,
+      "elbow@racket_drop": 32.57200000000002,
+      "elbow@contact": 44.153999999999996,
+      "wrist-h@contact": 0.03400000000000003
+     },
+     "evd-coach": {
+      "F-knee@trophy": 56.08500000000001,
+      "B-knee@trophy": 66.05799999999999,
+      "elbow@trophy": 62.158000000000015,
+      "trunk@trophy": 22.0,
+      "elbow@racket_drop": 148.43800000000002,
+      "elbow@contact": 38.147000000000006,
+      "wrist-h@contact": 0.1100000000000001
+     },
+     "indoor-white": {
+      "F-knee@trophy": 0.75,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.863999999999997,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.006000000000000005
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "pex_front": {
+      "trophy": 177,
+      "racket_drop": 178,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 172,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 337
+     },
+     "pex_side_low": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 78,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 69
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 33,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 91
+     },
+     "evd_studio_1": {
+      "trophy": 50,
+      "racket_drop": 51,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 65,
+      "racket_drop": 81,
+      "contact": 87
+     },
+     "evd_studio_slowmo": {
+      "trophy": 78,
+      "racket_drop": 91,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 75
+     },
+     "evd_studio_4": {
+      "trophy": 32,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_lowangle": {
+      "trophy": 194,
+      "racket_drop": 204,
+      "contact": 207
+     },
+     "pex_fence": {
+      "trophy": 199,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 2.4333152770996094
+  },
+  {
+   "variant": "new defaults + slow-swing stretch (10)",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": true,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "image2d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": true,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": true,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": 10.0
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.6083333333333334,
+     "racket_drop": 0.8666666666666667,
+     "contact": 0.425
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 18.444498709511326,
+     "B-knee@trophy": 18.99299358984431,
+     "elbow@trophy": 47.879650700403985,
+     "trunk@trophy": 8.626530463807445,
+     "elbow@racket_drop": 23.144889539634125,
+     "elbow@contact": 4.222739367966781,
+     "wrist-h@contact": 1.7059365304964524
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 20.21855039519466,
+    "view_spread": {
+     "F-knee@trophy": 13.83353674773192,
+     "B-knee@trophy": 15.107961997569754,
+     "elbow@trophy": 53.11651082888495,
+     "trunk@trophy": 6.6378494751768615,
+     "elbow@racket_drop": 22.203312865560175,
+     "elbow@contact": 4.627791719267361,
+     "wrist-h@contact": 1.7902477172839097
+    },
+    "angle_view_spread": 19.254493939031835,
+    "label_accuracy": 0.5808333333333333,
+    "feedback_jaccard": 0.2936111111111111,
+    "by_group": {
+     "behind": {
+      "angle_mae": 16.80755780545057,
+      "phase_mae": 0.6388888888888888,
+      "label_accuracy": 0.49166666666666664
+     },
+     "behind-diagonal": {
+      "angle_mae": 18.534442618026617,
+      "phase_mae": 0.8472222222222222,
+      "label_accuracy": 0.6166666666666667
+     },
+     "side-on": {
+      "angle_mae": 20.264839828868887,
+      "phase_mae": 0.8055555555555556,
+      "label_accuracy": 0.6291666666666667
+     },
+     "front-diagonal": {
+      "angle_mae": 25.168890914884596,
+      "phase_mae": 1.4722222222222223,
+      "label_accuracy": 0.5958333333333333
+     },
+     "front": {
+      "angle_mae": 18.853144981425064,
+      "phase_mae": 1.1388888888888888,
+      "label_accuracy": 0.49166666666666664
+     },
+     "high": {
+      "angle_mae": 19.2942272207554,
+      "phase_mae": 0.8194444444444444,
+      "label_accuracy": 0.5708333333333333
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 2.5833333333333335,
+    "trophy_within_2": 0.5833333333333334,
+    "trophy_missed": 0,
+    "contact_mae": 0.4583333333333333,
+    "contact_within_1": 0.9583333333333334,
+    "real_serves_lost": 0,
+    "phantom_rejected": 2,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 47.098,
+      "B-knee@trophy": 38.966,
+      "elbow@trophy": 81.021,
+      "trunk@trophy": 9.496,
+      "elbow@racket_drop": 91.654,
+      "elbow@contact": 59.82000000000001,
+      "wrist-h@contact": 0.08699999999999997
+     },
+     "red-jacket": {
+      "F-knee@trophy": 8.963999999999999,
+      "B-knee@trophy": 5.795000000000002,
+      "elbow@trophy": 59.32599999999999,
+      "trunk@trophy": 4.163,
+      "elbow@racket_drop": 97.675,
+      "elbow@contact": 17.537999999999982,
+      "wrist-h@contact": 0.03400000000000003
+     },
+     "evd-coach": {
+      "F-knee@trophy": 69.40299999999999,
+      "B-knee@trophy": 68.687,
+      "elbow@trophy": 92.702,
+      "trunk@trophy": 18.660999999999998,
+      "elbow@racket_drop": 89.649,
+      "elbow@contact": 8.615999999999985,
+      "wrist-h@contact": 0.1100000000000001
+     },
+     "indoor-white": {
+      "F-knee@trophy": 5.872,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.033999999999999,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.006000000000000005
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "pex_front": {
+      "trophy": 177,
+      "racket_drop": 178,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 172,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 337
+     },
+     "pex_side_low": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 78,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 69
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 33,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 91
+     },
+     "evd_studio_1": {
+      "trophy": 50,
+      "racket_drop": 51,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 65,
+      "racket_drop": 81,
+      "contact": 87
+     },
+     "evd_studio_slowmo": {
+      "trophy": 68,
+      "racket_drop": 91,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 75
+     },
+     "evd_studio_4": {
+      "trophy": 32,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_lowangle": {
+      "trophy": 194,
+      "racket_drop": 204,
+      "contact": 207
+     },
+     "pex_fence": {
+      "trophy": 199,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 2.3777589797973633
+  },
+  {
+   "variant": "combined: all winners",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": true,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "world3d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": true,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": true,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": null
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.3666666666666667,
+     "racket_drop": 0.775,
+     "contact": 0.425
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 5.024130438660966,
+     "B-knee@trophy": 5.332934924874166,
+     "elbow@trophy": 6.357673753933539,
+     "trunk@trophy": 3.438763069144001,
+     "elbow@racket_drop": 5.361679471619101,
+     "elbow@contact": 6.595501336593569,
+     "wrist-h@contact": 1.7059365304964524
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 5.351780499137557,
+    "view_spread": {
+     "F-knee@trophy": 4.980954548395212,
+     "B-knee@trophy": 5.4449611217250675,
+     "elbow@trophy": 9.589503492806058,
+     "trunk@trophy": 4.236994965430031,
+     "elbow@racket_drop": 6.614709813816188,
+     "elbow@contact": 6.129267020161734,
+     "wrist-h@contact": 1.7902477172839097
+    },
+    "angle_view_spread": 6.166065160389048,
+    "label_accuracy": 0.8791666666666667,
+    "feedback_jaccard": 0.65625,
+    "by_group": {
+     "behind": {
+      "angle_mae": 4.618945033395777,
+      "phase_mae": 0.6388888888888888,
+      "label_accuracy": 0.8916666666666667
+     },
+     "behind-diagonal": {
+      "angle_mae": 4.920332527844584,
+      "phase_mae": 0.8472222222222222,
+      "label_accuracy": 0.8791666666666667
+     },
+     "side-on": {
+      "angle_mae": 4.814650853545444,
+      "phase_mae": 0.8055555555555556,
+      "label_accuracy": 0.9083333333333333
+     },
+     "front-diagonal": {
+      "angle_mae": 5.857534501008336,
+      "phase_mae": 0.9166666666666666,
+      "label_accuracy": 0.9041666666666667
+     },
+     "front": {
+      "angle_mae": 5.404000751472281,
+      "phase_mae": 1.1388888888888888,
+      "label_accuracy": 0.9
+     },
+     "high": {
+      "angle_mae": 6.154911720855389,
+      "phase_mae": 0.8194444444444444,
+      "label_accuracy": 0.8083333333333333
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 3.0,
+    "trophy_within_2": 0.5416666666666666,
+    "trophy_missed": 0,
+    "contact_mae": 0.4583333333333333,
+    "contact_within_1": 0.9583333333333334,
+    "real_serves_lost": 0,
+    "phantom_rejected": 2,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 32.185,
+      "B-knee@trophy": 54.212,
+      "elbow@trophy": 64.037,
+      "trunk@trophy": 19.506999999999998,
+      "elbow@racket_drop": 64.79500000000002,
+      "elbow@contact": 53.510000000000005,
+      "wrist-h@contact": 0.08699999999999997
+     },
+     "red-jacket": {
+      "F-knee@trophy": 1.850999999999999,
+      "B-knee@trophy": 1.0760000000000005,
+      "elbow@trophy": 11.034000000000006,
+      "trunk@trophy": 5.757999999999999,
+      "elbow@racket_drop": 97.469,
+      "elbow@contact": 5.584000000000003,
+      "wrist-h@contact": 0.03400000000000003
+     },
+     "evd-coach": {
+      "F-knee@trophy": 52.067,
+      "B-knee@trophy": 43.467,
+      "elbow@trophy": 56.78399999999999,
+      "trunk@trophy": 22.0,
+      "elbow@racket_drop": 97.073,
+      "elbow@contact": 16.734999999999985,
+      "wrist-h@contact": 0.1100000000000001
+     },
+     "indoor-white": {
+      "F-knee@trophy": 7.077999999999989,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.863999999999997,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.006000000000000005
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "pex_front": {
+      "trophy": 177,
+      "racket_drop": 178,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 172,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 337
+     },
+     "pex_side_low": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 78,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 69
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 33,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 91
+     },
+     "evd_studio_1": {
+      "trophy": 50,
+      "racket_drop": 51,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 65,
+      "racket_drop": 81,
+      "contact": 87
+     },
+     "evd_studio_slowmo": {
+      "trophy": 78,
+      "racket_drop": 91,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 75
+     },
+     "evd_studio_4": {
+      "trophy": 32,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_lowangle": {
+      "trophy": 194,
+      "racket_drop": 204,
+      "contact": 207
+     },
+     "pex_fence": {
+      "trophy": 199,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 2.395780086517334
+  },
+  {
+   "variant": "combined, no trophy fallback",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": true,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "world3d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": true,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": false,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": null
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.3666666666666667,
+     "racket_drop": 0.775,
+     "contact": 0.425
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 5.024130438660966,
+     "B-knee@trophy": 5.332934924874166,
+     "elbow@trophy": 6.357673753933539,
+     "trunk@trophy": 3.438763069144001,
+     "elbow@racket_drop": 5.361679471619101,
+     "elbow@contact": 6.595501336593569,
+     "wrist-h@contact": 1.7059365304964524
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 5.351780499137557,
+    "view_spread": {
+     "F-knee@trophy": 4.980954548395212,
+     "B-knee@trophy": 5.4449611217250675,
+     "elbow@trophy": 9.589503492806058,
+     "trunk@trophy": 4.236994965430031,
+     "elbow@racket_drop": 6.614709813816188,
+     "elbow@contact": 6.129267020161734,
+     "wrist-h@contact": 1.7902477172839097
+    },
+    "angle_view_spread": 6.166065160389048,
+    "label_accuracy": 0.8791666666666667,
+    "feedback_jaccard": 0.65625,
+    "by_group": {
+     "behind": {
+      "angle_mae": 4.618945033395777,
+      "phase_mae": 0.6388888888888888,
+      "label_accuracy": 0.8916666666666667
+     },
+     "behind-diagonal": {
+      "angle_mae": 4.920332527844584,
+      "phase_mae": 0.8472222222222222,
+      "label_accuracy": 0.8791666666666667
+     },
+     "side-on": {
+      "angle_mae": 4.814650853545444,
+      "phase_mae": 0.8055555555555556,
+      "label_accuracy": 0.9083333333333333
+     },
+     "front-diagonal": {
+      "angle_mae": 5.857534501008336,
+      "phase_mae": 0.9166666666666666,
+      "label_accuracy": 0.9041666666666667
+     },
+     "front": {
+      "angle_mae": 5.404000751472281,
+      "phase_mae": 1.1388888888888888,
+      "label_accuracy": 0.9
+     },
+     "high": {
+      "angle_mae": 6.154911720855389,
+      "phase_mae": 0.8194444444444444,
+      "label_accuracy": 0.8083333333333333
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 2.727272727272727,
+    "trophy_within_2": 0.5416666666666666,
+    "trophy_missed": 2,
+    "contact_mae": 0.4583333333333333,
+    "contact_within_1": 0.9583333333333334,
+    "real_serves_lost": 0,
+    "phantom_rejected": 2,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 32.185,
+      "B-knee@trophy": 54.212,
+      "elbow@trophy": 56.58099999999999,
+      "trunk@trophy": 12.844999999999999,
+      "elbow@racket_drop": 64.79500000000002,
+      "elbow@contact": 53.510000000000005,
+      "wrist-h@contact": 0.08699999999999997
+     },
+     "red-jacket": {
+      "F-knee@trophy": 1.850999999999999,
+      "B-knee@trophy": 1.0760000000000005,
+      "elbow@trophy": 11.034000000000006,
+      "trunk@trophy": 5.757999999999999,
+      "elbow@racket_drop": 97.469,
+      "elbow@contact": 5.584000000000003,
+      "wrist-h@contact": 0.03400000000000003
+     },
+     "evd-coach": {
+      "F-knee@trophy": 52.067,
+      "B-knee@trophy": 43.467,
+      "elbow@trophy": 56.78399999999999,
+      "trunk@trophy": 22.0,
+      "elbow@racket_drop": 97.073,
+      "elbow@contact": 16.734999999999985,
+      "wrist-h@contact": 0.1100000000000001
+     },
+     "indoor-white": {
+      "F-knee@trophy": 7.077999999999989,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.863999999999997,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.006000000000000005
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "pex_front": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 172,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 337
+     },
+     "pex_side_low": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 78,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 69
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 33,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 91
+     },
+     "evd_studio_1": {
+      "trophy": 50,
+      "racket_drop": 51,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 65,
+      "racket_drop": 81,
+      "contact": 87
+     },
+     "evd_studio_slowmo": {
+      "trophy": 78,
+      "racket_drop": 91,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 75
+     },
+     "evd_studio_4": {
+      "trophy": 32,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_lowangle": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": 207
+     },
+     "pex_fence": {
+      "trophy": 199,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 2.3892202377319336
+  },
+  {
+   "variant": "combined, no complete-serve check",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": true,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "world3d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": false,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": true,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": null
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.3666666666666667,
+     "racket_drop": 0.775,
+     "contact": 0.425
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 5.024130438660966,
+     "B-knee@trophy": 5.332934924874166,
+     "elbow@trophy": 6.357673753933539,
+     "trunk@trophy": 3.438763069144001,
+     "elbow@racket_drop": 5.361679471619101,
+     "elbow@contact": 6.595501336593569,
+     "wrist-h@contact": 1.7059365304964524
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 5.351780499137557,
+    "view_spread": {
+     "F-knee@trophy": 4.980954548395212,
+     "B-knee@trophy": 5.4449611217250675,
+     "elbow@trophy": 9.589503492806058,
+     "trunk@trophy": 4.236994965430031,
+     "elbow@racket_drop": 6.614709813816188,
+     "elbow@contact": 6.129267020161734,
+     "wrist-h@contact": 1.7902477172839097
+    },
+    "angle_view_spread": 6.166065160389048,
+    "label_accuracy": 0.8791666666666667,
+    "feedback_jaccard": 0.65625,
+    "by_group": {
+     "behind": {
+      "angle_mae": 4.618945033395777,
+      "phase_mae": 0.6388888888888888,
+      "label_accuracy": 0.8916666666666667
+     },
+     "behind-diagonal": {
+      "angle_mae": 4.920332527844584,
+      "phase_mae": 0.8472222222222222,
+      "label_accuracy": 0.8791666666666667
+     },
+     "side-on": {
+      "angle_mae": 4.814650853545444,
+      "phase_mae": 0.8055555555555556,
+      "label_accuracy": 0.9083333333333333
+     },
+     "front-diagonal": {
+      "angle_mae": 5.857534501008336,
+      "phase_mae": 0.9166666666666666,
+      "label_accuracy": 0.9041666666666667
+     },
+     "front": {
+      "angle_mae": 5.404000751472281,
+      "phase_mae": 1.1388888888888888,
+      "label_accuracy": 0.9
+     },
+     "high": {
+      "angle_mae": 6.154911720855389,
+      "phase_mae": 0.8194444444444444,
+      "label_accuracy": 0.8083333333333333
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 3.0,
+    "trophy_within_2": 0.5416666666666666,
+    "trophy_missed": 0,
+    "contact_mae": 0.4583333333333333,
+    "contact_within_1": 0.9583333333333334,
+    "real_serves_lost": 0,
+    "phantom_rejected": 0,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 32.185,
+      "B-knee@trophy": 54.212,
+      "elbow@trophy": 64.037,
+      "trunk@trophy": 19.506999999999998,
+      "elbow@racket_drop": 64.79500000000002,
+      "elbow@contact": 53.510000000000005,
+      "wrist-h@contact": 0.08699999999999997
+     },
+     "red-jacket": {
+      "F-knee@trophy": 1.850999999999999,
+      "B-knee@trophy": 1.0760000000000005,
+      "elbow@trophy": 11.034000000000006,
+      "trunk@trophy": 5.757999999999999,
+      "elbow@racket_drop": 97.469,
+      "elbow@contact": 5.584000000000003,
+      "wrist-h@contact": 0.03400000000000003
+     },
+     "evd-coach": {
+      "F-knee@trophy": 52.067,
+      "B-knee@trophy": 43.467,
+      "elbow@trophy": 56.78399999999999,
+      "trunk@trophy": 22.0,
+      "elbow@racket_drop": 97.073,
+      "elbow@contact": 16.734999999999985,
+      "wrist-h@contact": 0.1100000000000001
+     },
+     "indoor-white": {
+      "F-knee@trophy": 7.077999999999989,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.863999999999997,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.006000000000000005
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "pex_front": {
+      "trophy": 177,
+      "racket_drop": 178,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 172,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 337
+     },
+     "pex_side_low": {
+      "trophy": 201,
+      "racket_drop": null,
+      "contact": 202
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 78,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 69
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 33,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 91
+     },
+     "evd_studio_1": {
+      "trophy": 50,
+      "racket_drop": 51,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 65,
+      "racket_drop": 81,
+      "contact": 87
+     },
+     "evd_studio_slowmo": {
+      "trophy": 78,
+      "racket_drop": 91,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 75
+     },
+     "evd_studio_4": {
+      "trophy": 32,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": 109,
+      "racket_drop": 110,
+      "contact": 113
+     },
+     "pex_lowangle": {
+      "trophy": 194,
+      "racket_drop": 204,
+      "contact": 207
+     },
+     "pex_fence": {
+      "trophy": 199,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 2.3942370414733887
+  },
+  {
+   "variant": "combined, smoothing off",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": false,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "world3d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": true,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": true,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": null
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.4333333333333333,
+     "racket_drop": 0.8416666666666667,
+     "contact": 0.4583333333333333
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 6.163136594771557,
+     "B-knee@trophy": 5.865436368902933,
+     "elbow@trophy": 8.321903417571663,
+     "trunk@trophy": 3.583254008038466,
+     "elbow@racket_drop": 5.739856307199371,
+     "elbow@contact": 7.168732622833821,
+     "wrist-h@contact": 1.7833537571363476
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 6.140386553219636,
+    "view_spread": {
+     "F-knee@trophy": 6.6673563171374655,
+     "B-knee@trophy": 6.765241304474717,
+     "elbow@trophy": 10.454270052727871,
+     "trunk@trophy": 4.589307349629359,
+     "elbow@racket_drop": 9.674532253879109,
+     "elbow@contact": 8.500653707417252,
+     "wrist-h@contact": 1.9376112894399522
+    },
+    "angle_view_spread": 7.77522683087763,
+    "label_accuracy": 0.8425,
+    "feedback_jaccard": 0.5840277777777778,
+    "by_group": {
+     "behind": {
+      "angle_mae": 4.909978361294411,
+      "phase_mae": 0.75,
+      "label_accuracy": 0.875
+     },
+     "behind-diagonal": {
+      "angle_mae": 5.613357850544038,
+      "phase_mae": 0.7638888888888888,
+      "label_accuracy": 0.8583333333333333
+     },
+     "side-on": {
+      "angle_mae": 6.271576748808253,
+      "phase_mae": 0.8888888888888888,
+      "label_accuracy": 0.8583333333333333
+     },
+     "front-diagonal": {
+      "angle_mae": 6.82213911668666,
+      "phase_mae": 1.0694444444444444,
+      "label_accuracy": 0.8708333333333333
+     },
+     "front": {
+      "angle_mae": 6.368043690559553,
+      "phase_mae": 0.8888888888888888,
+      "label_accuracy": 0.85
+     },
+     "high": {
+      "angle_mae": 6.355848024132244,
+      "phase_mae": 1.0138888888888888,
+      "label_accuracy": 0.7625
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 2.75,
+    "trophy_within_2": 0.5833333333333334,
+    "trophy_missed": 0,
+    "contact_mae": 0.2916666666666667,
+    "contact_within_1": 0.9166666666666666,
+    "real_serves_lost": 0,
+    "phantom_rejected": 2,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 35.468,
+      "B-knee@trophy": 53.352000000000004,
+      "elbow@trophy": 62.209999999999994,
+      "trunk@trophy": 21.34,
+      "elbow@racket_drop": 40.80800000000001,
+      "elbow@contact": 57.08800000000001,
+      "wrist-h@contact": 0.08799999999999986
+     },
+     "red-jacket": {
+      "F-knee@trophy": 2.8699999999999974,
+      "B-knee@trophy": 0.9489999999999998,
+      "elbow@trophy": 11.788999999999987,
+      "trunk@trophy": 5.932999999999998,
+      "elbow@racket_drop": 18.22,
+      "elbow@contact": 6.034999999999997,
+      "wrist-h@contact": 0.030000000000000027
+     },
+     "evd-coach": {
+      "F-knee@trophy": 44.742000000000004,
+      "B-knee@trophy": 46.542,
+      "elbow@trophy": 91.82900000000001,
+      "trunk@trophy": 17.436999999999998,
+      "elbow@racket_drop": 133.931,
+      "elbow@contact": 12.989000000000004,
+      "wrist-h@contact": 0.06899999999999995
+     },
+     "indoor-white": {
+      "F-knee@trophy": 7.320000000000007,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.9080000000000013,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.010000000000000009
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     },
+     "pex_front": {
+      "trophy": 178,
+      "racket_drop": 182,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 173,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 336
+     },
+     "pex_side_low": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 73,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 70
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 32,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 92
+     },
+     "evd_studio_1": {
+      "trophy": 51,
+      "racket_drop": 65,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 66,
+      "racket_drop": 82,
+      "contact": 88
+     },
+     "evd_studio_slowmo": {
+      "trophy": 83,
+      "racket_drop": 92,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 76
+     },
+     "evd_studio_4": {
+      "trophy": 33,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_lowangle": {
+      "trophy": 194,
+      "racket_drop": 205,
+      "contact": 206
+     },
+     "pex_fence": {
+      "trophy": 207,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 124
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 0.3103020191192627
+  },
+  {
+   "variant": "combined, 2D angles (phase changes only)",
+   "config": {
+    "max_duration_s": 15.0,
+    "min_fps": 24.0,
+    "model_variant": "heavy",
+    "model_dir": "/Users/aryan/.cache/serve_analyzer",
+    "visibility_threshold": 0.5,
+    "max_gap_frames": 5,
+    "smoothing_enabled": true,
+    "smoothing_window_ms": 150.0,
+    "smoothing_polyorder": 2,
+    "reference_ranges_path": null,
+    "angle_space": "image2d",
+    "trophy_method": "knee_toss",
+    "racket_drop_method": "min_elbow",
+    "require_complete_serve": true,
+    "serve_shape_check": true,
+    "phase_signal_space": "image2d",
+    "contact_visibility_threshold": 0.1,
+    "trophy_window_s": 0.8,
+    "trophy_fallback": true,
+    "trophy_plateau_deg": null,
+    "trophy_window_min_swing_speed": null
+   },
+   "borderline_scale": 1.0,
+   "max_points": 4,
+   "synthetic": {
+    "runs": 120,
+    "phase_mae": {
+     "trophy": 1.3666666666666667,
+     "racket_drop": 0.775,
+     "contact": 0.425
+    },
+    "phase_miss_rate": {
+     "trophy": 0.0,
+     "racket_drop": 0.0,
+     "contact": 0.0
+    },
+    "metric_mae": {
+     "F-knee@trophy": 18.444498709511326,
+     "B-knee@trophy": 18.99299358984431,
+     "elbow@trophy": 47.879650700403985,
+     "trunk@trophy": 8.626530463807445,
+     "elbow@racket_drop": 23.144889539634125,
+     "elbow@contact": 4.222739367966781,
+     "wrist-h@contact": 1.7059365304964524
+    },
+    "metric_coverage": {
+     "F-knee@trophy": 1.0,
+     "B-knee@trophy": 1.0,
+     "elbow@trophy": 1.0,
+     "trunk@trophy": 1.0,
+     "elbow@racket_drop": 1.0,
+     "elbow@contact": 1.0,
+     "wrist-h@contact": 1.0
+    },
+    "angle_mae": 20.21855039519466,
+    "view_spread": {
+     "F-knee@trophy": 13.884671052389223,
+     "B-knee@trophy": 15.193212965587035,
+     "elbow@trophy": 54.09533174587099,
+     "trunk@trophy": 6.691162244278936,
+     "elbow@racket_drop": 22.13686785194747,
+     "elbow@contact": 4.627791719267361,
+     "wrist-h@contact": 1.7902477172839097
+    },
+    "angle_view_spread": 19.438172929890168,
+    "label_accuracy": 0.5833333333333334,
+    "feedback_jaccard": 0.28944444444444445,
+    "by_group": {
+     "behind": {
+      "angle_mae": 16.80755780545057,
+      "phase_mae": 0.6388888888888888,
+      "label_accuracy": 0.49166666666666664
+     },
+     "behind-diagonal": {
+      "angle_mae": 18.534442618026617,
+      "phase_mae": 0.8472222222222222,
+      "label_accuracy": 0.6166666666666667
+     },
+     "side-on": {
+      "angle_mae": 20.264839828868887,
+      "phase_mae": 0.8055555555555556,
+      "label_accuracy": 0.6291666666666667
+     },
+     "front-diagonal": {
+      "angle_mae": 25.168890914884596,
+      "phase_mae": 0.9166666666666666,
+      "label_accuracy": 0.6083333333333333
+     },
+     "front": {
+      "angle_mae": 18.853144981425064,
+      "phase_mae": 1.1388888888888888,
+      "label_accuracy": 0.49166666666666664
+     },
+     "high": {
+      "angle_mae": 19.2942272207554,
+      "phase_mae": 0.8194444444444444,
+      "label_accuracy": 0.5708333333333333
+     }
+    }
+   },
+   "real": {
+    "trophy_mae": 3.0,
+    "trophy_within_2": 0.5416666666666666,
+    "trophy_missed": 0,
+    "contact_mae": 0.4583333333333333,
+    "contact_within_1": 0.9583333333333334,
+    "real_serves_lost": 0,
+    "phantom_rejected": 2,
+    "phantom_total": 2,
+    "metric_spread": {
+     "fixture": {
+      "F-knee@trophy": NaN,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": NaN,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": NaN
+     },
+     "pexels": {
+      "F-knee@trophy": 47.098,
+      "B-knee@trophy": 38.966,
+      "elbow@trophy": 81.021,
+      "trunk@trophy": 9.496,
+      "elbow@racket_drop": 91.654,
+      "elbow@contact": 59.82000000000001,
+      "wrist-h@contact": 0.08699999999999997
+     },
+     "red-jacket": {
+      "F-knee@trophy": 8.963999999999999,
+      "B-knee@trophy": 5.795000000000002,
+      "elbow@trophy": 59.32599999999999,
+      "trunk@trophy": 4.163,
+      "elbow@racket_drop": 97.675,
+      "elbow@contact": 17.537999999999982,
+      "wrist-h@contact": 0.03400000000000003
+     },
+     "evd-coach": {
+      "F-knee@trophy": 69.40299999999999,
+      "B-knee@trophy": 68.687,
+      "elbow@trophy": 92.702,
+      "trunk@trophy": 19.14,
+      "elbow@racket_drop": 89.649,
+      "elbow@contact": 8.615999999999985,
+      "wrist-h@contact": 0.1100000000000001
+     },
+     "indoor-white": {
+      "F-knee@trophy": 5.872,
+      "B-knee@trophy": NaN,
+      "elbow@trophy": NaN,
+      "trunk@trophy": 3.033999999999999,
+      "elbow@racket_drop": NaN,
+      "elbow@contact": NaN,
+      "wrist-h@contact": 0.006000000000000005
+     }
+    },
+    "phases": {
+     "fixture_front": {
+      "trophy": 113,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "pex_front": {
+      "trophy": 177,
+      "racket_drop": 178,
+      "contact": 190
+     },
+     "pex_front_far": {
+      "trophy": 172,
+      "racket_drop": null,
+      "contact": 181
+     },
+     "pex_frontdiag": {
+      "trophy": 229,
+      "racket_drop": 233,
+      "contact": 236
+     },
+     "pex_side": {
+      "trophy": 327,
+      "racket_drop": null,
+      "contact": 337
+     },
+     "pex_side_low": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_behind": {
+      "trophy": 115,
+      "racket_drop": 116,
+      "contact": 120
+     },
+     "saque_1": {
+      "trophy": 52,
+      "racket_drop": 53,
+      "contact": 61
+     },
+     "saque_2": {
+      "trophy": 72,
+      "racket_drop": 78,
+      "contact": 80
+     },
+     "saque_3": {
+      "trophy": 85,
+      "racket_drop": 88,
+      "contact": 94
+     },
+     "saque_4": {
+      "trophy": 95,
+      "racket_drop": 96,
+      "contact": 107
+     },
+     "evd_clay_1": {
+      "trophy": 69,
+      "racket_drop": null,
+      "contact": 78
+     },
+     "evd_clay_2": {
+      "trophy": 44,
+      "racket_drop": 48,
+      "contact": 53
+     },
+     "evd_clay_3": {
+      "trophy": 62,
+      "racket_drop": null,
+      "contact": 69
+     },
+     "evd_clay_4": {
+      "trophy": 25,
+      "racket_drop": 33,
+      "contact": 38
+     },
+     "evd_clay_5": {
+      "trophy": 72,
+      "racket_drop": 82,
+      "contact": 91
+     },
+     "evd_studio_1": {
+      "trophy": 50,
+      "racket_drop": 51,
+      "contact": 67
+     },
+     "evd_studio_2": {
+      "trophy": 65,
+      "racket_drop": 81,
+      "contact": 87
+     },
+     "evd_studio_slowmo": {
+      "trophy": 78,
+      "racket_drop": 91,
+      "contact": 102
+     },
+     "evd_studio_3": {
+      "trophy": 56,
+      "racket_drop": 71,
+      "contact": 75
+     },
+     "evd_studio_4": {
+      "trophy": 32,
+      "racket_drop": 42,
+      "contact": 46
+     },
+     "evd_trophy_demo": {
+      "trophy": null,
+      "racket_drop": null,
+      "contact": null
+     },
+     "pex_lowangle": {
+      "trophy": 194,
+      "racket_drop": 204,
+      "contact": 207
+     },
+     "pex_fence": {
+      "trophy": 199,
+      "racket_drop": 210,
+      "contact": 213
+     },
+     "intent_1": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 123
+     },
+     "intent_2": {
+      "trophy": 114,
+      "racket_drop": null,
+      "contact": 124
+     }
+    }
+   },
+   "seconds": 2.3733069896698
+  }
+ ]
+}

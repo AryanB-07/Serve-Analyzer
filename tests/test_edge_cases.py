@@ -11,6 +11,7 @@ from serve_analyzer.config import AnalysisConfig
 from serve_analyzer.export import build_frames_payload
 from serve_analyzer.models import Hand, PhaseFrames, PoseSequence
 from serve_analyzer.phases import detect_contact, detect_phases, detect_racket_drop, detect_trophy
+from serve_analyzer.errors import AnalysisError
 from serve_analyzer.pipeline import analyze_sequence
 from serve_analyzer.preprocessing import clean, interpolate_gaps, smooth_series
 from serve_analyzer.reference import load_ranges
@@ -36,7 +37,8 @@ def _standing(frames: int, width: int = 640, height: int = 480) -> PoseSequence:
 
 def test_clip_shorter_than_the_smoothing_window_still_analyses():
     seq = _standing(3)
-    out = analyze_sequence(seq, Hand.RIGHT, AnalysisConfig(), load_ranges())
+    # A person standing still isn't a serve; switch the check off to test smoothing alone.
+    out = analyze_sequence(seq, Hand.RIGHT, AnalysisConfig(require_complete_serve=False), load_ranges())
     assert out.result.n_frames == 3
     assert out.result.feedback  # always at least one point
 
@@ -138,3 +140,9 @@ def test_list_rejects_malformed_cursors_and_limits(client):
     assert client.get("/analyses", params={"cursor": "!!!"}).status_code == 400
     assert client.get("/analyses", params={"limit": 0}).status_code == 422
     assert client.get("/analyses", params={"limit": 101}).status_code == 422
+
+
+def test_a_person_standing_still_is_rejected_as_not_a_serve():
+    with pytest.raises(AnalysisError) as exc:
+        analyze_sequence(_standing(30), Hand.RIGHT, AnalysisConfig(), load_ranges())
+    assert exc.value.code == "NOT_A_SERVE"

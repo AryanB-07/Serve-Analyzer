@@ -125,6 +125,28 @@ Failure modes no setting can fix:
 
 Remaining caveat: 24 serves is still small, and 11 of them come from one person.
 
+## Round 3: model size, label swaps, slow motion, rebuilt depth
+
+Four more experiments, each tested against the current defaults on all 26 real clips. The full
+numbers are in `evaluation/reports/20260929-155450_eb990b5-dirty.md` and
+`evaluation/reports/depth_20260929-155148_eb990b5-dirty.md`.
+
+| Experiment | Result | Decision |
+|---|---|---|
+| **Pose model size** (lite / full / heavy) | 6.5 / 7.4 / 15.4 ms per frame on CPU. Lite and full both lose the behind-view clip (trophy and contact 64 frames early). Real trophy error is 5.4 / 5.2 / 3.0 frames; contact error is 3.6 / 3.3 / 0.46. | Keep **heavy** |
+| **Left/right swap repair.** A two-state Viterbi relabels frames where MediaPipe flips the whole body's left/right labels, choosing the most continuous path with a penalty for each switch. | With continuity measured on all joints, penalties of 0.1–0.5 "repair" genuinely fast arm swings near contact: contact error 0.46 → 0.7–5.5 frames, and up to 2 serves lost. Penalty 1.0 never fires. Measuring continuity on torso, hips or legs only didn't help either. The trophy-demo clip it targets has MediaPipe's *majority* labelling inverted, so continuity can't fix it, and no orientation cue is reliable: face visibility reads 1.00 even from behind. | **Rejected**, code removed |
+| **Slow-swing trophy window** (`trophy_window_min_swing_speed`). The trophy window is stretched by threshold ÷ speed when the hitting wrist's peak speed is below the threshold (in torso lengths/s). | Real serves measure 11–32 and the slow-motion replay 6.4. At 10, that clip's trophy error goes 10 → 0 frames and no other clip changes (real mean 3.0 → 2.6). At 13 and above it overshoots. Synthetic trophy error rises 1.4 → 1.6 frames, because the synthetic serves swing at 6.5–10 torso lengths/s, slower than any real serve. | **Optional, off by default.** It rests on one clip, and the simulator's tempo is unrealistic, so the simulator can't judge it. Turn it on at 10 once more slow-motion footage confirms it. |
+| **Depth rebuilt from bone lengths** (`angle_space="bone3d"`). Keeps MediaPipe's x and y; each limb bone's depth is √(L² − xy²), where L is the 85th percentile of the bone's x-y length; the sign of the depth comes from MediaPipe. | Synthetic data: it degrades much more slowly than world3d as depth is compressed (6.5 / 6.9 / 7.5 / 10.2° against 5.4 / 9.1 / 14.1 / 18.5°). The 80th–85th percentiles beat 90–99, because noise inflates the top of the range. Real mirror test: *less* consistent than world3d on every view (diagonal elbow 24–30° against 22–24°; 2D is 4–6°). Rebuilding magnifies x/y noise when a bone lies nearly flat to the image, and a wrong depth sign doubles the error. | Kept as an experimental option; **2D stays the default** |
+
+Smoothing depth more heavily (300–800 ms, depth only) doesn't change the mirror-test numbers. The
+depth disagreement is systematic from frame to frame, not jitter, so filtering can't fix it. This
+supports the conclusion in `docs/mediapipe-depth.md`: dependable 3D needs a second camera or a
+different model.
+
+The sweep's "phantom rejected" figure now counts both no-serve clips; it had reported only the
+last one. The original defaults reject 0 of 2 and the current defaults reject 1 of 2. The
+trophy-position demo, a real motion that isn't a serve, still gets through.
+
 ## Reproducing
 
 ```bash

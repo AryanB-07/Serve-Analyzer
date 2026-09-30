@@ -1,0 +1,105 @@
+{
+  "_note": "Clips that are NOT serves, for testing that the pipeline rejects them. Each video is cut into 4-second windows, and each window stands for one uploaded clip. Videos are not stored in git: `python -m evaluation.negatives fetch` downloads them into evaluation/.cache/negatives/. Clips marked held_out were added after the serve-check thresholds were fixed, so they test it fairly.",
+  "clips": {
+    "drive": {
+      "kind": "forehand",
+      "source": "https://commons.wikimedia.org/wiki/File:Drive_con_pelota.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Drive_con_pelota.ogv",
+      "license": "CC BY-SA 3.0, by Dardo 86 7"
+    },
+    "backhand_1h": {
+      "kind": "backhand",
+      "source": "https://commons.wikimedia.org/wiki/File:Reves_una_mano_con_pelota.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/1/11/Reves_una_mano_con_pelota.ogv",
+      "license": "CC BY-SA 3.0, by Dardo 86 7"
+    },
+    "backhand_2h": {
+      "kind": "backhand",
+      "source": "https://commons.wikimedia.org/wiki/File:Reves_dos_manos_con_pelota.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Reves_dos_manos_con_pelota.ogv",
+      "license": "CC BY-SA 3.0, by Dardo 86 7"
+    },
+    "slice": {
+      "kind": "backhand",
+      "source": "https://commons.wikimedia.org/wiki/File:Slice_con_pelota.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Slice_con_pelota.ogv",
+      "license": "CC BY-SA 3.0, by Dardo 86 7"
+    },
+    "volley": {
+      "kind": "volley / drop / lob",
+      "source": "https://commons.wikimedia.org/wiki/File:Volea_con_pelota.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Volea_con_pelota.ogv",
+      "license": "CC BY-SA 3.0, by Dardo 86 7"
+    },
+    "drop": {
+      "kind": "volley / drop / lob",
+      "source": "https://commons.wikimedia.org/wiki/File:Drop_con_pelota.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Drop_con_pelota.ogv",
+      "license": "CC BY-SA 3.0, by Dardo 86 7"
+    },
+    "lob": {
+      "kind": "volley / drop / lob",
+      "source": "https://commons.wikimedia.org/wiki/File:Globo_pelota.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Globo_pelota.ogv",
+      "license": "CC BY-SA 3.0, by Dardo 86 7"
+    },
+    "smash": {
+      "kind": "smash",
+      "source": "https://commons.wikimedia.org/wiki/File:Smash_con_pelota.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Smash_con_pelota.ogv",
+      "license": "CC BY-SA 3.0, by Dardo 86 7"
+    },
+    "basketball": {
+      "kind": "other sport",
+      "source": "https://commons.wikimedia.org/wiki/File:Basketball-Shot-Types-and-Shot-Success-in-Different-Levels-of-Competitive-Basketball-pone.0128885.s001.ogv",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Basketball-Shot-Types-and-Shot-Success-in-Different-Levels-of-Competitive-Basketball-pone.0128885.s001.ogv",
+      "license": "CC BY 4.0, Erculj & Strumbelj 2015, PLOS ONE"
+    },
+    "pitch": {
+      "kind": "other sport",
+      "source": "https://commons.wikimedia.org/wiki/File:Hyun-jin_Ryu_Pitching_motion.webm",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Hyun-jin_Ryu_Pitching_motion.webm",
+      "license": "CC BY-SA 4.0"
+    },
+    "javelin": {
+      "kind": "other sport",
+      "source": "https://commons.wikimedia.org/wiki/File:Branko_Paukovic,_javelin_throw.webm",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Branko_Paukovic%2C_javelin_throw.webm",
+      "license": "CC BY-SA 4.0"
+    },
+    "squat": {
+      "kind": "exercise",
+      "source": "https://commons.wikimedia.org/wiki/File:Squat_-_exercise_demonstration_video.webm",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Squat_-_exercise_demonstration_video.webm",
+      "license": "CC BY 3.0"
+    },
+    "volleyball_serve": {
+      "kind": "other sport",
+      "source": "https://commons.wikimedia.org/wiki/File:Volleyball_serve.ogv",
+      "download": "https://commons.wikimedia.org/wiki/Special:FilePath/Volleyball_serve.ogv",
+      "license": "CC BY-SA 4.0",
+      "held_out": true
+    },
+    "jumping_jack": {
+      "kind": "exercise",
+      "source": "https://commons.wikimedia.org/wiki/File:Jumping_jack_slow_motion.webm",
+      "download": "https://commons.wikimedia.org/wiki/Special:FilePath/Jumping_jack_slow_motion.webm",
+      "license": "CC0",
+      "held_out": true
+    },
+    "jumping_jacks_burpees": {
+      "kind": "exercise",
+      "source": "https://commons.wikimedia.org/wiki/File:Jumping_jacks_and_burpees.webm",
+      "download": "https://commons.wikimedia.org/wiki/Special:FilePath/Jumping_jacks_and_burpees.webm",
+      "license": "CC BY-SA 4.0",
+      "held_out": true
+    },
+    "squat_raise": {
+      "kind": "exercise",
+      "source": "https://commons.wikimedia.org/wiki/File:Squat_and_Frontal_Raise.webm",
+      "download": "https://commons.wikimedia.org/wiki/Special:FilePath/Squat_and_Frontal_Raise.webm",
+      "license": "CC BY-SA 4.0",
+      "held_out": true
+    }
+  }
+}

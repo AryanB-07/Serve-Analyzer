@@ -40,6 +40,13 @@ export const ERROR_COPY: Record<ErrorCode, ErrorCopy> = {
     showDetail: false,
     linkGuide: true,
   },
+  NOT_A_SERVE: {
+    title: "This doesn't look like a serve",
+    advice: "Upload one full serve, from the toss until just after contact. Forehands, backhands and smashes can't be analysed yet.",
+    retryHelps: false,
+    showDetail: true,
+    linkGuide: true,
+  },
   INTERNAL: {
     title: "Something went wrong on our side",
     advice: "This wasn't caused by your video. Try again in a moment.",

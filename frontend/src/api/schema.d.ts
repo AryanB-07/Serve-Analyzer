@@ -273,7 +273,7 @@ export interface components {
              * Code
              * @enum {string}
              */
-            code: "UNREADABLE_VIDEO" | "VIDEO_TOO_LONG" | "FPS_TOO_LOW" | "NO_PERSON_DETECTED" | "INTERNAL";
+            code: "UNREADABLE_VIDEO" | "VIDEO_TOO_LONG" | "FPS_TOO_LOW" | "NO_PERSON_DETECTED" | "NOT_A_SERVE" | "INTERNAL";
             /** Message */
             message: string;
         };
