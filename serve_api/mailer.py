@@ -50,21 +50,23 @@ def _build(message: Email, sender: str) -> EmailMessage:
 
 
 class SmtpMailer:
-    """Port 465 uses implicit TLS; any other port (587, Gmail's default) upgrades with STARTTLS."""
+    """Encryption follows ``Settings.smtp_mode``: implicit TLS ("ssl", port 465 by default),
+    STARTTLS (any other port, e.g. Gmail's or Brevo's 587), or none for a local relay."""
 
     def __init__(self, settings: Settings, timeout_s: float = 20.0) -> None:
         self.settings, self.timeout_s = settings, timeout_s
 
     def send(self, message: Email) -> None:
         s = self.settings
+        mode = s.smtp_mode
         context = ssl.create_default_context()
-        if s.smtp_port == 465:
+        if mode == "ssl":
             server: smtplib.SMTP = smtplib.SMTP_SSL(s.smtp_host, s.smtp_port, timeout=self.timeout_s,
                                                     context=context)
         else:
             server = smtplib.SMTP(s.smtp_host, s.smtp_port, timeout=self.timeout_s)
         with server:
-            if s.smtp_port != 465:
+            if mode == "starttls":
                 server.starttls(context=context)
             if s.smtp_username:
                 server.login(s.smtp_username, s.smtp_password)

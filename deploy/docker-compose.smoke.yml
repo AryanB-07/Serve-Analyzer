@@ -1,0 +1,32 @@
+# Runs the production images locally (or in CI) with everything they need and nothing real:
+# the bundled Postgres, a Mailpit inbox instead of a mail provider, and Caddy's self-signed
+# HTTPS on port 8443. From the repository root:
+#
+#   docker compose -p serve-smoke --env-file deploy/smoke.env -f deploy/docker-compose.yml \
+#     -f deploy/docker-compose.smoke.yml --profile bundled-db up -d --build --wait
+#   python scripts/smoke_test.py https://localhost:8443 --mailpit http://localhost:8025 --insecure
+#   docker compose -p serve-smoke -f deploy/docker-compose.yml -f deploy/docker-compose.smoke.yml down -v
+#
+# It reads deploy/smoke.env instead of deploy/.env, so a real configuration is never touched.
+
+services:
+  web:
+    env_file: !override [smoke.env]
+    ports: !override
+      - "127.0.0.1:8443:443"
+
+  api:
+    env_file: !override [smoke.env]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  worker:
+    env_file: !override [smoke.env]
+
+  mailpit:
+    image: axllent/mailpit:v1.30
+    ports:
+      - "127.0.0.1:8025:8025"

@@ -384,6 +384,22 @@ def test_port_465_uses_implicit_tls(tmp_path, monkeypatch):
     assert "starttls" not in FakeSMTP.instances[0].calls
 
 
+def test_a_local_relay_can_skip_encryption(tmp_path, monkeypatch):
+    FakeSMTP.instances.clear()
+    monkeypatch.setattr(smtplib, "SMTP", FakeSMTP)
+    settings = Settings(data_dir=tmp_path, smtp_host="mailpit", smtp_port=1025, smtp_security="none",
+                        email_from="no-reply@example.com")
+    SmtpMailer(settings).send(MESSAGE)
+    assert FakeSMTP.instances[0].calls[0] == ("send", "Serve Analyzer <no-reply@example.com>",
+                                              "player@example.com", "Hello")
+
+
+def test_an_unknown_smtp_security_setting_is_refused(tmp_path):
+    from tests.conftest import production_settings
+    with pytest.raises(RuntimeError, match="SERVE_API_SMTP_SECURITY"):
+        production_settings(tmp_path, smtp_security="tls").check()
+
+
 def test_a_failed_send_does_not_break_signup(tmp_path):
     class Broken:
         def send(self, message):

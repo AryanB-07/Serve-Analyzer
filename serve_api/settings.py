@@ -53,6 +53,9 @@ class Settings:
     # username and an app password (https://myaccount.google.com/apppasswords).
     smtp_host: str = field(default_factory=lambda: _env("SMTP_HOST", ""))
     smtp_port: int = field(default_factory=lambda: int(_env("SMTP_PORT", "587")))
+    # "auto": implicit TLS on port 465, STARTTLS otherwise. "ssl" / "starttls" force one.
+    # "none" sends unencrypted, only for a relay on the same private network (or a test server).
+    smtp_security: str = field(default_factory=lambda: _env("SMTP_SECURITY", "auto"))
     smtp_username: str = field(default_factory=lambda: _env("SMTP_USERNAME", ""))
     smtp_password: str = field(default_factory=lambda: _env("SMTP_PASSWORD", ""))
     # The From address; defaults to the SMTP username.
@@ -87,6 +90,14 @@ class Settings:
         return self.environment != "development" if self.verify_email is None else self.verify_email
 
     @property
+    def smtp_mode(self) -> str:
+        if self.smtp_security not in ("auto", "ssl", "starttls", "none"):
+            raise RuntimeError(f"SERVE_API_SMTP_SECURITY must be auto, ssl, starttls or none, not {self.smtp_security!r}")
+        if self.smtp_security == "auto":
+            return "ssl" if self.smtp_port == 465 else "starttls"
+        return self.smtp_security
+
+    @property
     def sender(self) -> str:
         return self.email_from or self.smtp_username
 
@@ -109,6 +120,7 @@ class Settings:
             ("SERVE_API_EMAIL_FROM or SERVE_API_SMTP_USERNAME", not self.sender),
             ("SERVE_API_APP_URL", self.app_url.startswith("http://localhost")),
         ) if unset]
+        self.smtp_mode  # validates SERVE_API_SMTP_SECURITY
         if missing:
             raise RuntimeError(
                 f"{', '.join(missing)} must be set when SERVE_API_ENV is {self.environment!r}"

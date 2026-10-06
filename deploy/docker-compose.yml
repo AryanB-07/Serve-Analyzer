@@ -12,6 +12,9 @@ x-logging: &logging
 
 x-app: &app
   logging: *logging
+  # MediaPipe publishes Linux wheels for x86-64 only, so the API/worker image is always amd64
+  # (emulated on Apple Silicon and other ARM machines; deploy to an x86 server).
+  platform: linux/amd64
   build:
     context: ..
     target: app

@@ -1,0 +1,116 @@
+# Every push and pull request: the Python tests (on SQLite and on Postgres), the frontend
+# checks, and the production Docker images built and smoke-tested end to end.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.12.18"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  python:
+    name: Python tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: serve
+          POSTGRES_PASSWORD: serve
+          POSTGRES_DB: serve_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U serve -d serve_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: System libraries for OpenCV and MediaPipe
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libegl1 libgles2
+
+      - name: Install uv
+        run: |
+          curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Cache the pose model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/serve_analyzer
+          key: pose-model-heavy-v1
+
+      - name: Install dependencies
+        run: |
+          uv python install "$PYTHON_VERSION"
+          uv sync --frozen --extra api --extra dev
+
+      - name: Tests (SQLite)
+        run: uv run pytest -q
+
+      - name: API tests (Postgres)
+        env:
+          SERVE_API_DATABASE_URL: postgresql://serve:serve@localhost:5432/serve_test
+        run: uv run pytest -q -m "not integration" tests/test_api.py tests/test_auth.py tests/test_account.py tests/test_privacy.py tests/test_queue.py tests/test_db.py tests/test_ownership.py tests/test_errors.py
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit -p .
+      - name: Generated API types match openapi.json
+        run: npm run check:api
+      - name: Unit tests
+        run: npx vitest run
+      - name: Production build
+        run: npm run build
+
+  docker:
+    name: Docker images and smoke test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: [python, frontend]
+    env:
+      COMPOSE: docker compose -p serve-smoke --env-file deploy/smoke.env -f deploy/docker-compose.yml -f deploy/docker-compose.smoke.yml --profile bundled-db
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build the images
+        run: $COMPOSE build
+
+      - name: Start the stack
+        run: $COMPOSE up -d --wait --wait-timeout 180
+
+      - name: Smoke test (sign up, confirm email, analyse a serve, delete everything)
+        run: python3 scripts/smoke_test.py https://localhost:8443 --mailpit http://localhost:8025 --insecure
+
+      - name: Logs
+        if: always()
+        run: $COMPOSE logs --no-color --tail 200
+
+      - name: Stop
+        if: always()
+        run: $COMPOSE down -v
