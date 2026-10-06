@@ -178,3 +178,23 @@ class User(BaseModel):
     id: str
     email: str
     created_at: datetime
+    email_verified: bool = False
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str = Field(min_length=1, max_length=128)
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr = Field(max_length=320)
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str = Field(min_length=1, max_length=128)
+    password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=256)
+
+
+class DeleteAccountRequest(BaseModel):
+    """The current password, so a borrowed or stolen session can't delete the account."""
+
+    password: str = Field(min_length=1, max_length=256)

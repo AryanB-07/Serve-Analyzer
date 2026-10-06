@@ -10,6 +10,7 @@ import { HandSelector } from "./HandSelector";
 import { uploadErrorText } from "./uploadError";
 import { useUploadAnalysis, type UploadProgress } from "./useUploadAnalysis";
 import { checkFile, checkMetadata, readVideoMetadata, type VideoMetadata } from "./validateVideo";
+import { VerifyEmailBanner } from "../account/AccountPages";
 
 interface Selected {
   file: File;
@@ -120,6 +121,7 @@ export function UploadPage() {
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="space-y-6">
+        <VerifyEmailBanner />
         <header className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">Analyze your serve</h1>
           <p className="text-ink-muted">

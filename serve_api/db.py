@@ -1,4 +1,5 @@
-"""Persistence (SQLite or Postgres): analyses, which double as the job queue, users and sessions."""
+"""Persistence (SQLite or Postgres): analyses, which double as the job queue, users, sessions,
+emailed tokens and the storage purge queue."""
 
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 
-from .tables import analyses, auth_attempts, sessions, users
+from .tables import analyses, auth_attempts, email_tokens, sessions, storage_purges, users
 
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
 ACTIVE = ("queued", *IN_PROGRESS)
@@ -269,7 +270,7 @@ class Database:
     def create_user(self, email: str, password_hash: str) -> dict[str, Any] | None:
         """Returns None if the email is already registered. ``email`` must be normalised."""
         row = {"id": uuid.uuid4().hex, "email": email, "password_hash": password_hash,
-               "created_at": now()}
+               "created_at": now(), "email_verified_at": None}
         try:
             with self.engine.begin() as conn:
                 conn.execute(insert(users).values(row))
@@ -281,6 +282,97 @@ class Database:
         with self.engine.connect() as conn:
             row = conn.execute(select(users).where(users.c.email == email)).mappings().first()
         return dict(row) if row else None
+
+    def get_user(self, user_id: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(users).where(users.c.id == user_id)).mappings().first()
+        return dict(row) if row else None
+
+    def mark_email_verified(self, user_id: str) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(update(users).where(users.c.id == user_id, users.c.email_verified_at.is_(None))
+                         .values(email_verified_at=now()))
+
+    def reset_password(self, user_id: str, password_hash: str) -> None:
+        """Set a new password, sign out every session, and void outstanding reset links.
+
+        Following a reset link proves control of the inbox, so the email counts as verified.
+        """
+        ts = now()
+        with self.engine.begin() as conn:
+            conn.execute(update(users).where(users.c.id == user_id).values(password_hash=password_hash))
+            conn.execute(update(users).where(users.c.id == user_id, users.c.email_verified_at.is_(None))
+                         .values(email_verified_at=ts))
+            conn.execute(delete(sessions).where(sessions.c.user_id == user_id))
+            conn.execute(delete(email_tokens).where(email_tokens.c.user_id == user_id,
+                                                    email_tokens.c.purpose == "reset"))
+
+    # --- emailed tokens --------------------------------------------------------
+
+    def create_email_token(self, user_id: str, purpose: str, token_hash: str,
+                           expires_at: datetime) -> None:
+        """Store a new link token. Earlier unused tokens for the same purpose stop working,
+        so only the most recent email's link is valid."""
+        with self.engine.begin() as conn:
+            conn.execute(delete(email_tokens).where(
+                email_tokens.c.user_id == user_id, email_tokens.c.purpose == purpose,
+                email_tokens.c.used_at.is_(None)))
+            conn.execute(insert(email_tokens).values(
+                id=uuid.uuid4().hex, user_id=user_id, purpose=purpose, token_hash=token_hash,
+                created_at=now(), expires_at=expires_at, used_at=None))
+
+    def use_email_token(self, token_hash: str, purpose: str) -> str | None:
+        """Spend a token: returns its user id, or None if it's unknown, used or expired.
+
+        One UPDATE makes it single-use even when two requests race."""
+        with self.engine.begin() as conn:
+            row = conn.execute(
+                update(email_tokens)
+                .where(email_tokens.c.token_hash == token_hash, email_tokens.c.purpose == purpose,
+                       email_tokens.c.used_at.is_(None), email_tokens.c.expires_at > now())
+                .values(used_at=now())
+                .returning(email_tokens.c.user_id)
+            ).first()
+        return row[0] if row else None
+
+    # --- deletion ----------------------------------------------------------------
+
+    @staticmethod
+    def _queue_purges(conn: Connection, prefixes: list[str]) -> list[int]:
+        ts = now()
+        return [conn.execute(insert(storage_purges).values(prefix=p, created_at=ts)).inserted_primary_key[0]
+                for p in prefixes]
+
+    def delete_analysis(self, analysis_id: str, user_id: str, prefixes: list[str]) -> list[int] | None:
+        """Delete one of ``user_id``'s analyses and queue its storage ``prefixes`` for removal,
+        in one transaction. Returns the purge ids, or None if there was no such analysis."""
+        with self.engine.begin() as conn:
+            gone = conn.execute(delete(analyses).where(
+                analyses.c.id == analysis_id, analyses.c.user_id == user_id)).rowcount
+            return self._queue_purges(conn, prefixes) if gone else None
+
+    def delete_user(self, user_id: str, prefixes_for: Any) -> list[int]:
+        """Delete an account with its sessions, tokens and analyses, queueing every analysis's
+        storage (``prefixes_for(analysis_id)``) for removal. Returns the purge ids."""
+        with self.engine.begin() as conn:
+            ids = list(conn.execute(select(analyses.c.id).where(analyses.c.user_id == user_id)).scalars())
+            purge_ids = self._queue_purges(conn, [p for i in ids for p in prefixes_for(i)])
+            # Explicit deletes rather than relying on ON DELETE CASCADE alone.
+            for table in (analyses, sessions, email_tokens):
+                conn.execute(delete(table).where(table.c.user_id == user_id))
+            conn.execute(delete(users).where(users.c.id == user_id))
+        return purge_ids
+
+    def pending_purges(self, ids: list[int] | None = None) -> list[tuple[int, str]]:
+        query = select(storage_purges.c.id, storage_purges.c.prefix).order_by(storage_purges.c.id)
+        if ids is not None:
+            query = query.where(storage_purges.c.id.in_(ids))
+        with self.engine.connect() as conn:
+            return [(r[0], r[1]) for r in conn.execute(query)]
+
+    def finish_purge(self, purge_id: int) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(delete(storage_purges).where(storage_purges.c.id == purge_id))
 
     def set_password_hash(self, user_id: str, password_hash: str) -> None:
         with self.engine.begin() as conn:
@@ -301,7 +393,8 @@ class Database:
         """The live session for a token, joined with its user (``user_*`` keys), or None."""
         query = (
             select(sessions, users.c.email.label("user_email"),
-                   users.c.created_at.label("user_created_at"))
+                   users.c.created_at.label("user_created_at"),
+                   users.c.email_verified_at.label("user_email_verified_at"))
             .join(users, users.c.id == sessions.c.user_id)
             .where(sessions.c.token_hash == token_hash, sessions.c.expires_at > now())
         )
@@ -331,8 +424,10 @@ class Database:
         return count, oldest
 
     def delete_expired(self, attempts_before: datetime) -> tuple[int, int]:
-        """Drop expired sessions and old rate-limit rows. Returns how many of each."""
+        """Drop expired sessions, emailed tokens and old rate-limit rows.
+        Returns how many sessions and attempts were removed."""
         with self.engine.begin() as conn:
+            conn.execute(delete(email_tokens).where(email_tokens.c.expires_at < now()))
             dead_sessions = conn.execute(delete(sessions).where(sessions.c.expires_at < now())).rowcount
             old_attempts = conn.execute(
                 delete(auth_attempts).where(auth_attempts.c.at < attempts_before)).rowcount

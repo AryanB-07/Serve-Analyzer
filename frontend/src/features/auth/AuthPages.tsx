@@ -29,6 +29,8 @@ export function LoginPage() {
       onSubmit={(email, password) => logIn.mutate({ email, password })}
       footer={
         <>
+          <Link to="/forgot-password" className="font-medium text-accent underline">Forgot your password?</Link>
+          <br />
           New here?{" "}
           <Link to={`/signup${nextParam(next)}`} className="font-medium text-accent underline">Create an account</Link>
         </>

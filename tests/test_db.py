@@ -15,7 +15,7 @@ from serve_api import migrate
 from serve_api.db import Database, now
 from serve_api.settings import DEV_SECRET, Settings
 from serve_api.tables import metadata
-from tests.conftest import make_user
+from tests.conftest import make_user, production_settings
 
 LEGACY_SCHEMA = """
 CREATE TABLE analyses (
@@ -106,11 +106,15 @@ def test_the_worker_refuses_an_out_of_date_schema(tmp_path):
         migrate.wait_until_current(database.engine, timeout_s=0)
 
 
-def test_settings_require_a_real_secret_outside_development(tmp_path):
+def test_settings_require_a_real_secret_and_email_outside_development(tmp_path):
     Settings(data_dir=tmp_path, environment="development", secret=DEV_SECRET).check()
     with pytest.raises(RuntimeError, match="SERVE_API_SECRET"):
-        Settings(data_dir=tmp_path, environment="production", secret=DEV_SECRET).check()
-    Settings(data_dir=tmp_path, environment="production", secret="s3cret").check()
+        production_settings(tmp_path, secret=DEV_SECRET).check()
+    with pytest.raises(RuntimeError, match="SERVE_API_SMTP_HOST"):
+        production_settings(tmp_path, smtp_host="").check()
+    with pytest.raises(RuntimeError, match="SERVE_API_APP_URL"):
+        production_settings(tmp_path, app_url="http://localhost:5173").check()
+    production_settings(tmp_path).check()
 
 
 def test_postgres_urls_use_the_psycopg_driver(tmp_path):

@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router";
+import { Link, NavLink, Outlet, useNavigate } from "react-router";
 
 import { USE_MOCKS } from "../api";
 import { useLogOut, useSession } from "../api/session";
@@ -18,9 +18,14 @@ function AccountControls() {
   if (!user) return null;
   return (
     <>
-      <span className="hidden max-w-48 truncate text-sm text-ink-muted md:inline" title={user.email}>
-        {user.email}
-      </span>
+      <Link
+        to="/account"
+        className="max-w-48 truncate rounded-md px-2 py-1.5 text-sm text-ink-muted hover:text-ink"
+        title={`Account: ${user.email}`}
+      >
+        <span className="hidden md:inline">{user.email}</span>
+        <span className="md:hidden">Account</span>
+      </Link>
       <button
         type="button"
         onClick={() => logOut.mutate(undefined, { onSettled: () => navigate("/login", { replace: true }) })}

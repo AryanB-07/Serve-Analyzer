@@ -46,6 +46,21 @@ class Settings:
     s3_region: str = field(default_factory=lambda: _env("S3_REGION", ""))
     # Only for S3-compatible services (R2, MinIO); empty means AWS.
     s3_endpoint_url: str = field(default_factory=lambda: _env("S3_ENDPOINT_URL", ""))
+    # Where people open the app, for links in emails (no trailing slash). Vite's dev server by default.
+    app_url: str = field(default_factory=lambda: _env("APP_URL", "http://localhost:5173").rstrip("/"))
+    # Outgoing email over SMTP. With no host, emails are written to data_dir/outbox instead
+    # (development only). Gmail: host smtp.gmail.com, port 587, the account's address as the
+    # username and an app password (https://myaccount.google.com/apppasswords).
+    smtp_host: str = field(default_factory=lambda: _env("SMTP_HOST", ""))
+    smtp_port: int = field(default_factory=lambda: int(_env("SMTP_PORT", "587")))
+    smtp_username: str = field(default_factory=lambda: _env("SMTP_USERNAME", ""))
+    smtp_password: str = field(default_factory=lambda: _env("SMTP_PASSWORD", ""))
+    # The From address; defaults to the SMTP username.
+    email_from: str = field(default_factory=lambda: _env("EMAIL_FROM", ""))
+    # Must people confirm their email before analysing? Default: yes unless ENV=development.
+    verify_email: bool | None = field(
+        default_factory=lambda: {"1": True, "0": False}.get(_env("REQUIRE_VERIFIED_EMAIL", ""))
+    )
     max_upload_bytes: int = 200 * 1024 * 1024
     upload_url_ttl_s: int = 15 * 60
     # Long enough that seeking (new Range requests) keeps working while a results page is open.
@@ -64,12 +79,33 @@ class Settings:
         return self.environment != "development" if self.cookie_secure is None else self.cookie_secure
 
     @property
+    def require_verified_email(self) -> bool:
+        return self.environment != "development" if self.verify_email is None else self.verify_email
+
+    @property
+    def sender(self) -> str:
+        return self.email_from or self.smtp_username
+
+    @property
+    def outbox_dir(self) -> Path:
+        return self.data_dir / "outbox"
+
+    @property
     def objects_dir(self) -> Path:
         return self.data_dir / "objects"
 
     def check(self) -> None:
-        """Refuse to run a non-development deployment with the public default secret."""
-        if self.environment != "development" and self.secret == DEV_SECRET:
+        """Refuse to run a non-development deployment with the default secret or without email."""
+        if self.environment == "development":
+            return
+        missing = [name for name, unset in (
+            ("SERVE_API_SECRET", self.secret == DEV_SECRET),
+            # Without email nobody can verify their address or reset a password.
+            ("SERVE_API_SMTP_HOST", not self.smtp_host),
+            ("SERVE_API_EMAIL_FROM or SERVE_API_SMTP_USERNAME", not self.sender),
+            ("SERVE_API_APP_URL", self.app_url.startswith("http://localhost")),
+        ) if unset]
+        if missing:
             raise RuntimeError(
-                f"SERVE_API_SECRET must be set when SERVE_API_ENV is {self.environment!r}"
+                f"{', '.join(missing)} must be set when SERVE_API_ENV is {self.environment!r}"
             )

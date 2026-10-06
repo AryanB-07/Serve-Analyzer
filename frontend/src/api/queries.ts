@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { createStatusBackoff, isActive } from "../lib/polling";
@@ -52,5 +52,23 @@ export function useAnalysesList() {
     getNextPageParam: (last) => last.next_cursor ?? undefined,
     refetchInterval: (query) =>
       query.state.data?.pages.some((page) => page.items.some((a) => isActive(a.status))) ? 3000 : false,
+  });
+}
+
+/**
+ * Delete an analysis, dropping it from every cached view. ``onDeleted`` runs first, so a
+ * page showing the analysis can navigate away before its data is removed.
+ */
+export function useDeleteAnalysis(onDeleted?: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteAnalysis(id),
+    onSuccess: (_data, id) => {
+      onDeleted?.();
+      for (const key of [queryKeys.analysis(id), queryKeys.result(id), queryKeys.frames(id)]) {
+        queryClient.removeQueries({ queryKey: key });
+      }
+      return queryClient.invalidateQueries({ queryKey: queryKeys.analyses });
+    },
   });
 }

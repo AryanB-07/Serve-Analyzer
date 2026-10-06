@@ -141,7 +141,7 @@ uv run alembic revision --autogenerate -m "add users table"
 | Variable | Default | Meaning |
 |---|---|---|
 | `SERVE_API_DATABASE_URL` | SQLite in `var/` | `postgresql://user:password@host:5432/db` or `sqlite:///path` |
-| `SERVE_API_ENV` | `development` | Any other value requires `SERVE_API_SECRET` to be set |
+| `SERVE_API_ENV` | `development` | Any other value requires `SERVE_API_SECRET`, an SMTP host and `SERVE_API_APP_URL` |
 | `SERVE_API_SECRET` | a development-only value | Signs upload and download URLs |
 | `SERVE_API_AUTO_MIGRATE` | `1` | `0` stops the API from migrating at startup |
 | `SERVE_API_DATA_DIR` | `var` | Where uploads, results and the SQLite file are stored |
@@ -152,6 +152,11 @@ uv run alembic revision --autogenerate -m "add users table"
 | `SERVE_API_STORAGE` | `local` | `local` keeps files in `SERVE_API_DATA_DIR`; `s3` uses a bucket |
 | `SERVE_API_S3_BUCKET`, `SERVE_API_S3_REGION` | none | The bucket, when `SERVE_API_STORAGE=s3` (credentials come from the usual AWS variables or a role) |
 | `SERVE_API_S3_ENDPOINT_URL` | AWS | Only for S3-compatible services (R2, MinIO) |
+| `SERVE_API_APP_URL` | `http://localhost:5173` | Where people open the app; links in emails point here |
+| `SERVE_API_SMTP_HOST`, `SERVE_API_SMTP_PORT` | none, `587` | Outgoing mail server. With no host, emails go to `var/outbox` and the log (development only) |
+| `SERVE_API_SMTP_USERNAME`, `SERVE_API_SMTP_PASSWORD` | none | SMTP login; for Gmail, the address and an app password |
+| `SERVE_API_EMAIL_FROM` | the SMTP username | The From address |
+| `SERVE_API_REQUIRE_VERIFIED_EMAIL` | on unless `SERVE_API_ENV=development` | `1`/`0`: must people confirm their email before analysing? |
 
 ### Accounts
 
@@ -164,7 +169,20 @@ and password accounts:
   the session on the server.
 - Sessions last 30 days from the last visit, extended at most once a day.
 - Login is limited to 10 failed attempts per email per 15 minutes, and signup plus login to 30
-  requests per IP per 10 minutes. The counters live in each API process's memory.
+  requests per IP per 10 minutes. The counters are kept in the database, so every API process
+  shares them.
+- **Email verification.** Signing up emails a link to confirm the address. Analysing a serve
+  needs a confirmed email, except in development.
+- **Password reset.** A reset link is valid for 1 hour and works once. Asking for one gets the
+  same response whether or not the address has an account, and emails are sent after the
+  response, so timing doesn't reveal it either. Setting a new password signs out every device.
+  Each address gets at most 3 emails an hour.
+- **Link tokens** are random and single use; like sessions, only their hashes are stored.
+- **Deletion.** Deleting an analysis removes its video and results. Deleting the account (which
+  needs the password) removes the account, its sessions and every analysis.
+  - Files are deleted through a queue written in the same transaction as the database change,
+    so a storage outage delays a deletion but can't lose it. The worker retries anything left.
+  - An analysis deleted mid-processing leaves nothing behind.
 - POST, PUT and DELETE requests from another origin are refused (CSRF protection on top of
   `SameSite`).
 
@@ -311,6 +329,11 @@ frontend/
 | `GET /analyses?cursor=` | History, newest first, cursor-paginated |
 | `GET /analyses/{id}/result` | Metrics, labels, ranges, feedback, warnings and video URLs |
 | `GET /analyses/{id}/frames` | Per-frame landmarks (raw and smoothed) and angle series |
+| `DELETE /analyses/{id}` | Delete an analysis with its video and results |
+| `POST /auth/signup`, `/auth/login`, `/auth/logout`, `GET /auth/me` | Accounts and sessions (an HttpOnly cookie) |
+| `POST /auth/verify-email`, `/auth/verify-email/resend` | Confirm the email address from the emailed link |
+| `POST /auth/password-reset`, `/auth/password-reset/confirm` | Email a reset link; set a new password from it (signs out every device) |
+| `DELETE /auth/me` | Delete the account and everything in it (needs the password) |
 
 Interactive docs are at http://localhost:8000/docs while the API is running. Failures carry
 a code (`NO_PERSON_DETECTED`, `NOT_A_SERVE`, `VIDEO_TOO_LONG`, `FPS_TOO_LOW`, `UNREADABLE_VIDEO`,

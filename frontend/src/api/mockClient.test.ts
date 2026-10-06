@@ -63,4 +63,29 @@ describe("mock client", () => {
     const list = await client.listAnalyses();
     expect(list.items.map((a) => a.id)).toEqual([analysis.id, "demo-serve-1"]);
   });
+
+  it("verifies new sign-ups only with a valid token", async () => {
+    const { client } = setup();
+    const user = await client.signUp({ email: "New@Example.com", password: "long enough" });
+    expect(user.email_verified).toBe(false);
+    await expect(client.verifyEmail("expired")).rejects.toMatchObject({ status: 400 });
+    await client.verifyEmail("valid");
+    expect((await client.getMe())?.email_verified).toBe(true);
+  });
+
+  it("deletes analyses, including the demo ones", async () => {
+    const { client } = setup();
+    const { analysis } = await client.createAnalysis(request);
+    await client.deleteAnalysis(analysis.id);
+    await client.deleteAnalysis("demo-serve-1");
+    expect((await client.listAnalyses()).items).toEqual([]);
+    await expect(client.getAnalysis(analysis.id)).rejects.toBeInstanceOf(ApiError);
+    await expect(client.deleteAnalysis("nope")).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("signs out after deleting the account", async () => {
+    const { client } = setup();
+    await client.deleteAccount("any password");
+    expect(await client.getMe()).toBeNull();
+  });
 });

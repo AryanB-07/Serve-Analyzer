@@ -15,13 +15,15 @@ import type {
  * uploads and the worker's stage progression for newly created analyses.
  * A file whose name contains "fail" fails with NO_PERSON_DETECTED.
  * It starts signed in as MOCK_USER so demos open straight to the app; signing
- * out and in again works in memory with any email and password.
+ * out and in again works in memory with any email and password. New sign-ups
+ * start unverified; the token "valid" verifies or resets, anything else is expired.
  */
 
 export const MOCK_USER: User = {
   id: "mock-user",
   email: "demo@serve-analyzer.dev",
   created_at: "2026-09-20T10:00:00Z",
+  email_verified: true,
 };
 
 const TEMPLATE_ID = "demo-serve-1";
@@ -60,6 +62,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   const created = new Map<string, Created>();
   let counter = 0;
   let user: User | null = MOCK_USER;
+  const deleted = new Set<string>();
 
   const delay = () => (latency > 0 ? sleep(latency) : Promise.resolve());
 
@@ -117,7 +120,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
 
     async signUp({ email }) {
       await delay();
-      user = { ...MOCK_USER, email: email.trim().toLowerCase(), created_at: new Date(now()).toISOString() };
+      user = {
+        ...MOCK_USER,
+        email: email.trim().toLowerCase(),
+        created_at: new Date(now()).toISOString(),
+        email_verified: false,
+      };
       return user;
     },
 
@@ -130,6 +138,39 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async logOut() {
       await delay();
       user = null;
+    },
+
+    async verifyEmail(token) {
+      await delay();
+      if (token !== "valid") throw new ApiError(400, "This link is invalid or has expired. Request a new one.");
+      if (user) user = { ...user, email_verified: true };
+    },
+
+    async resendVerification() {
+      await delay();
+    },
+
+    async requestPasswordReset() {
+      await delay();
+    },
+
+    async resetPassword(token) {
+      await delay();
+      if (token !== "valid") throw new ApiError(400, "This link is invalid or has expired. Request a new one.");
+      user = null;
+    },
+
+    async deleteAccount(password) {
+      await delay();
+      if (!password) throw new ApiError(403, "Incorrect password.");
+      user = null;
+      created.clear();
+    },
+
+    async deleteAnalysis(id) {
+      await delay();
+      if (!created.delete(id) && !isDemo(id)) throw new ApiError(404, "Analysis not found");
+      deleted.add(id);
     },
 
     async createAnalysis(body) {
@@ -195,6 +236,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
 
     async getAnalysis(id) {
       await delay();
+      if (deleted.has(id)) throw new ApiError(404, "Analysis not found");
       if (isDemo(id)) return fetchJson<AnalysisSummary>(`/mock/${id}/summary.json`);
       return current(entryOrThrow(id));
     },
@@ -203,7 +245,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await delay();
       const fixtures = await fetchJson<AnalysisList>("/mock/analyses.json");
       const mine = [...created.values()].map(current).reverse();
-      return { items: [...mine, ...fixtures.items], next_cursor: null };
+      const demos = fixtures.items.filter((a) => !deleted.has(a.id));
+      return { items: [...mine, ...demos], next_cursor: null };
     },
 
     async getResult(id) {

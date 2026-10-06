@@ -17,6 +17,15 @@ export interface ApiClient {
   signUp(body: Credentials): Promise<User>;
   logIn(body: Credentials): Promise<User>;
   logOut(): Promise<void>;
+  /** Confirm an email address with the token from the emailed link. */
+  verifyEmail(token: string): Promise<void>;
+  resendVerification(): Promise<void>;
+  /** Always resolves (the server answers the same whether or not the address has an account). */
+  requestPasswordReset(email: string): Promise<void>;
+  resetPassword(token: string, password: string): Promise<void>;
+  /** Permanently delete the signed-in account and everything in it. */
+  deleteAccount(password: string): Promise<void>;
+  deleteAnalysis(id: string): Promise<void>;
   createAnalysis(body: CreateAnalysisRequest): Promise<CreateAnalysisResponse>;
   uploadVideo(
     target: UploadTarget,
@@ -124,6 +133,14 @@ export const httpClient: ApiClient = {
   signUp: (body) => request("/auth/signup", { method: "POST", body: JSON.stringify(body) }),
   logIn: (body) => request("/auth/login", { method: "POST", body: JSON.stringify(body) }),
   logOut: () => request("/auth/logout", { method: "POST" }),
+  verifyEmail: (token) => request("/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) }),
+  resendVerification: () => request("/auth/verify-email/resend", { method: "POST" }),
+  requestPasswordReset: (email) =>
+    request("/auth/password-reset", { method: "POST", body: JSON.stringify({ email }) }),
+  resetPassword: (token, password) =>
+    request("/auth/password-reset/confirm", { method: "POST", body: JSON.stringify({ token, password }) }),
+  deleteAccount: (password) => request("/auth/me", { method: "DELETE", body: JSON.stringify({ password }) }),
+  deleteAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}`, { method: "DELETE" }),
   createAnalysis: (body) => request("/analyses", { method: "POST", body: JSON.stringify(body) }),
   uploadVideo: putWithProgress,
   startAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}/start`, { method: "POST" }),

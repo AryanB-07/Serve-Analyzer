@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 
 import { useAnalysesList } from "../../api/queries";
 import type { AnalysisSummary } from "../../api/types";
+import { DeleteAnalysisButton } from "../../components/DeleteAnalysisButton";
 import { StatusIcon } from "../../components/StatusIcon";
 import { beforeAfter, toggleSelection } from "../../lib/compare";
 import { errorCopyFor } from "../processing/errorCopy";
@@ -59,10 +60,12 @@ function AnalysisCard({
   analysis,
   selected,
   onToggle,
+  onDeleted,
 }: {
   analysis: AnalysisSummary;
   selected: boolean;
   onToggle: () => void;
+  onDeleted: () => void;
 }) {
   const comparable = analysis.status === "succeeded";
   return (
@@ -80,12 +83,17 @@ function AnalysisCard({
           <StatusLine analysis={analysis} />
         </div>
       </Link>
-      {comparable && (
-        <label className="flex cursor-pointer items-center gap-2 border-t border-border px-3 py-2 text-sm text-ink-muted hover:text-ink">
-          <input type="checkbox" checked={selected} onChange={onToggle} className="size-4 accent-[var(--accent)]" />
-          Select to compare
-        </label>
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2">
+        {comparable ? (
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-muted hover:text-ink">
+            <input type="checkbox" checked={selected} onChange={onToggle} className="size-4 accent-[var(--accent)]" />
+            Select to compare
+          </label>
+        ) : (
+          <span />
+        )}
+        <DeleteAnalysisButton id={analysis.id} filename={analysis.filename} onDeleted={onDeleted} />
+      </div>
     </article>
   );
 }
@@ -141,6 +149,7 @@ export function HistoryPage() {
                 analysis={a}
                 selected={selected.includes(a.id)}
                 onToggle={() => setSelected((s) => toggleSelection(s, a.id))}
+                onDeleted={() => setSelected((s) => s.filter((id) => id !== a.id))}
               />
             </li>
           ))}

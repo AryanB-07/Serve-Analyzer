@@ -76,6 +76,32 @@ users = Table(
     Column("email", String(320), nullable=False, unique=True),
     Column("password_hash", String(255), nullable=False),
     Column("created_at", UTCDateTime, nullable=False),
+    Column("email_verified_at", UTCDateTime),
+)
+
+email_tokens = Table(
+    "email_tokens",
+    metadata,
+    Column("id", String(32), primary_key=True),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+           index=True),
+    Column("purpose", String(16), nullable=False),  # "verify" | "reset"
+    # SHA-256 of the token in the emailed link; the token itself is never stored.
+    Column("token_hash", String(64), nullable=False, unique=True),
+    Column("created_at", UTCDateTime, nullable=False),
+    Column("expires_at", UTCDateTime, nullable=False),
+    Column("used_at", UTCDateTime),
+)
+
+storage_purges = Table(
+    "storage_purges",
+    metadata,
+    # Storage prefixes still to delete after an analysis or account was deleted. Written in
+    # the same transaction as the deletion and cleared once the files are gone, so a storage
+    # outage can delay a deletion but never lose it.
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("prefix", String(255), nullable=False),
+    Column("created_at", UTCDateTime, nullable=False),
 )
 
 auth_attempts = Table(

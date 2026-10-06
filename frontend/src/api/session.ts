@@ -65,3 +65,44 @@ export function useLogOut() {
     onSettled: () => switchUser(null),
   });
 }
+
+/** Confirming an email updates the signed-in user, if this browser is signed in. */
+export function useVerifyEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (token: string) => api.verifyEmail(token),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: sessionKey }),
+  });
+}
+
+export function useResendVerification() {
+  return useMutation({ mutationFn: () => api.resendVerification() });
+}
+
+export function useRequestPasswordReset() {
+  return useMutation({ mutationFn: (email: string) => api.requestPasswordReset(email) });
+}
+
+/** A reset signs out every device, this one included. */
+export function useResetPassword() {
+  const switchUser = useSwitchUser();
+  return useMutation({
+    mutationFn: ({ token, password }: { token: string; password: string }) => api.resetPassword(token, password),
+    onSuccess: () => switchUser(null),
+  });
+}
+
+/**
+ * ``onDeleted`` runs before the session is cleared, so it can leave the signed-in
+ * pages first (otherwise the route guard would send the user to sign in).
+ */
+export function useDeleteAccount(onDeleted: () => void) {
+  const switchUser = useSwitchUser();
+  return useMutation({
+    mutationFn: (password: string) => api.deleteAccount(password),
+    onSuccess: () => {
+      onDeleted();
+      switchUser(null);
+    },
+  });
+}

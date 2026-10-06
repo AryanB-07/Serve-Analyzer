@@ -73,8 +73,38 @@ Fill in `deploy/.env`:
 | `SERVE_API_S3_ENDPOINT_URL` | Only for R2, MinIO and similar services |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | The bucket credentials (omit if using an instance role) |
 | `WORKERS` | How many analyses can run at once (one per worker) |
+| `SERVE_API_APP_URL` | `https://` plus your domain. Links in emails point here. |
+| `SERVE_API_SMTP_HOST`, `SERVE_API_SMTP_PORT` | Your mail server, e.g. `smtp.gmail.com` and `587` (see "Email" below) |
+| `SERVE_API_SMTP_USERNAME`, `SERVE_API_SMTP_PASSWORD` | The sending account and its password (for Gmail, an app password) |
+| `SERVE_API_EMAIL_FROM` | Optional From address; defaults to the SMTP username |
 
-The API refuses to start if `SERVE_API_SECRET` is left empty or set to the development value.
+The API and workers refuse to start outside development if `SERVE_API_SECRET` is empty or the
+development value, if no SMTP host is set, or if `SERVE_API_APP_URL` still points at localhost.
+
+### Email
+
+The app sends four emails: a link to confirm the address after signing up, a password-reset
+link, and notices when a password is changed or an account is deleted. People must confirm
+their email before they can analyse a serve (turn this off with
+`SERVE_API_REQUIRE_VERIFIED_EMAIL=0`).
+
+**Sending through a Gmail account:**
+
+1. Turn on 2-Step Verification for the Google account.
+2. Create an app password at https://myaccount.google.com/apppasswords and copy the 16
+   characters.
+3. Set `SERVE_API_SMTP_HOST=smtp.gmail.com`, `SERVE_API_SMTP_PORT=587`,
+   `SERVE_API_SMTP_USERNAME` to the Gmail address, and `SERVE_API_SMTP_PASSWORD` to the app
+   password.
+
+Gmail caps how much a personal account can send, roughly 500 messages a day. Each address can
+request at most 3 emails an hour. Gmail also rewrites the From address to the account unless it
+is one of the account's verified "Send mail as" addresses. That is fine to launch with. When
+volume grows, switch to a transactional provider (Amazon SES, Postmark, Resend): only the
+`SMTP_*` values change.
+
+In development, with no SMTP host, emails aren't sent. Each one is written to
+`var/outbox/*.eml`, and its text, including the link, is printed in the API log.
 
 ## 4. Start it
 

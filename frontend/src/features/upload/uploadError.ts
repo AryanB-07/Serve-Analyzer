@@ -6,6 +6,9 @@ import { ApiError } from "../../api";
  * get the "check your connection" advice, since retrying can fix those.
  */
 export function uploadErrorText(error: Error): { title: string; detail: string } {
+  if (error instanceof ApiError && error.status === 403) {
+    return { title: "Confirm your email first.", detail: error.message };
+  }
   if (error instanceof ApiError && error.status === 429) {
     return { title: "Limit reached.", detail: error.message };
   }

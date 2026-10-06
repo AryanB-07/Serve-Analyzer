@@ -25,6 +25,7 @@ from serve_analyzer.pipeline import analyze
 from . import keys, migrate
 from .convert import counts_from_labels, public_message
 from .db import Database, now
+from .purge import analysis_prefixes, run_purges
 from .settings import Settings
 from .storage import Storage, make_storage
 
@@ -104,6 +105,11 @@ def process(job: dict, db: Database, storage: Storage, token: str,
         storage.publish(work, keys.output_prefix(analysis_id))
     if write("succeeded", counts=counts):
         log.info("analysis %s succeeded (contact frame %s)", analysis_id, result.phases.contact)
+    elif db.get(analysis_id) is None:
+        # Deleted while we were publishing: don't leave its files behind.
+        for prefix in analysis_prefixes(analysis_id):
+            storage.delete_prefix(prefix)
+        log.info("analysis %s was deleted while processing; outputs removed", analysis_id)
 
 
 def sweep(db: Database, lease: timedelta = LEASE, max_attempts: int = MAX_ATTEMPTS) -> None:
@@ -115,7 +121,10 @@ def sweep(db: Database, lease: timedelta = LEASE, max_attempts: int = MAX_ATTEMP
 
 
 def housekeeping(db: Database, storage: Storage) -> None:
-    """Delete what nobody will use again: abandoned uploads, dead sessions, old attempts."""
+    """Delete what nobody will use again: abandoned uploads, dead sessions and links, old
+    attempts. Also retries storage deletions that failed when an analysis or account was deleted."""
+    if left := run_purges(db, storage):
+        log.warning("%d storage deletions still pending", left)
     for analysis_id in db.delete_abandoned_uploads(now() - ABANDONED_AFTER):
         storage.delete_prefix(keys.upload_prefix(analysis_id))
         log.info("deleted abandoned upload %s", analysis_id)

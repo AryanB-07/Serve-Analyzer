@@ -26,7 +26,7 @@ const { AppShell } = await import("../../components/AppShell");
 const { LoginPage, SignupPage } = await import("./AuthPages");
 const { RequireAuth } = await import("./RequireAuth");
 
-const ALICE: User = { id: "u1", email: "alice@example.com", created_at: "2026-09-27T10:00:00Z" };
+const ALICE: User = { id: "u1", email: "alice@example.com", created_at: "2026-09-27T10:00:00Z", email_verified: true };
 
 beforeEach(() => {
   fake.user = null;

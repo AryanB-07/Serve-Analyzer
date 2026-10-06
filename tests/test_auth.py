@@ -11,6 +11,7 @@ from serve_api.auth import SESSION_COOKIE, RateLimiter, hash_token
 from serve_api.db import now
 from serve_api.settings import Settings
 from serve_api.tables import auth_attempts, sessions, users
+from tests.conftest import FakeMailer, production_settings
 
 PASSWORD = "correct horse battery"
 
@@ -195,8 +196,7 @@ def test_extra_origins_can_be_allowed(tmp_path):
 
 
 def test_cookies_are_secure_outside_development(tmp_path):
-    settings = Settings(data_dir=tmp_path, secret="prod-secret", environment="production",
-                        public_base="")
-    res = signup(TestClient(create_app(settings), base_url="https://testserver"))
+    settings = production_settings(tmp_path, public_base="")
+    res = signup(TestClient(create_app(settings, FakeMailer()), base_url="https://testserver"))
     assert res.status_code == 201
     assert "secure" in res.headers["set-cookie"].lower()

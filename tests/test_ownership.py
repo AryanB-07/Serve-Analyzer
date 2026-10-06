@@ -135,13 +135,22 @@ def _insert_old_analysis(db: Database, analysis_id: str) -> None:
             " :ts, :ts)"), {"id": analysis_id, "ts": ts})
 
 
+def _insert_old_user(db: Database, user_id: str, email: str, ts: datetime) -> None:
+    """A user row with only the columns revision 0002 has."""
+    if db.engine.dialect.name == "sqlite":
+        ts = ts.replace(tzinfo=None)
+    with db.engine.begin() as conn:
+        conn.execute(text("INSERT INTO users (id, email, password_hash, created_at)"
+                          " VALUES (:id, :email, '!', :ts)"), {"id": user_id, "email": email, "ts": ts})
+
+
 def test_existing_analyses_go_to_the_oldest_account(tmp_path):
     db = _database_at_0002(tmp_path)
-    first = db.create_user("first@example.com", "!")
-    db.create_user("second@example.com", "!")
+    _insert_old_user(db, "first", "first@example.com", datetime(2026, 1, 1, tzinfo=UTC))
+    _insert_old_user(db, "second", "second@example.com", datetime(2026, 2, 1, tzinfo=UTC))
     _insert_old_analysis(db, "old1")
     migrate.upgrade(db.engine)
-    assert db.get("old1")["user_id"] == first["id"]
+    assert db.get("old1")["user_id"] == "first"
 
 
 def test_existing_analyses_without_any_account_get_a_placeholder_owner(tmp_path):

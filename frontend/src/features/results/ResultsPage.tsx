@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 
 import { api, ApiError } from "../../api";
 import { queryKeys, useAnalysis, useFrames, useResult } from "../../api/queries";
 import type { AnalysisResult, AnalysisSummary, FramesPayload } from "../../api/types";
+import { DeleteAnalysisButton } from "../../components/DeleteAnalysisButton";
 import { PlayheadProvider, usePlayheadStore } from "../../playhead/context";
 import { ProcessingView } from "../processing/ProcessingView";
 import { AngleCharts } from "./charts/AngleCharts";
@@ -44,6 +45,7 @@ function ResultsView({
             {new Date(summary.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })} ·{" "}
             {result.hand === "right" ? "Right" : "Left"}-handed · {result.fps} fps
           </p>
+          <DeleteFromHere summary={summary} className="ml-auto" />
         </header>
 
         {/* Phone order is DOM order (video, analysis, charts); on large screens the
@@ -83,6 +85,18 @@ function ResultsView({
         </div>
       </div>
     </PlayheadProvider>
+  );
+}
+
+function DeleteFromHere({ summary, className }: { summary: AnalysisSummary; className?: string }) {
+  const navigate = useNavigate();
+  return (
+    <DeleteAnalysisButton
+      id={summary.id}
+      filename={summary.filename}
+      onDeleted={() => navigate("/history", { replace: true })}
+      className={className}
+    />
   );
 }
 
@@ -141,7 +155,16 @@ export function ResultsPage() {
     );
   }
   if (!analysis.data) return <CenteredMessage title="Loading…" />;
-  if (!succeeded) return <Processing key={id} summary={analysis.data} />;
+  if (!succeeded) {
+    return (
+      <div className="space-y-4">
+        <Processing key={id} summary={analysis.data} />
+        <div className="flex justify-center">
+          <DeleteFromHere summary={analysis.data} />
+        </div>
+      </div>
+    );
+  }
   if (result.isError || frames.isError) {
     return (
       <CenteredMessage title="We couldn't load the results">

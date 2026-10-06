@@ -1,4 +1,5 @@
 /** Edge cases for upload, mock API, shortcuts, error copy and page components. */
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
@@ -146,12 +147,14 @@ function LocationProbe() {
 function renderHistory(items: AnalysisSummary[]) {
   listState.current = items;
   render(
-    <MemoryRouter initialEntries={["/history"]}>
-      <Routes>
-        <Route path="/history" element={<HistoryPage />} />
-        <Route path="/compare" element={<LocationProbe />} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={["/history"]}>
+        <Routes>
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/compare" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

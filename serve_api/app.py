@@ -14,6 +14,8 @@ from sqlalchemy import text
 
 from . import keys, migrate
 from .auth import Auth, origin_guard
+from .mailer import Mailer
+from .purge import analysis_prefixes, run_purges
 from .convert import result_from_file, summary_from_row
 from .db import Database, now
 from .schemas import (
@@ -48,14 +50,18 @@ def _decode_cursor(cursor: str) -> tuple[datetime, str]:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid cursor") from exc
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+VERIFY_FIRST = ("Confirm your email address to analyze serves. Check your inbox for the link, "
+                "or send a new one from your account page.")
+
+
+def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -> FastAPI:
     settings = settings or Settings()
     settings.check()
     db = Database(settings.sqlalchemy_url)
     if settings.auto_migrate:
         migrate.upgrade(db.engine)
     storage = make_storage(settings)
-    auth = Auth(db, settings)
+    auth = Auth(db, settings, storage, mailer)
 
     app = FastAPI(title="Serve Analyzer API", version="1.0.0")
     app.add_middleware(GZipMiddleware, minimum_size=1024)
@@ -105,12 +111,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return JSONResponse({"status": "ok"})
 
     @app.post("/analyses", status_code=201, response_model=CreateAnalysisResponse,
-              responses={**UNAUTHORIZED, 413: {"model": ErrorResponse},
+              responses={**UNAUTHORIZED, 403: {"model": ErrorResponse}, 413: {"model": ErrorResponse},
                          429: {"model": ErrorResponse}})
     def create_analysis(
         body: CreateAnalysisRequest, user: User = signed_in
     ) -> CreateAnalysisResponse:
         """Create a record and return a presigned URL to PUT the video to."""
+        if settings.require_verified_email and not user.email_verified:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, VERIFY_FIRST)
         if body.size_bytes > settings.max_upload_bytes:
             raise HTTPException(
                 status.HTTP_413_CONTENT_TOO_LARGE,
@@ -181,6 +189,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                            f"Only failed analyses can be retried; this one is {row['status']}",
                            attempts=0)
         return summary_from_row(get_row(analysis_id, user), signed_get)
+
+    @app.delete("/analyses/{analysis_id}", status_code=204, responses=ERRORS)
+    def delete_analysis(analysis_id: str, user: User = signed_in) -> Response:
+        """Delete an analysis with its video and results, whatever its status.
+
+        If a worker is processing it, the worker finds the job gone and stops: its
+        status writes no longer match a row, and anything it publishes is removed.
+        """
+        purge_ids = db.delete_analysis(analysis_id, user.id, analysis_prefixes(analysis_id))
+        if purge_ids is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
+        run_purges(db, storage, purge_ids)
+        return Response(status_code=204)
 
     @app.get("/analyses/{analysis_id}/result", response_model=AnalysisResult, responses=ERRORS)
     def get_result(analysis_id: str, user: User = signed_in) -> AnalysisResult:
