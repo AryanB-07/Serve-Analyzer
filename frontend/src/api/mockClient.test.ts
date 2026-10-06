@@ -66,7 +66,7 @@ describe("mock client", () => {
 
   it("verifies new sign-ups only with a valid token", async () => {
     const { client } = setup();
-    const user = await client.signUp({ email: "New@Example.com", password: "long enough" });
+    const user = await client.signUp({ email: "New@Example.com", password: "long enough", accept_terms: true });
     expect(user.email_verified).toBe(false);
     await expect(client.verifyEmail("expired")).rejects.toMatchObject({ status: 400 });
     await client.verifyEmail("valid");

@@ -1,4 +1,5 @@
-"""Email verification, password-reset tokens, and the storage purge queue.
+"""Email verification, password-reset tokens, the storage purge queue, consent to the
+terms at signup, and upload retention.
 
 Revision ID: 0006
 Revises: 0005
@@ -19,6 +20,10 @@ depends_on = None
 def upgrade() -> None:
     with op.batch_alter_table("users") as batch:
         batch.add_column(sa.Column("email_verified_at", sa.DateTime(timezone=True)))
+        batch.add_column(sa.Column("terms_version", sa.String(32)))
+        batch.add_column(sa.Column("terms_accepted_at", sa.DateTime(timezone=True)))
+    with op.batch_alter_table("analyses") as batch:
+        batch.add_column(sa.Column("input_deleted_at", sa.DateTime(timezone=True)))
     op.create_table(
         "email_tokens",
         sa.Column("id", sa.String(32), primary_key=True),
@@ -43,5 +48,9 @@ def downgrade() -> None:
     op.drop_table("storage_purges")
     op.drop_index("ix_email_tokens_user_id", "email_tokens")
     op.drop_table("email_tokens")
+    with op.batch_alter_table("analyses") as batch:
+        batch.drop_column("input_deleted_at")
     with op.batch_alter_table("users") as batch:
+        batch.drop_column("terms_accepted_at")
+        batch.drop_column("terms_version")
         batch.drop_column("email_verified_at")

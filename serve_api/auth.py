@@ -43,6 +43,9 @@ SESSION_COOKIE = "serve_session"
 SESSION_TTL = timedelta(days=30)
 EXTEND_AFTER = timedelta(days=1)
 BAD_CREDENTIALS = "Incorrect email or password."
+# The date of the current Terms of Service and Privacy Policy (frontend/src/features/legal).
+# Change it whenever either document changes materially.
+TERMS_VERSION = "2026-10-06"
 VERIFY_TTL = timedelta(hours=24)
 RESET_TTL = timedelta(hours=1)
 BAD_LINK = "This link is invalid or has expired. Request a new one."
@@ -175,7 +178,8 @@ class Auth:
                    tasks: BackgroundTasks) -> User:
             """Create an account, sign in, and email a link to confirm the address."""
             self._check_ip(request)
-            row = self.db.create_user(normalise_email(body.email), _hasher.hash(body.password))
+            row = self.db.create_user(normalise_email(body.email), _hasher.hash(body.password),
+                                      terms_version=TERMS_VERSION)
             if row is None:
                 raise HTTPException(status.HTTP_409_CONFLICT,
                                     "An account with this email already exists.")

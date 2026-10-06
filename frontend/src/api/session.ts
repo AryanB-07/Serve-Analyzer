@@ -2,7 +2,7 @@ import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/re
 
 import { setUnauthorizedHandler } from "./client";
 import { shouldRetry } from "./retry";
-import type { Credentials, User } from "./types";
+import type { Credentials, SignupRequest, User } from "./types";
 import { api } from ".";
 
 export const sessionKey = ["session"] as const;
@@ -52,7 +52,7 @@ export function useLogIn() {
 export function useSignUp() {
   const switchUser = useSwitchUser();
   return useMutation({
-    mutationFn: (body: Credentials) => api.signUp(body),
+    mutationFn: (body: SignupRequest) => api.signUp(body),
     onSuccess: switchUser,
   });
 }

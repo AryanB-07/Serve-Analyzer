@@ -122,7 +122,7 @@ class Database:
             "content_type": content_type, "size_bytes": size_bytes,
             "status": "awaiting_upload", "error_code": None, "error_message": None,
             "counts": None, "created_at": ts, "updated_at": ts,
-            "claim_token": None, "heartbeat_at": None, "attempts": 0,
+            "claim_token": None, "heartbeat_at": None, "attempts": 0, "input_deleted_at": None,
         }
         conn.execute(insert(analyses).values(row))
         return row
@@ -267,10 +267,14 @@ class Database:
 
     # --- users and sessions ----------------------------------------------------
 
-    def create_user(self, email: str, password_hash: str) -> dict[str, Any] | None:
-        """Returns None if the email is already registered. ``email`` must be normalised."""
+    def create_user(self, email: str, password_hash: str,
+                    terms_version: str | None = None) -> dict[str, Any] | None:
+        """Returns None if the email is already registered. ``email`` must be normalised.
+        ``terms_version`` records the Terms and Privacy Policy accepted at signup."""
+        ts = now()
         row = {"id": uuid.uuid4().hex, "email": email, "password_hash": password_hash,
-               "created_at": now(), "email_verified_at": None}
+               "created_at": ts, "email_verified_at": None, "terms_version": terms_version,
+               "terms_accepted_at": ts if terms_version else None}
         try:
             with self.engine.begin() as conn:
                 conn.execute(insert(users).values(row))
@@ -441,6 +445,20 @@ class Database:
             if ids:
                 conn.execute(delete(analyses).where(analyses.c.id.in_(ids), *stale))
         return ids
+
+    def expire_inputs(self, uploaded_before: datetime, limit: int = 500) -> list[str]:
+        """Analyses whose original upload is due for deletion: uploaded before the cutoff,
+        not waiting in the queue or being processed, and not already expired. Returns ids."""
+        query = (select(analyses.c.id)
+                 .where(analyses.c.created_at < uploaded_before, analyses.c.input_deleted_at.is_(None),
+                        analyses.c.status.in_(("succeeded", "failed")))
+                 .order_by(analyses.c.created_at).limit(limit))
+        with self.engine.connect() as conn:
+            return list(conn.execute(query).scalars())
+
+    def mark_input_deleted(self, analysis_id: str) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(update(analyses).where(analyses.c.id == analysis_id).values(input_deleted_at=now()))
 
     def delete_session(self, token_hash: str) -> None:
         with self.engine.begin() as conn:

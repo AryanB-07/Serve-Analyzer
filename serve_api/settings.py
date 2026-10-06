@@ -61,6 +61,10 @@ class Settings:
     verify_email: bool | None = field(
         default_factory=lambda: {"1": True, "0": False}.get(_env("REQUIRE_VERIFIED_EMAIL", ""))
     )
+    # Original uploads are deleted this many days after upload (0 keeps them). Results,
+    # including their own playback copy of the video, are kept until the person deletes them.
+    upload_retention_days: int = field(
+        default_factory=lambda: int(_env("UPLOAD_RETENTION_DAYS", "30")))
     max_upload_bytes: int = 200 * 1024 * 1024
     upload_url_ttl_s: int = 15 * 60
     # Long enough that seeking (new Range requests) keeps working while a results page is open.

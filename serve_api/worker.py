@@ -120,11 +120,19 @@ def sweep(db: Database, lease: timedelta = LEASE, max_attempts: int = MAX_ATTEMP
         log.warning("failed %d analyses after %d attempts", failed, max_attempts)
 
 
-def housekeeping(db: Database, storage: Storage) -> None:
+def housekeeping(db: Database, storage: Storage, upload_retention_days: int = 0) -> None:
     """Delete what nobody will use again: abandoned uploads, dead sessions and links, old
-    attempts. Also retries storage deletions that failed when an analysis or account was deleted."""
+    attempts, and (with ``upload_retention_days``) original videos past their retention
+    period. Also retries storage deletions that failed when an analysis or account was deleted."""
     if left := run_purges(db, storage):
         log.warning("%d storage deletions still pending", left)
+    if upload_retention_days > 0:
+        expired = db.expire_inputs(now() - timedelta(days=upload_retention_days))
+        for analysis_id in expired:
+            storage.delete_prefix(keys.upload_prefix(analysis_id))
+            db.mark_input_deleted(analysis_id)
+        if expired:
+            log.info("deleted %d original uploads older than %d days", len(expired), upload_retention_days)
     for analysis_id in db.delete_abandoned_uploads(now() - ABANDONED_AFTER):
         storage.delete_prefix(keys.upload_prefix(analysis_id))
         log.info("deleted abandoned upload %s", analysis_id)
@@ -144,7 +152,7 @@ def run(settings: Settings, poll_s: float = 1.0, once: bool = False) -> None:
             sweep(db)
             last_sweep = time.monotonic()
         if time.monotonic() - last_housekeeping >= HOUSEKEEPING_EVERY_S:
-            housekeeping(db, storage)
+            housekeeping(db, storage, settings.upload_retention_days)
             last_housekeeping = time.monotonic()
         job = db.claim_next(uuid.uuid4().hex)
         if job is not None:

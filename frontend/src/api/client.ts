@@ -6,6 +6,7 @@ import type {
   CreateAnalysisResponse,
   Credentials,
   FramesPayload,
+  SignupRequest,
   UploadTarget,
   User,
 } from "./types";
@@ -14,7 +15,7 @@ import type {
 export interface ApiClient {
   /** The signed-in user, or null when there is no valid session. */
   getMe(): Promise<User | null>;
-  signUp(body: Credentials): Promise<User>;
+  signUp(body: SignupRequest): Promise<User>;
   logIn(body: Credentials): Promise<User>;
   logOut(): Promise<void>;
   /** Confirm an email address with the token from the emailed link. */

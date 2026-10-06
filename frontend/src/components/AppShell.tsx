@@ -86,8 +86,12 @@ export function AppShell() {
         <Outlet />
       </main>
       <footer className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-4 py-4 text-xs text-ink-muted">
-          Serve Analyzer · Tennis serve biomechanics, frame by frame
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-ink-muted">
+          <span>Serve Analyzer · Tennis serve biomechanics, frame by frame</span>
+          <nav aria-label="Legal" className="flex gap-4">
+            <Link to="/privacy" className="hover:text-ink">Privacy</Link>
+            <Link to="/terms" className="hover:text-ink">Terms</Link>
+          </nav>
         </div>
       </footer>
     </div>

@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 
 import { ApiError } from "../../api";
+import { LEGAL } from "../legal/config";
 
 export const MIN_PASSWORD_LENGTH = 8;
 
@@ -31,6 +32,7 @@ export function AuthForm({ title, subtitle, submitLabel, pendingLabel, mode, pen
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
   const signingUp = mode === "signup";
 
   function submit(event: FormEvent) {
@@ -45,6 +47,10 @@ export function AuthForm({ title, subtitle, submitLabel, pendingLabel, mode, pen
     }
     if (!password) {
       setProblem("Enter your password.");
+      return;
+    }
+    if (signingUp && !accepted) {
+      setProblem("Accept the Terms of Service and Privacy Policy to create an account.");
       return;
     }
     setProblem(null);
@@ -101,6 +107,22 @@ export function AuthForm({ title, subtitle, submitLabel, pendingLabel, mode, pen
             <p id={`${id}-password-hint`} className="text-xs text-ink-muted">At least {MIN_PASSWORD_LENGTH} characters.</p>
           )}
         </div>
+        {signingUp && (
+          <label className="flex items-start gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+              className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
+            />
+            <span>
+              I'm at least {LEGAL.minimumAge} and agree to the{" "}
+              <a href="/terms" target="_blank" rel="noopener" className="font-medium text-accent underline">Terms of Service</a>{" "}
+              and{" "}
+              <a href="/privacy" target="_blank" rel="noopener" className="font-medium text-accent underline">Privacy Policy</a>.
+            </span>
+          </label>
+        )}
         {message && (
           <p id={`${id}-error`} role="alert" className="rounded-lg border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
             {message}

@@ -12,6 +12,7 @@ import { LoginPage, SignupPage } from "./features/auth/AuthPages";
 import { RequireAuth } from "./features/auth/RequireAuth";
 import { ComparePage } from "./features/compare/ComparePage";
 import { HistoryPage } from "./features/history/HistoryPage";
+import { PrivacyPage, TermsPage } from "./features/legal/LegalPages";
 import { ResultsPage } from "./features/results/ResultsPage";
 import { UploadPage } from "./features/upload/UploadPage";
 
@@ -34,6 +35,8 @@ export const routes = [
       { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/verify-email", element: <VerifyEmailPage /> },
       { path: "/account-deleted", element: <AccountDeletedPage /> },
+      { path: "/privacy", element: <PrivacyPage /> },
+      { path: "/terms", element: <TermsPage /> },
       {
         element: <RequireAuth />,
         children: [

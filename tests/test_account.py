@@ -51,7 +51,7 @@ def db_of(app):
 
 def signup(client: TestClient, email: str | None = None) -> str:
     email = email or f"{uuid.uuid4().hex[:10]}@example.com"
-    res = client.post("/auth/signup", json={"email": email, "password": PASSWORD})
+    res = client.post("/auth/signup", json={"email": email, "password": PASSWORD, "accept_terms": True})
     assert res.status_code == 201, res.text
     return email
 
@@ -299,7 +299,7 @@ def test_deleting_an_account_removes_everything_it_owns(app, client, mailer, set
     assert storage.size(keys.input_key(theirs, "video/mp4")) == 1
     assert mailer.sent[-1].to == email and "deleted" in mailer.sent[-1].subject
     # The address is free to sign up again.
-    assert client.post("/auth/signup", json={"email": email, "password": PASSWORD}).status_code == 201
+    assert client.post("/auth/signup", json={"email": email, "password": PASSWORD, "accept_terms": True}).status_code == 201
 
 
 def test_wrong_passwords_when_deleting_are_rate_limited(client):
@@ -390,4 +390,4 @@ def test_a_failed_send_does_not_break_signup(tmp_path):
             raise smtplib.SMTPException("down")
 
     client = TestClient(create_app(Settings(data_dir=tmp_path, secret="t", public_base=""), Broken()))
-    assert client.post("/auth/signup", json={"email": "a@example.com", "password": PASSWORD}).status_code == 201
+    assert client.post("/auth/signup", json={"email": "a@example.com", "password": PASSWORD, "accept_terms": True}).status_code == 201

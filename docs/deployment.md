@@ -50,8 +50,15 @@ With the AWS CLI: `aws s3api put-bucket-cors --bucket <name> --cors-configuratio
 The credentials need `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` and `s3:ListBucket` on
 the bucket. An IAM role attached to the server works instead of access keys.
 
-Optionally, add a lifecycle rule that expires `uploads/` after 30 days. Original videos are
-only needed to retry a failed analysis, and the results under `analyses/` are what people keep.
+**Leave versioning off** (the default). The app deletes videos when people delete an analysis or
+their account, and deletes original uploads after `SERVE_API_UPLOAD_RETENTION_DAYS` (30). With
+versioning on, those deletions would only hide the files, and the Privacy Policy would be wrong.
+If you want versioning as protection against mistakes, add a lifecycle rule that permanently
+deletes noncurrent versions after at most as many days as `backupRetentionDays` in the policy
+(7).
+
+The app removes original uploads itself. An S3 lifecycle rule expiring `uploads/` after 31 days
+is an optional safety net.
 
 ## 3. Configure
 
@@ -77,6 +84,7 @@ Fill in `deploy/.env`:
 | `SERVE_API_SMTP_HOST`, `SERVE_API_SMTP_PORT` | Your mail server, e.g. `smtp.gmail.com` and `587` (see "Email" below) |
 | `SERVE_API_SMTP_USERNAME`, `SERVE_API_SMTP_PASSWORD` | The sending account and its password (for Gmail, an app password) |
 | `SERVE_API_EMAIL_FROM` | Optional From address; defaults to the SMTP username |
+| `SERVE_API_UPLOAD_RETENTION_DAYS` | Days to keep original uploads (default 30; `0` keeps them). Must match `uploadRetentionDays` in the Privacy Policy config. |
 
 The API and workers refuse to start outside development if `SERVE_API_SECRET` is empty or the
 development value, if no SMTP host is set, or if `SERVE_API_APP_URL` still points at localhost.
@@ -130,8 +138,10 @@ site and create an account.
   worth alerting on: `requeued … whose worker stopped responding` and `failed … after 3 attempts`.
 - **Health:** point an uptime monitor at `https://<domain>/api/health`. It returns 503 if the
   database can't be reached.
-- **Backups:** your managed Postgres handles the database. For the bucket, enable versioning,
-  or replicate it if you need to protect against deletion.
+- **Backups:** your managed Postgres handles the database. Keep its automated backup retention
+  equal to `backupRetentionDays` in `frontend/src/features/legal/config.ts` (RDS defaults to 7
+  days), because the Privacy Policy states that number. For the bucket, see the versioning note
+  in step 2.
 - **Limits:** `SERVE_API_DAILY_ANALYSIS_LIMIT` and `SERVE_API_MAX_ACTIVE_ANALYSES` control each
   user's budget.
 

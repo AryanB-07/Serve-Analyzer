@@ -48,11 +48,11 @@ describe("http client auth", () => {
   it("sends credentials as JSON to the auth endpoints", async () => {
     const fetchMock = respond(201, MOCK_USER);
     vi.stubGlobal("fetch", fetchMock);
-    await httpClient.signUp({ email: "a@example.com", password: "long enough" });
+    await httpClient.signUp({ email: "a@example.com", password: "long enough", accept_terms: true });
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("/api/auth/signup");
     expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body as string)).toEqual({ email: "a@example.com", password: "long enough" });
+    expect(JSON.parse(init.body as string)).toEqual({ email: "a@example.com", password: "long enough", accept_terms: true });
   });
 });
 

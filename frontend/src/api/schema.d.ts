@@ -596,6 +596,8 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+            /** Accept Terms */
+            accept_terms: boolean;
         };
         /** SmoothedLandmarks */
         SmoothedLandmarks: {

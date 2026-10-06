@@ -76,10 +76,12 @@ function renderApp(path: string): { router: ReturnType<typeof createMemoryRouter
 const where = (router: ReturnType<typeof createMemoryRouter>) =>
   router.state.location.pathname + router.state.location.search;
 
-async function fillAndSubmit(email: string, password: string, button: RegExp) {
+async function fillAndSubmit(email: string, password: string, button: RegExp, acceptTerms = true) {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Email"), email);
   await user.type(screen.getByLabelText("Password"), password);
+  const consent = screen.queryByRole("checkbox", { name: /agree to the Terms/ });
+  if (consent && acceptTerms) await user.click(consent);
   await user.click(screen.getByRole("button", { name: button }));
 }
 
@@ -187,6 +189,17 @@ describe("sign up", () => {
     await fillAndSubmit("new@example.com", "long enough", /create account/i);
     expect(await screen.findByRole("heading", { name: "Upload page" })).toBeInTheDocument();
     expect(screen.getByText("new@example.com")).toBeInTheDocument();
+    expect(fake.signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "long enough", accept_terms: true });
+  });
+
+  it("needs the terms accepted, and links to them", async () => {
+    renderApp("/signup");
+    await screen.findByRole("heading", { name: "Create your account" });
+    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveAttribute("href", "/terms");
+    expect(screen.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute("href", "/privacy");
+    await fillAndSubmit("new@example.com", "long enough", /create account/i, false);
+    expect(screen.getByRole("alert")).toHaveTextContent("Accept the Terms of Service and Privacy Policy");
+    expect(fake.signUp).not.toHaveBeenCalled();
   });
 
   it("says so when the email is taken", async () => {

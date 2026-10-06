@@ -31,7 +31,7 @@ def db(client: TestClient):
 
 
 def signup(client: TestClient, email: str = "Player@Example.com", password: str = PASSWORD):
-    return client.post("/auth/signup", json={"email": email, "password": password})
+    return client.post("/auth/signup", json={"email": email, "password": password, "accept_terms": True})
 
 
 def login(client: TestClient, email: str = "player@example.com", password: str = PASSWORD):
@@ -178,12 +178,12 @@ def test_rate_limit_rows_do_not_store_emails(client):
 def test_cross_origin_writes_are_refused(settings):
     client = TestClient(create_app(settings))
     foreign = {"origin": "https://evil.example"}
-    assert client.post("/auth/signup", json={"email": "a@example.com", "password": PASSWORD},
+    assert client.post("/auth/signup", json={"email": "a@example.com", "password": PASSWORD, "accept_terms": True},
                        headers=foreign).status_code == 403
     assert client.post("/auth/logout", headers=foreign).status_code == 403
     assert client.get("/auth/me", headers=foreign).status_code == 401  # reads aren't blocked
     same = {"origin": "http://testserver"}
-    assert client.post("/auth/signup", json={"email": "a@example.com", "password": PASSWORD},
+    assert client.post("/auth/signup", json={"email": "a@example.com", "password": PASSWORD, "accept_terms": True},
                        headers=same).status_code == 201
 
 

@@ -41,8 +41,10 @@ ENV SERVE_API_ENV=production SERVE_API_DATA_DIR=/data
 EXPOSE 8000
 # --proxy-headers: trust Caddy's X-Forwarded-For so rate limits see the real client IP.
 # The API is only reachable from Caddy on the compose network.
+# --no-access-log: don't keep a log of every request's IP address (see the Privacy Policy);
+# errors and the worker's job log are still written.
 CMD ["sh", "-c", "exec uvicorn serve_api.app:create_app --factory --host 0.0.0.0 --port 8000 \
---proxy-headers --forwarded-allow-ips='*' --workers ${API_PROCESSES:-2}"]
+--proxy-headers --forwarded-allow-ips='*' --no-access-log --workers ${API_PROCESSES:-2}"]
 
 # --- web: Caddy with the built frontend ------------------------------------------------
 FROM caddy:2 AS web

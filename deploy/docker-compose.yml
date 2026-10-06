@@ -3,7 +3,15 @@
 #   docker compose -f deploy/docker-compose.yml up -d --build
 # See docs/deployment.md for the full walkthrough.
 
+# Container logs rotate at 5 x 10 MB per container instead of growing forever.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 x-app: &app
+  logging: *logging
   build:
     context: ..
     target: app
@@ -20,6 +28,7 @@ services:
       context: ..
       target: web
     image: serve-analyzer-web
+    logging: *logging
     restart: unless-stopped
     ports:
       - "80:80"
@@ -59,6 +68,7 @@ services:
   postgres:
     image: postgres:16
     profiles: ["bundled-db"]
+    logging: *logging
     restart: unless-stopped
     environment:
       POSTGRES_USER: serve

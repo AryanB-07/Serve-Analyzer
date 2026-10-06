@@ -156,6 +156,7 @@ uv run alembic revision --autogenerate -m "add users table"
 | `SERVE_API_SMTP_HOST`, `SERVE_API_SMTP_PORT` | none, `587` | Outgoing mail server. With no host, emails go to `var/outbox` and the log (development only) |
 | `SERVE_API_SMTP_USERNAME`, `SERVE_API_SMTP_PASSWORD` | none | SMTP login; for Gmail, the address and an app password |
 | `SERVE_API_EMAIL_FROM` | the SMTP username | The From address |
+| `SERVE_API_UPLOAD_RETENTION_DAYS` | `30` | Days before original uploads are deleted (results keep their own copy); `0` keeps them |
 | `SERVE_API_REQUIRE_VERIFIED_EMAIL` | on unless `SERVE_API_ENV=development` | `1`/`0`: must people confirm their email before analysing? |
 
 ### Accounts
@@ -183,6 +184,14 @@ and password accounts:
   - Files are deleted through a queue written in the same transaction as the database change,
     so a storage outage delays a deletion but can't lose it. The worker retries anything left.
   - An analysis deleted mid-processing leaves nothing behind.
+- **Retention and consent.** Original uploads are deleted 30 days after upload; results keep
+  their own playback copy. Signing up requires accepting the Terms of Service and Privacy Policy
+  (`/terms`, `/privacy`). The accepted version and time are recorded.
+  - The pages' operator details are placeholders in `frontend/src/features/legal/config.ts`.
+  - `tests/test_legal_sync.py` keeps the pages' stated terms version and retention period in
+    step with the backend.
+- The API doesn't write a request log (`--no-access-log`), so visitors' IP addresses aren't
+  kept. Container logs rotate at 50 MB per container.
 - POST, PUT and DELETE requests from another origin are refused (CSRF protection on top of
   `SameSite`).
 

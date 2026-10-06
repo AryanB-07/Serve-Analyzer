@@ -185,6 +185,16 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
               responses=LIMITED)
     def retry_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
         row = get_row(analysis_id, user)
+        if row["status"] == "failed" and (
+            row["input_deleted_at"] is not None
+            or storage.size(keys.input_key(analysis_id, row["content_type"])) is None
+        ):
+            why = (f"Original videos are kept for {settings.upload_retention_days} days"
+                   if row["input_deleted_at"] is not None else "The original video is no longer stored")
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                f"{why}, so this analysis can't be retried. Upload the video again instead.",
+            )
         queue_within_limit(analysis_id, user, "failed",
                            f"Only failed analyses can be retried; this one is {row['status']}",
                            attempts=0)

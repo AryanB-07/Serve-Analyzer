@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, EmailStr, Field, create_model
+from pydantic import BaseModel, EmailStr, Field, create_model, field_validator
 
 from serve_analyzer.angles import METRIC_NAMES
 from serve_analyzer.errors import ErrorCode
@@ -167,6 +167,15 @@ class SignupRequest(BaseModel):
     email: EmailStr = Field(max_length=320)
     # No composition rules (NIST SP 800-63B); the upper bound caps hashing cost.
     password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=256)
+    # The person confirms they're old enough and agree to the Terms and Privacy Policy.
+    accept_terms: bool
+
+    @field_validator("accept_terms")
+    @classmethod
+    def _must_accept(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("You need to accept the Terms of Service and Privacy Policy.")
+        return value
 
 
 class LoginRequest(BaseModel):

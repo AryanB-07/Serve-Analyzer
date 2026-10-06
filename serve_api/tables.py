@@ -64,6 +64,8 @@ analyses = Table(
     Column("claim_token", String(32)),
     Column("heartbeat_at", UTCDateTime),
     Column("attempts", Integer, nullable=False, server_default="0"),
+    # When the original upload was deleted under the retention policy (results are kept).
+    Column("input_deleted_at", UTCDateTime),
     Index("analyses_status", "status", "updated_at"),
     Index("analyses_user_created", "user_id", "created_at", "id"),  # a user's History page
 )
@@ -77,6 +79,9 @@ users = Table(
     Column("password_hash", String(255), nullable=False),
     Column("created_at", UTCDateTime, nullable=False),
     Column("email_verified_at", UTCDateTime),
+    # Which version of the Terms and Privacy Policy the person agreed to at signup, and when.
+    Column("terms_version", String(32)),
+    Column("terms_accepted_at", UTCDateTime),
 )
 
 email_tokens = Table(

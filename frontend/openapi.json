@@ -2122,12 +2122,17 @@
             "maxLength": 256,
             "minLength": 8,
             "title": "Password"
+          },
+          "accept_terms": {
+            "type": "boolean",
+            "title": "Accept Terms"
           }
         },
         "type": "object",
         "required": [
           "email",
-          "password"
+          "password",
+          "accept_terms"
         ],
         "title": "SignupRequest"
       },
