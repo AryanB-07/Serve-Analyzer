@@ -12,8 +12,8 @@ function navClass({ isActive }: { isActive: boolean }) {
 
 function AccountControls() {
   const session = useSession();
-  const logOut = useLogOut();
   const navigate = useNavigate();
+  const logOut = useLogOut(() => navigate("/login", { replace: true }));
   const user = session.data;
   if (!user) return null;
   return (
@@ -28,7 +28,7 @@ function AccountControls() {
       </Link>
       <button
         type="button"
-        onClick={() => logOut.mutate(undefined, { onSettled: () => navigate("/login", { replace: true }) })}
+        onClick={() => logOut.mutate()}
         disabled={logOut.isPending}
         className="rounded-md px-3 py-1.5 text-sm font-medium text-ink-muted hover:text-ink disabled:opacity-50"
       >

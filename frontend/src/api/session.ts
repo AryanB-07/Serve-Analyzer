@@ -57,12 +57,19 @@ export function useSignUp() {
   });
 }
 
-export function useLogOut() {
+/**
+ * ``onSignedOut`` runs before the session is cleared, so the page can leave the signed-in
+ * routes first. (Otherwise the route guard's redirect to /login?next=… races it.)
+ */
+export function useLogOut(onSignedOut?: () => void) {
   const switchUser = useSwitchUser();
   return useMutation({
     mutationFn: () => api.logOut(),
     // Signed out locally even if the request failed: the user asked to leave.
-    onSettled: () => switchUser(null),
+    onSettled: () => {
+      onSignedOut?.();
+      switchUser(null);
+    },
   });
 }
 
