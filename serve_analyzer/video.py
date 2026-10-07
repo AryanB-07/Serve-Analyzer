@@ -73,10 +73,22 @@ def iter_frames(path: str | Path) -> Iterator[np.ndarray]:
         cap.release()
 
 
+# Whether OpenCV can write H.264 here: None until the first try. OpenCV's Linux wheels can't,
+# and each failed attempt prints several ffmpeg errors, so it's tried once per process.
+_h264_writer_works: bool | None = None
+
+
 def open_writer(path: str | Path, fps: float, width: int, height: int) -> cv2.VideoWriter:
-    """Open an MP4 writer, preferring H.264 (browser-playable) over MPEG-4 Part 2."""
-    for codec in ("avc1", "mp4v"):
+    """Open an MP4 writer, preferring H.264 (browser-playable) over MPEG-4 Part 2.
+
+    Where H.264 isn't available, make_browser_playable re-encodes the result afterwards.
+    """
+    global _h264_writer_works
+    codecs = ("avc1", "mp4v") if _h264_writer_works is not False else ("mp4v",)
+    for codec in codecs:
         writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*codec), fps, (width, height))
+        if codec == "avc1":
+            _h264_writer_works = writer.isOpened()
         if writer.isOpened():
             return writer
         writer.release()

@@ -39,3 +39,23 @@ def test_without_ffmpeg_the_file_is_left_as_is(tmp_path, monkeypatch):
     monkeypatch.setattr(shutil, "which", lambda name: None)
     assert make_browser_playable(clip) == clip
     assert clip.read_bytes() == before
+
+
+def test_a_missing_h264_writer_is_only_tried_once(tmp_path, monkeypatch):
+    import serve_analyzer.video as video
+
+    tried = []
+    real_writer = cv2.VideoWriter
+
+    def fake_writer(path, code, fps, size):
+        name = "".join(chr((code >> 8 * i) & 0xFF) for i in range(4))
+        tried.append(name)
+        if name == "avc1":  # behave like OpenCV's Linux wheels
+            return real_writer(str(path), cv2.VideoWriter_fourcc(*"XXXX"), fps, size)
+        return real_writer(path, code, fps, size)
+
+    monkeypatch.setattr(video, "_h264_writer_works", None)
+    monkeypatch.setattr(video.cv2, "VideoWriter", fake_writer)
+    for i in range(3):
+        video.open_writer(tmp_path / f"{i}.mp4", 25, 64, 48).release()
+    assert tried == ["avc1", "mp4v", "mp4v", "mp4v"]
