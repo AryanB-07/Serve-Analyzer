@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,17 +17,18 @@ from .config import AnalysisConfig
 from .errors import AnalysisError
 from .export import build_frames_payload
 from .metrics import compute_metrics
-from .models import AnalysisResult, Hand, PhaseFrames, PoseSequence
+from .models import AnalysisResult, Hand, PhaseFrames, PoseSequence, VideoInfo
 from .outputs import ANNOTATED_FILE, FRAMES_FILE, PLAYBACK_FILE, RESULTS_FILE, THUMBNAIL_FILE
 from .phases import REJECTION_MESSAGES, detect_contact, detect_phases, serve_rejection
 from .pose import ensure_model, extract_pose_sequence
 from .preprocessing import clean
 from .reference import RangeTable, assess, load_ranges, ranges_to_dict, to_labels
-from .video import probe, validate, write_playback_copy, write_thumbnail
+from .video import probe_or_convert, validate, write_playback_copy, write_thumbnail
 
 __all__ = ["AnalysisError", "SequenceAnalysis", "Stage", "analyze", "analyze_sequence"]
 
 Stage = Literal["extracting_pose", "analyzing", "rendering"]
+PoseExtractor = Callable[[VideoInfo, Path], PoseSequence]
 
 
 @dataclass
@@ -186,10 +188,13 @@ def analyze(
     debug_plots: bool = False,
     render_video: bool = True,
     on_stage: Callable[[Stage], None] | None = None,
+    pose_extractor: PoseExtractor | None = None,
 ) -> AnalysisResult:
     """Validate, extract pose, analyse, and write outputs into ``out_dir``.
 
-    ``on_stage`` is called as each stage starts, for progress reporting.
+    ``on_stage`` is called as each stage starts, for progress reporting. ``pose_extractor``
+    replaces ``extract_pose_sequence``; the worker passes ``extract_pose_in_subprocess`` so
+    MediaPipe's memory is released after each video.
     """
     config = config or AnalysisConfig()
     hand = Hand(hand)
@@ -197,13 +202,23 @@ def analyze(
     out_dir.mkdir(parents=True, exist_ok=True)
     report = on_stage or (lambda stage: None)
 
-    info = probe(video_path)
+    # A converted copy (for formats OpenCV can't decode) lives here, outside out_dir.
+    with tempfile.TemporaryDirectory(prefix="serve-analyzer-") as scratch:
+        info = probe_or_convert(video_path, scratch)
+        return _analyze_video(info, hand, out_dir, config, debug_plots, render_video, report,
+                              pose_extractor or extract_pose_sequence)
+
+
+def _analyze_video(
+    info: VideoInfo, hand: Hand, out_dir: Path, config: AnalysisConfig, debug_plots: bool,
+    render_video: bool, report: Callable[[Stage], None], pose_extractor: PoseExtractor,
+) -> AnalysisResult:
     validate(info, config.max_duration_s, config.min_fps)
     ranges = load_ranges(config.reference_ranges_path)
 
     report("extracting_pose")
     model_path = ensure_model(config.model_variant, config.model_dir)
-    raw = extract_pose_sequence(info, model_path)
+    raw = pose_extractor(info, model_path)
 
     report("analyzing")
     analysis = analyze_sequence(raw, hand, config, ranges)

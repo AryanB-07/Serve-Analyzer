@@ -2,21 +2,16 @@
 
 from __future__ import annotations
 
+import multiprocessing
 import os
 import tempfile
 import urllib.request
 from collections.abc import Callable
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import cv2
-import mediapipe as mp
 import numpy as np
-from mediapipe.tasks.python import BaseOptions
-from mediapipe.tasks.python.vision import (
-    PoseLandmarker,
-    PoseLandmarkerOptions,
-    RunningMode,
-)
 
 from .landmarks import NUM_LANDMARKS
 from .models import PoseSequence, VideoInfo
@@ -56,6 +51,12 @@ def extract_pose_sequence(
     ``transform`` optionally alters each BGR frame first (the evaluation uses
     it to flip or downscale video); pixel coordinates follow the transformed size.
     """
+    # Imported here, not at module level, so processes that never extract pose (the API, the
+    # worker's parent process) don't load MediaPipe.
+    import mediapipe as mp
+    from mediapipe.tasks.python import BaseOptions
+    from mediapipe.tasks.python.vision import PoseLandmarker, PoseLandmarkerOptions, RunningMode
+
     width, height = info.width, info.height
     options = PoseLandmarkerOptions(
         base_options=BaseOptions(
@@ -103,3 +104,15 @@ def _to_pixel_array(poses: list, width: int, height: int) -> np.ndarray:
     for j, lm in enumerate(poses[0]):
         out[j] = (lm.x * width, lm.y * height, lm.visibility)
     return out
+
+
+def extract_pose_in_subprocess(info: VideoInfo, model_path: Path) -> PoseSequence:
+    """``extract_pose_sequence`` in a fresh process that exits when it's done.
+
+    MediaPipe's memory only goes back to the operating system when its process ends. In a
+    long-running worker it grew with every video (711, 763, 864 MB idle after three 1080p
+    jobs) and was still held while ffmpeg encoded the results. A short-lived process returns
+    all of it after each pose pass, at the cost of a second or two to start.
+    """
+    with ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context("spawn")) as pool:
+        return pool.submit(extract_pose_sequence, info, model_path).result()

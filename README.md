@@ -354,14 +354,14 @@ missing (for example, no ball toss before the swing).
 
 | Stage | Module | What it does |
 |---|---|---|
-| Validate | `video.py` | Checks duration and frame rate; takes dimensions from a decoded frame so portrait phone video is handled |
-| Pose | `pose.py` | MediaPipe Tasks `PoseLandmarker` in VIDEO mode |
+| Validate | `video.py` | Accepts MOV, MP4/M4V, WebM, MKV, AVI, 3GP and MTS (H.264, HEVC, VP8/9, ProRes and more), and converts anything else ffmpeg can read, such as AV1. Checks duration and frame rate; takes dimensions from a decoded frame so portrait phone video is handled |
+| Pose | `pose.py` | MediaPipe Tasks `PoseLandmarker` in VIDEO mode. The worker runs it in a short-lived child process, so MediaPipe's memory is released after every video |
 | Clean | `preprocessing.py` | Drops low-visibility points, fills gaps of ≤5 frames, Savitzky–Golay smoothing |
 | Angles | `angles.py` | Front/back knee flexion, hitting elbow angle, trunk tilt, wrist height in body heights |
 | Serve check | `phases.py` | Rejects clips that aren't a serve: the toss must rise and peak before contact, and at contact the hitting wrist must be above the head with the toss arm down (see `docs/serve-check.md`) |
 | Phases | `phases.py` | Contact = hitting wrist highest; trophy = deepest knee bend before contact with the toss arm raised; racket drop = most flexed elbow in between |
 | Assess | `metrics.py`, `reference.py`, `feedback.py` | Values at each phase, labels from `reference_ranges.json`, ranked feedback rules |
-| Export | `export.py`, `render.py`, `pipeline.py` | `results.json`, `frames.json`, playback/annotated videos, thumbnail |
+| Export | `export.py`, `render.py`, `pipeline.py` | `results.json`, `frames.json`, thumbnail, and playback/annotated videos encoded once to H.264 by piping frames into ffmpeg (browsers can't play OpenCV's Linux output) |
 
 ## Design notes
 

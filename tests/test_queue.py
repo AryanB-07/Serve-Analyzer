@@ -111,7 +111,7 @@ def test_a_job_that_keeps_killing_workers_is_failed_after_three_attempts(db):
 def fake_analyze(duration_s: float, during=None):
     """Stands in for the pipeline: reports stages, takes a while, writes results.json."""
 
-    def analyze(video, hand, out_dir, on_stage):
+    def analyze(video, hand, out_dir, on_stage, **kwargs):
         for stage in ("extracting_pose", "analyzing", "rendering"):
             on_stage(stage)
             time.sleep(duration_s / 3)

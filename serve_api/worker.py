@@ -12,6 +12,7 @@ job's status.
 from __future__ import annotations
 
 import argparse
+import ctypes
 import json
 import logging
 import threading
@@ -21,6 +22,7 @@ from datetime import timedelta
 
 from serve_analyzer.errors import PipelineError
 from serve_analyzer.pipeline import analyze
+from serve_analyzer.pose import extract_pose_in_subprocess
 
 from . import keys, migrate
 from .convert import counts_from_labels, public_message
@@ -89,7 +91,8 @@ def process(job: dict, db: Database, storage: Storage, token: str,
     with Heartbeat(db, analysis_id, token, heartbeat_every), storage.scratch_dir() as work:
         try:
             with storage.local_copy(input_key) as video:
-                result = analyze(video, job["hand"], work, on_stage=write)
+                result = analyze(video, job["hand"], work, on_stage=write,
+                                 pose_extractor=extract_pose_in_subprocess)
             counts = counts_from_labels(json.loads((work / keys.RESULTS).read_text())["labels"])
         except PipelineError as exc:
             log.info("analysis %s failed: %s (%s)", analysis_id, exc.code, exc)
@@ -110,6 +113,18 @@ def process(job: dict, db: Database, storage: Storage, token: str,
         for prefix in analysis_prefixes(analysis_id):
             storage.delete_prefix(prefix)
         log.info("analysis %s was deleted while processing; outputs removed", analysis_id)
+
+
+def release_memory() -> None:
+    """Hand memory freed by the last job back to the operating system.
+
+    glibc keeps freed memory for reuse; after a 1080p job this returns about 115 MB
+    (374 -> 258 MB measured). A no-op where libc isn't glibc (macOS, Alpine).
+    """
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):
+        pass
 
 
 def sweep(db: Database, lease: timedelta = LEASE, max_attempts: int = MAX_ATTEMPTS) -> None:
@@ -157,6 +172,7 @@ def run(settings: Settings, poll_s: float = 1.0, once: bool = False) -> None:
         job = db.claim_next(uuid.uuid4().hex)
         if job is not None:
             process(job, db, storage, job["claim_token"])
+            release_memory()
         elif once:
             return
         else:

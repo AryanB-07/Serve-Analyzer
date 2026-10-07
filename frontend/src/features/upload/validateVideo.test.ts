@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { checkFile, checkMetadata, MAX_UPLOAD_BYTES } from "./validateVideo";
+import { ACCEPT, checkFile, checkMetadata, MAX_UPLOAD_BYTES } from "./validateVideo";
 
 const file = (name: string, type: string, size = 1000) => ({ name, type, size });
 
@@ -16,8 +16,8 @@ describe("checkFile", () => {
   });
 
   it("rejects other types, empty files and oversized files", () => {
-    expect(checkFile(file("serve.avi", "video/x-msvideo"))).toMatchObject({ ok: false });
-    expect(checkFile(file("notes.txt", "text/plain"))).toMatchObject({ ok: false });
+    expect(checkFile(file("serve.flv", "video/x-flv"))).toMatchObject({ ok: false });
+    expect(checkFile(file("notes.txt", "text/plain"))).toMatchObject({ ok: false, message: expect.stringContaining("MP4, MOV") });
     expect(checkFile(file("a.mp4", "video/mp4", 0))).toMatchObject({ ok: false, message: "That file is empty." });
     const big = checkFile(file("a.mp4", "video/mp4", MAX_UPLOAD_BYTES + 1));
     expect(big.ok).toBe(false);
@@ -41,5 +41,27 @@ describe("checkMetadata", () => {
 
   it("rejects files with no video track", () => {
     expect(checkMetadata({ durationS: 5, width: 0, height: 0 })).toMatch(/only audio/);
+  });
+});
+
+describe("supported formats", () => {
+  it.each([
+    ["IMG_0001.MOV", "", "video/quicktime"],
+    ["serve.mov", "video/quicktime", "video/quicktime"],
+    ["serve.mp4", "video/mp4", "video/mp4"],
+    ["export.m4v", "video/x-m4v", "video/mp4"],
+    ["screen.webm", "video/webm", "video/webm"],
+    ["clip.mkv", "", "video/x-matroska"],
+    ["old.avi", "video/avi", "video/x-msvideo"],
+    ["android.3gp", "video/3gpp", "video/3gpp"],
+    ["00001.MTS", "model/vnd.mts", "video/mp2t"],
+    ["camcorder.m2ts", "video/vnd.dlna.mpeg-tts", "video/mp2t"],
+    ["no-extension", "video/webm", "video/webm"],
+  ])("%s (browser says %j) is sent as %s", (name, type, expected) => {
+    expect(checkFile(file(name, type))).toEqual({ ok: true, contentType: expected });
+  });
+
+  it("lets the picker choose any video and the listed extensions", () => {
+    expect(ACCEPT.split(",")).toEqual(expect.arrayContaining(["video/*", ".mov", ".mp4", ".mkv", ".mts"]));
   });
 });

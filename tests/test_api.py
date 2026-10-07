@@ -59,9 +59,20 @@ def test_create_rejects_oversized_and_bad_type(client):
     })
     assert too_big.status_code == 413
     bad_type = client.post("/analyses", json={
-        "hand": "right", "filename": "a.avi", "content_type": "video/x-msvideo", "size_bytes": 10,
+        "hand": "right", "filename": "a.png", "content_type": "image/png", "size_bytes": 10,
     })
     assert bad_type.status_code == 422
+
+
+@pytest.mark.parametrize("content_type, extension", [
+    ("video/mp4", ".mp4"), ("video/quicktime", ".mov"), ("video/webm", ".webm"),
+    ("video/x-matroska", ".mkv"), ("video/x-msvideo", ".avi"), ("video/3gpp", ".3gp"),
+    ("video/mp2t", ".mts"),
+])
+def test_each_supported_video_type_is_stored_with_its_extension(client, content_type, extension):
+    created = create(client, content_type=content_type)
+    assert created["upload"]["headers"]["Content-Type"] == content_type
+    assert f"/input{extension}" in created["upload"]["url"]
 
 
 def test_upload_rejects_tampered_signature_and_wrong_content_type(client):

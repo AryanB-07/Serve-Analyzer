@@ -16,8 +16,8 @@ from .errors import VideoValidationError
 from .models import VideoInfo
 
 __all__ = [
-    "VideoValidationError", "iter_frames", "make_browser_playable", "open_writer", "probe",
-    "validate", "write_playback_copy", "write_thumbnail",
+    "VideoValidationError", "iter_frames", "make_browser_playable", "open_browser_writer",
+    "open_writer", "probe", "probe_or_convert", "validate", "write_playback_copy", "write_thumbnail",
 ]
 
 log = logging.getLogger(__name__)
@@ -43,6 +43,34 @@ def probe(path: str | Path) -> VideoInfo:
         raise VideoValidationError(f"Could not read frame rate or length of {path}")
     height, width = first.shape[:2]
     return VideoInfo(path, fps, frame_count, width, height)
+
+
+def probe_or_convert(path: str | Path, scratch: str | Path) -> VideoInfo:
+    """Probe a video, converting it to H.264 first if OpenCV can't decode it.
+
+    OpenCV reads the usual formats (MP4, MOV, WebM, MKV, AVI, 3GP, MTS with H.264, HEVC,
+    VP8/9, ProRes) but has no AV1 decoder. ffmpeg, when installed, converts anything it can
+    read into ``scratch``, applying any rotation tag; the returned info points at that copy.
+    """
+    path = Path(path)
+    try:
+        return probe(path)
+    except VideoValidationError as unreadable:
+        ffmpeg = shutil.which("ffmpeg")
+        if ffmpeg is None or not path.is_file():
+            raise
+        converted = Path(scratch) / "converted.mp4"
+        try:
+            subprocess.run(
+                [ffmpeg, "-y", "-loglevel", "error", "-i", str(path), "-an", "-c:v", "libx264",
+                 "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-threads", "2",
+                 "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", str(converted)],
+                check=True, capture_output=True, timeout=600,
+            )
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            raise unreadable from None
+        log.info("%s couldn't be decoded directly; converted with ffmpeg", path.name)
+        return probe(converted)
 
 
 def validate(info: VideoInfo, max_duration_s: float, min_fps: float) -> None:
@@ -122,20 +150,67 @@ def make_browser_playable(path: str | Path) -> Path:
     tmp = path.with_name(f"{path.stem}.h264{path.suffix}")
     try:
         subprocess.run(
-            [ffmpeg, "-y", "-loglevel", "error", "-i", str(path), "-an",
-             "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p",
-             # x264's memory grows with its thread count: all cores took 935 MB on a 1080p
-             # clip, two take 446 MB at the same speed on a 2-vCPU server.
-             "-threads", "2",
-             # yuv420p needs even dimensions; odd ones lose one pixel row or column.
-             "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
-             "-fps_mode", "passthrough", "-movflags", "+faststart", str(tmp)],
+            [ffmpeg, "-y", "-loglevel", "error", "-i", str(path), "-an", *EVEN_SIZE, *X264_ARGS,
+             # Keep every frame (frame i must still match pose frame i).
+             "-fps_mode", "passthrough", str(tmp)],
             check=True, capture_output=True, timeout=600,
         )
         os.replace(tmp, path)
     finally:
         tmp.unlink(missing_ok=True)
     return path
+
+
+# Shared by both H.264 paths. x264's memory grows with its thread count: all cores took
+# 935 MB on a 1080p clip, two take about 420 MB at the same speed on a 2-vCPU server.
+X264_ARGS = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p",
+             "-threads", "2", "-movflags", "+faststart"]
+# yuv420p needs even dimensions; odd ones lose one pixel row or column.
+EVEN_SIZE = ["-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]
+
+
+class FfmpegWriter:
+    """Encodes frames straight to browser-playable H.264 by piping them into ffmpeg.
+
+    Compared with writing MPEG-4 Part 2 through OpenCV and re-encoding it, this compresses
+    once instead of twice: files about 20% smaller at better quality, no intermediate file,
+    and slightly less memory. Every frame written is one output frame, at a constant ``fps``.
+    """
+
+    def __init__(self, ffmpeg: str, path: Path, fps: float, width: int, height: int) -> None:
+        self.path = path
+        self._proc = subprocess.Popen(
+            [ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "bgr24",
+             "-s", f"{width}x{height}", "-r", f"{fps:.6f}", "-i", "-", "-an",
+             *EVEN_SIZE, *X264_ARGS, str(path)],
+            stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+
+    def write(self, frame: np.ndarray) -> None:
+        try:
+            self._proc.stdin.write(np.ascontiguousarray(frame).tobytes())
+        except BrokenPipeError:
+            self.release()  # raises with ffmpeg's error message
+
+    def release(self) -> None:
+        if self._proc.stdin and not self._proc.stdin.closed:
+            try:
+                self._proc.stdin.close()
+            except BrokenPipeError:
+                pass
+        err = self._proc.stderr.read() if self._proc.stderr else b""
+        self._proc.wait(timeout=600)
+        if self._proc.returncode != 0:
+            raise RuntimeError(f"ffmpeg couldn't encode {self.path.name}: {err.decode(errors='replace').strip()}")
+
+
+def open_browser_writer(path: str | Path, fps: float, width: int, height: int):
+    """A writer whose output browsers can play: ffmpeg's H.264 when installed, otherwise
+    OpenCV's writer (H.264 on macOS; elsewhere make_browser_playable warns)."""
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is not None:
+        return FfmpegWriter(ffmpeg, Path(path), fps, width, height)
+    return open_writer(path, fps, width, height)
 
 
 def write_playback_copy(src: str | Path, dst: str | Path, fps: float) -> Path:
@@ -146,7 +221,7 @@ def write_playback_copy(src: str | Path, dst: str | Path, fps: float) -> Path:
         for frame in iter_frames(src):
             if writer is None:
                 h, w = frame.shape[:2]
-                writer = open_writer(dst, fps, w, h)
+                writer = open_browser_writer(dst, fps, w, h)
             writer.write(frame)
     finally:
         if writer is not None:

@@ -383,7 +383,7 @@ export interface components {
              * Content Type
              * @enum {string}
              */
-            content_type: "video/mp4" | "video/quicktime";
+            content_type: "video/mp4" | "video/quicktime" | "video/webm" | "video/x-matroska" | "video/x-msvideo" | "video/3gpp" | "video/mp2t";
             /** Size Bytes */
             size_bytes: number;
         };

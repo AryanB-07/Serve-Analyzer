@@ -21,7 +21,12 @@ PhaseName = Literal["trophy", "racket_drop", "contact"]
 MetricName = Literal[
     "front_knee_flexion", "back_knee_flexion", "elbow_angle", "trunk_tilt", "wrist_height"
 ]
-UploadContentType = Literal["video/mp4", "video/quicktime"]
+# One canonical type per container; the frontend picks it from the file extension (browsers
+# report these inconsistently). The pipeline also converts other codecs, such as AV1, with ffmpeg.
+UploadContentType = Literal[
+    "video/mp4", "video/quicktime", "video/webm", "video/x-matroska", "video/x-msvideo",
+    "video/3gpp", "video/mp2t",
+]
 
 
 def _keyed(name: str, keys: list[str], value_type: Any, default: Any = ...) -> type[BaseModel]:

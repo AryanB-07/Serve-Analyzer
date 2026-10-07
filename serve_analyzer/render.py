@@ -11,7 +11,7 @@ from . import angles as A
 from . import landmarks as L
 from .models import Hand, PhaseFrames, PoseSequence
 from .phases import phase_label
-from .video import iter_frames, make_browser_playable, open_writer
+from .video import iter_frames, make_browser_playable, open_browser_writer
 
 # BGR
 BODY_COLOR = (40, 215, 255)
@@ -89,7 +89,7 @@ def render_annotated(
     lw = max(int(round(3 * scale)), 2)
     hold = max(int(round(EVENT_HOLD_S * pose.fps)), 1)
 
-    writer = open_writer(out_path, pose.fps, pose.width, pose.height)
+    writer = open_browser_writer(out_path, pose.fps, pose.width, pose.height)
     try:
         for i, frame in enumerate(iter_frames(video_path)):
             if i < pose.n_frames:

@@ -1,5 +1,7 @@
 import { useId, useState, type DragEvent } from "react";
 
+import { ACCEPT } from "./validateVideo";
+
 /**
  * Drag-and-drop target backed by a real file input: the input stays in the
  * tab order (visually hidden), and the whole zone is its label, so click,
@@ -31,7 +33,7 @@ export function Dropzone({ onFile, disabled }: { onFile: (file: File) => void; d
       <input
         id={id}
         type="file"
-        accept="video/mp4,video/quicktime,.mp4,.mov,.m4v"
+        accept={ACCEPT}
         disabled={disabled}
         className="peer sr-only"
         onChange={(e) => {
@@ -53,7 +55,7 @@ export function Dropzone({ onFile, disabled }: { onFile: (file: File) => void; d
         <span className="font-medium">
           Drop your serve video here, or <span className="text-accent underline">browse</span>
         </span>
-        <span className="text-sm text-ink-muted">MP4 or MOV · up to 15 s · up to 200 MB</span>
+        <span className="text-sm text-ink-muted">MOV, MP4 and other common formats · up to 15 s · up to 200 MB</span>
       </label>
     </div>
   );

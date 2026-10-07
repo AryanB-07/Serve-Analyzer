@@ -3,18 +3,18 @@ import { Link, useLocation } from "react-router";
 
 import { USE_MOCKS } from "../../api";
 import { DEMO_IDS } from "../../api/demo";
-import type { Hand } from "../../api/types";
+import type { CreateAnalysisRequest, Hand } from "../../api/types";
+import { VerifyEmailBanner } from "../account/AccountPages";
 import { Dropzone } from "./Dropzone";
 import { FilmingGuide } from "./FilmingGuide";
 import { HandSelector } from "./HandSelector";
 import { uploadErrorText } from "./uploadError";
 import { useUploadAnalysis, type UploadProgress } from "./useUploadAnalysis";
 import { checkFile, checkMetadata, readVideoMetadata, type VideoMetadata } from "./validateVideo";
-import { VerifyEmailBanner } from "../account/AccountPages";
 
 interface Selected {
   file: File;
-  contentType: "video/mp4" | "video/quicktime";
+  contentType: CreateAnalysisRequest["content_type"];
   meta: VideoMetadata | null;
   previewUrl: string;
 }

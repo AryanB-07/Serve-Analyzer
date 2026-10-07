@@ -59,3 +59,38 @@ def test_a_missing_h264_writer_is_only_tried_once(tmp_path, monkeypatch):
     for i in range(3):
         video.open_writer(tmp_path / f"{i}.mp4", 25, 64, 48).release()
     assert tried == ["avc1", "mp4v", "mp4v", "mp4v"]
+
+
+@needs_ffmpeg
+def test_the_ffmpeg_writer_encodes_h264_directly_keeping_every_frame(tmp_path):
+    from serve_analyzer.video import open_browser_writer
+
+    out = tmp_path / "annotated.mp4"
+    writer = open_browser_writer(out, 30, 161, 121)
+    for i in range(45):
+        writer.write(np.full((121, 161, 3), i * 5 % 255, np.uint8))
+    writer.release()
+    cap = cv2.VideoCapture(str(out))
+    assert fourcc(out) in ("avc1", "h264")
+    assert int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) == 45
+    assert cap.get(cv2.CAP_PROP_FPS) == pytest.approx(30, abs=0.01)
+    assert (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))) == (160, 120)
+
+
+@needs_ffmpeg
+def test_the_ffmpeg_writer_reports_encoder_errors(tmp_path):
+    from serve_analyzer.video import FfmpegWriter
+
+    writer = FfmpegWriter(shutil.which("ffmpeg"), tmp_path / "missing-dir" / "x.mp4", 30, 64, 48)
+    writer.write(np.zeros((48, 64, 3), np.uint8))
+    with pytest.raises(RuntimeError, match="ffmpeg couldn't encode"):
+        writer.release()
+
+
+def test_without_ffmpeg_the_opencv_writer_is_used(tmp_path, monkeypatch):
+    from serve_analyzer import video
+
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+    writer = video.open_browser_writer(tmp_path / "a.mp4", 25, 64, 48)
+    assert isinstance(writer, cv2.VideoWriter)
+    writer.release()

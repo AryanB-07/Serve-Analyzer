@@ -1261,7 +1261,12 @@
             "type": "string",
             "enum": [
               "video/mp4",
-              "video/quicktime"
+              "video/quicktime",
+              "video/webm",
+              "video/x-matroska",
+              "video/x-msvideo",
+              "video/3gpp",
+              "video/mp2t"
             ],
             "title": "Content Type"
           },

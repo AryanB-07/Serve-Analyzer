@@ -11,22 +11,24 @@ browser ──HTTPS──► EC2 instance (Docker): Caddy ─► API ─► Post
 
 ## What fits, measured
 
-These are the production containers analysing a 1080p, 15-second serve on Linux. The numbers
-are peak memory:
+Peak memory of the production containers analysing a 1080p, 15-second serve on Linux, over
+several analyses in a row:
 
 | Process | Memory |
 |---|---|
-| Worker: MediaPipe heavy model, pose for every frame | about 705 MB |
-| ffmpeg, re-encoding the two result videos to H.264 (briefly, while the worker waits) | about 565 MB |
+| Pose step: MediaPipe heavy model, in a short-lived child process that exits afterwards | about 545 MB |
+| Worker, the rest of the time (analysis, drawing the overlay) | about 250 MB between jobs, up to 380 MB during one |
+| ffmpeg, encoding the result videos to H.264 (while the pose step isn't running) | about 445 MB |
 | API, one process (it never loads MediaPipe) | about 160 MB |
 | Postgres | about 30–60 MB |
 | Caddy (HTTPS and the website) | about 20 MB |
 
-So the peak is about 1.5 GB for a few seconds per analysis, and around 300 MB when idle.
+So an analysis peaks at about 0.9 GB for the worker, and about 1.1 GB with everything else.
+The worker returns to about 250 MB between jobs and doesn't grow over time.
 
-- **t3.small (2 GB):** fits, with a swap file as a safety margin.
-- **t3.micro (1 GB):** works only with the swap file below, and analyses run slower while
-  swapping.
+- **t3.small (2 GB):** fits comfortably.
+- **t3.micro (1 GB):** works with the swap file below; expect some slowdown while it swaps
+  during an analysis.
 
 ## Pick the instance
 

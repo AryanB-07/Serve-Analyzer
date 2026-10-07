@@ -41,7 +41,9 @@ USER app
 RUN python -c "from serve_analyzer.config import AnalysisConfig as C; \
 from serve_analyzer.pose import ensure_model; c = C(); ensure_model(c.model_variant, c.model_dir)"
 
-ENV SERVE_API_ENV=production SERVE_API_DATA_DIR=/data
+# Video decoding runs in many threads, and glibc gives each its own memory arena that it
+# rarely returns. Two arenas cut the worker's memory after a 1080p job from about 520 to 380 MB.
+ENV SERVE_API_ENV=production SERVE_API_DATA_DIR=/data MALLOC_ARENA_MAX=2
 EXPOSE 8000
 # --proxy-headers: trust Caddy's X-Forwarded-For so rate limits see the real client IP.
 # The API is only reachable from Caddy on the compose network.

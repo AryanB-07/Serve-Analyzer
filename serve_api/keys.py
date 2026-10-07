@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from serve_analyzer import outputs
 
-EXTENSIONS = {"video/mp4": ".mp4", "video/quicktime": ".mov"}
+EXTENSIONS = {
+    "video/mp4": ".mp4", "video/quicktime": ".mov", "video/webm": ".webm",
+    "video/x-matroska": ".mkv", "video/x-msvideo": ".avi", "video/3gpp": ".3gp",
+    "video/mp2t": ".mts",
+}
 
 
 def upload_prefix(analysis_id: str) -> str:
