@@ -136,8 +136,14 @@ site and create an account.
   machines work too, as long as they use the same database and bucket.
 - **Logs:** `docker compose -f deploy/docker-compose.yml logs -f api worker`. Worker lines
   worth alerting on: `requeued … whose worker stopped responding` and `failed … after 3 attempts`.
-- **Health:** point an uptime monitor at `https://<domain>/api/health`. It returns 503 if the
-  database can't be reached.
+- **Health:** point an uptime monitor at `https://<domain>/api/health`, which returns 503 if the
+  database can't be reached, and at `https://<domain>/api/health/queue`, which returns 503 when
+  an analysis has waited longer than `SERVE_API_QUEUE_ALERT_AFTER_S` (10 minutes), meaning the
+  workers have stopped.
+- **Smoke test:** `python3 scripts/smoke_test.py https://<domain>` signs up, checks the API and
+  website, and deletes the test account. `scripts/smoke_docker.sh` runs the full version
+  (including an analysis and email) against the production images locally; CI runs it on every
+  push.
 - **Backups:** your managed Postgres handles the database. Keep its automated backup retention
   equal to `backupRetentionDays` in `frontend/src/features/legal/config.ts` (RDS defaults to 7
   days), because the Privacy Policy states that number. For the bucket, see the versioning note

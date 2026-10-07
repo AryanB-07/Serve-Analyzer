@@ -7,6 +7,9 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 - [x] Serve analysis pipeline, the multi-view evaluation, and tuning (`docs/tuning-results.md`)
 - [x] Rejecting clips that aren't a serve (`docs/serve-check.md`)
 - [x] Accounts: email verification, password reset, deleting an analysis, deleting an account
+- [x] CI on GitHub Actions; the production images are built and smoke-tested end to end
+- [x] Fits a small free-tier server: the API no longer loads MediaPipe (289 → 151 MB), and
+      result videos are H.264 so browsers can play them (they weren't on Linux)
 - [x] Privacy and legal:
   - Privacy Policy and Terms pages, and consent recorded at signup
   - original uploads deleted after 30 days
@@ -14,26 +17,26 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 
 ## Next phases (in order)
 
-1. **CI**: GitHub Actions runs the Python tests, frontend tests, type check, API-contract check and
-   a Docker build on every push.
-2. **Staging on AWS**:
-   - EC2 (c7i.xlarge), RDS Postgres, an S3 bucket and an IAM role, following `docs/deployment.md`.
-   - The Docker images and compose stack have never been built in CI; this is where they're
-     first proven.
-   - Smoke-test everything, including uploads from phones (portrait video, HEVC `.mov` from
+1. **Deploy on the AWS free tier** following `docs/deploy-aws-free-tier.md`, then run
+   `scripts/smoke_test.py` against it and analyse a serve from your phone.
+2. **Later, the full AWS setup** (`docs/deployment.md`):
+   - a bigger EC2 instance, RDS Postgres, an S3 bucket and an IAM role;
+   - smoke-test everything, including uploads from phones (portrait video, HEVC `.mov` from
      iPhones).
-3. **Error tracking and alerts**: an uptime monitor on `/api/health`, alerts on worker failures, a
-   CloudWatch billing alarm.
+3. **Error tracking**: the uptime checks exist (`/api/health`, `/api/health/queue`); add
+   exception reporting (e.g. Sentry's free tier) if you want stack traces from production.
 4. **Launch.**
 
 ## Before launch (only you can do these)
 
-- [ ] **Buy a domain** (Route 53 or Cloudflare, about $10–15 a year).
-- [ ] **Set up email with Resend**:
-  - add the domain and its DNS records (SPF, DKIM, DMARC);
-  - set the `SERVE_API_SMTP_*`, `SERVE_API_EMAIL_FROM` and `SERVE_API_APP_URL` variables (see
-    `docs/deployment.md`, "Email");
-  - send yourself a test to a Gmail and an Outlook inbox and check it isn't marked as spam.
+- [ ] **A hostname:** a free DuckDNS subdomain for now (`docs/deploy-aws-free-tier.md`, step 2);
+  buy a domain later.
+- [ ] **Email:** a free Brevo account with one verified sender (step 3). Once you have a domain,
+  switch to Resend or Brevo domain sending, add the DNS records (SPF, DKIM, DMARC), and test
+  that emails don't land in spam.
+- [ ] **Monitoring:** UptimeRobot (or similar) on `/api/health` and `/api/health/queue`, and an AWS
+  zero-spend budget (step 6).
+- [ ] **Backups:** the nightly database dump cron job (step 7).
 - [ ] **Fill in the legal details** in `frontend/src/features/legal/config.ts`: operator name,
   contact email, governing law, hosting region.
 - [ ] **Have the Privacy Policy and Terms reviewed** for where you operate. They're written to

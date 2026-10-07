@@ -11,7 +11,7 @@ from . import angles as A
 from . import landmarks as L
 from .models import Hand, PhaseFrames, PoseSequence
 from .phases import phase_label
-from .video import iter_frames, open_writer
+from .video import iter_frames, make_browser_playable, open_writer
 
 # BGR
 BODY_COLOR = (40, 215, 255)
@@ -109,4 +109,4 @@ def render_annotated(
             writer.write(frame)
     finally:
         writer.release()
-    return out_path
+    return make_browser_playable(out_path)

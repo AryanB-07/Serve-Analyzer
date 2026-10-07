@@ -110,6 +110,15 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
             return JSONResponse({"status": "database unavailable"}, status_code=503)
         return JSONResponse({"status": "ok"})
 
+    @app.get("/health/queue", include_in_schema=False)
+    def queue_health() -> JSONResponse:
+        """For an uptime monitor: 503 when analyses are waiting too long, which means the
+        workers have stopped (or can't keep up). /health alone can't see that."""
+        stats = db.queue_stats()
+        stuck = stats["oldest_queued_s"] > settings.queue_alert_after_s
+        return JSONResponse({"status": "stuck" if stuck else "ok", **stats},
+                            status_code=503 if stuck else 200)
+
     @app.post("/analyses", status_code=201, response_model=CreateAnalysisResponse,
               responses={**UNAUTHORIZED, 403: {"model": ErrorResponse}, 413: {"model": ErrorResponse},
                          429: {"model": ErrorResponse}})

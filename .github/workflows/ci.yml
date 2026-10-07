@@ -37,8 +37,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: System libraries for OpenCV and MediaPipe
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libegl1 libgles2
+      - name: System libraries for OpenCV, MediaPipe and ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libegl1 libgles2 ffmpeg
 
       - name: Install uv
         run: |
@@ -93,24 +93,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: [python, frontend]
-    env:
-      COMPOSE: docker compose -p serve-smoke --env-file deploy/smoke.env -f deploy/docker-compose.yml -f deploy/docker-compose.smoke.yml --profile bundled-db
     steps:
       - uses: actions/checkout@v5
-
-      - name: Build the images
-        run: $COMPOSE build
-
-      - name: Start the stack
-        run: $COMPOSE up -d --wait --wait-timeout 180
-
-      - name: Smoke test (sign up, confirm email, analyse a serve, delete everything)
-        run: python3 scripts/smoke_test.py https://localhost:8443 --mailpit http://localhost:8025 --insecure
-
-      - name: Logs
-        if: always()
-        run: $COMPOSE logs --no-color --tail 200
-
-      - name: Stop
-        if: always()
-        run: $COMPOSE down -v
+      # Builds the production images, starts them with test settings (bundled Postgres,
+      # a Mailpit inbox, self-signed HTTPS), then signs up, confirms the email, analyses
+      # the sample serve, checks the videos are browser-playable, and deletes everything.
+      - name: Build, start and smoke-test the production stack
+        run: scripts/smoke_docker.sh

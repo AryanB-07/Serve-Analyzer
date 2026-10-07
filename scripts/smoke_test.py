@@ -1,6 +1,7 @@
 """End-to-end smoke test of a running deployment, through the same URLs a browser uses.
 
     python scripts/smoke_test.py https://localhost --mailpit http://localhost:8025 --insecure
+    python scripts/smoke_test.py https://yourname.duckdns.org     # a live server (no test inbox)
 
 Signs up, confirms the email (reading the link from a Mailpit test inbox), uploads the
 sample serve, waits for the worker to analyse it, checks the results and video, then
@@ -129,6 +130,17 @@ def main() -> None:
         c.json("POST", "/api/auth/verify-email", {"token": token}, 204)
         check(c.json("GET", "/api/auth/me")["email_verified"] is True, "email still unverified")
 
+    else:
+        status, _, data = c.call("POST", "/api/analyses", body)
+        if status == 403:
+            step("email confirmation is required and no --mailpit inbox was given: skipping the "
+                 "analysis steps (confirm a real account by hand to test them)")
+            c.json("DELETE", "/api/auth/me", {"password": PASSWORD}, 204)
+            print(f"OK: smoke test passed (without analysis) in {time.monotonic() - started:.0f}s", flush=True)
+            return
+        check(status == 201, f"POST /api/analyses -> {status}: {data[:300]!r}")
+        c.call("DELETE", f"/api/analyses/{json.loads(data)['analysis']['id']}")
+
     step("upload the sample serve")
     created = c.json("POST", "/api/analyses", body, 201)
     analysis_id, upload = created["analysis"]["id"], created["upload"]
@@ -150,8 +162,11 @@ def main() -> None:
     check(result["phases"]["contact"] is not None, "no contact frame in the result")
     frames = c.json("GET", f"/api/analyses/{analysis_id}/frames")
     check(frames["n_frames"] == result["n_frames"], "frames and result disagree")
-    status, headers, video = c.call("GET", result["video_url"], headers={"Range": "bytes=0-1023", "Content-Type": ""})
-    check(status in (200, 206) and len(video) > 0, f"playback video -> {status}")
+    for name in ("video_url", "annotated_video_url"):
+        status, headers, video = c.call("GET", result[name], headers={"Range": "bytes=0-65535", "Content-Type": ""})
+        check(status in (200, 206) and len(video) > 0, f"{name} -> {status}")
+        # H.264 with its index at the front: browsers can play it and start before it all arrives.
+        check(b"avc1" in video, f"{name} isn't browser-playable H.264 with faststart")
 
     if args.mailpit:
         step("password reset emails a link")

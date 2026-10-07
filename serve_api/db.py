@@ -252,6 +252,19 @@ class Database:
             ).rowcount
         return requeued, failed
 
+    def queue_stats(self) -> dict[str, Any]:
+        """For monitoring: jobs waiting and running, and how long the oldest has waited."""
+        with self.engine.connect() as conn:
+            queued, oldest = conn.execute(
+                select(func.count(), func.min(analyses.c.updated_at)).where(analyses.c.status == "queued")
+            ).one()
+            running = conn.execute(select(func.count()).select_from(analyses).where(
+                analyses.c.status.in_(IN_PROGRESS))).scalar_one()
+        if oldest is not None and oldest.tzinfo is None:
+            oldest = oldest.replace(tzinfo=UTC)  # min() comes back untyped on SQLite
+        waited = (now() - oldest).total_seconds() if oldest is not None else 0.0
+        return {"queued": queued, "running": running, "oldest_queued_s": round(waited)}
+
     # --- per-user limits ---------------------------------------------------------
 
     @staticmethod

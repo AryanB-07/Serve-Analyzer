@@ -68,6 +68,8 @@ class Settings:
     # including their own playback copy of the video, are kept until the person deletes them.
     upload_retention_days: int = field(
         default_factory=lambda: int(_env("UPLOAD_RETENTION_DAYS", "30")))
+    # /health/queue reports a problem when a job has waited longer than this (workers down).
+    queue_alert_after_s: int = field(default_factory=lambda: int(_env("QUEUE_ALERT_AFTER_S", "600")))
     max_upload_bytes: int = 200 * 1024 * 1024
     upload_url_ttl_s: int = 15 * 60
     # Long enough that seeking (new Range requests) keeps working while a results page is open.

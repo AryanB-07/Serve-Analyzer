@@ -18,6 +18,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libegl1 libgles2 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /usr/local/bin/uv
+# A static ffmpeg (with libx264) re-encodes result videos to H.264, which OpenCV's Linux wheels
+# can't write (see video.make_browser_playable). Debian's ffmpeg package would add about 2 GB.
+COPY --from=mwader/static-ffmpeg:7.1.1 /ffmpeg /usr/local/bin/ffmpeg
 
 RUN useradd --create-home --uid 10001 app && mkdir /data && chown app /data
 WORKDIR /app
@@ -26,11 +29,12 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/app/.venv \
 
 # Dependencies first, so code changes don't reinstall them.
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev --extra api --no-install-project
+# The cache mount keeps uv's download cache (about 600 MB) out of the image.
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --extra api --no-install-project
 COPY serve_analyzer/ serve_analyzer/
 COPY serve_api/ serve_api/
 COPY alembic.ini ./
-RUN uv sync --frozen --no-dev --extra api
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --extra api
 
 USER app
 # Bake the pose model into the image so workers never download it at startup.

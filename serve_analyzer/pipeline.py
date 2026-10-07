@@ -17,6 +17,7 @@ from .errors import AnalysisError
 from .export import build_frames_payload
 from .metrics import compute_metrics
 from .models import AnalysisResult, Hand, PhaseFrames, PoseSequence
+from .outputs import ANNOTATED_FILE, FRAMES_FILE, PLAYBACK_FILE, RESULTS_FILE, THUMBNAIL_FILE
 from .phases import REJECTION_MESSAGES, detect_contact, detect_phases, serve_rejection
 from .pose import ensure_model, extract_pose_sequence
 from .preprocessing import clean
@@ -27,11 +28,6 @@ __all__ = ["AnalysisError", "SequenceAnalysis", "Stage", "analyze", "analyze_seq
 
 Stage = Literal["extracting_pose", "analyzing", "rendering"]
 
-RESULTS_FILE = "results.json"
-FRAMES_FILE = "frames.json"
-PLAYBACK_FILE = "playback.mp4"
-ANNOTATED_FILE = "annotated.mp4"
-THUMBNAIL_FILE = "thumbnail.jpg"
 
 @dataclass
 class SequenceAnalysis:

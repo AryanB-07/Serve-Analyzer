@@ -327,3 +327,21 @@ def test_housekeeping_removes_only_what_is_dead(db, settings):
     assert db.get_session("live-token") and not db.get_session("dead-token")
     with db.engine.connect() as conn:
         assert [r.key_hash for r in conn.execute(select(auth_attempts))] == ["y" * 64]
+
+
+def test_queue_health_reports_jobs_waiting_too_long(tmp_path):
+    settings = Settings(data_dir=tmp_path, secret="test", public_base="", queue_alert_after_s=600)
+    client = TestClient(create_app(settings))
+    db = Database(settings.sqlalchemy_url)
+    assert client.get("/health/queue").json() == {"status": "ok", "queued": 0, "running": 0, "oldest_queued_s": 0}
+    queued_job(db)
+    queued_job(db)
+    db.claim_next("worker-a")  # takes the older one; the other stays queued
+    res = client.get("/health/queue")
+    assert res.status_code == 200 and res.json()["queued"] == 1 and res.json()["running"] == 1
+    with db.engine.begin() as conn:
+        conn.execute(update(analyses).where(analyses.c.status == "queued")
+                     .values(updated_at=now() - timedelta(minutes=11)))
+    stuck = client.get("/health/queue")
+    assert stuck.status_code == 503 and stuck.json()["status"] == "stuck"
+    assert stuck.json()["oldest_queued_s"] >= 660

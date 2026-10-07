@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from serve_analyzer import pipeline
+from serve_analyzer import outputs
 
 EXTENSIONS = {"video/mp4": ".mp4", "video/quicktime": ".mov"}
 
@@ -23,8 +23,8 @@ def output_key(analysis_id: str, filename: str) -> str:
     return f"{output_prefix(analysis_id)}/{filename}"
 
 
-RESULTS = pipeline.RESULTS_FILE
-FRAMES = pipeline.FRAMES_FILE
-PLAYBACK = pipeline.PLAYBACK_FILE
-ANNOTATED = pipeline.ANNOTATED_FILE
-THUMBNAIL = pipeline.THUMBNAIL_FILE
+RESULTS = outputs.RESULTS_FILE
+FRAMES = outputs.FRAMES_FILE
+PLAYBACK = outputs.PLAYBACK_FILE
+ANNOTATED = outputs.ANNOTATED_FILE
+THUMBNAIL = outputs.THUMBNAIL_FILE
