@@ -146,3 +146,13 @@ def test_a_person_standing_still_is_rejected_as_not_a_serve():
     with pytest.raises(AnalysisError) as exc:
         analyze_sequence(_standing(30), Hand.RIGHT, AnalysisConfig(), load_ranges())
     assert exc.value.code == "NOT_A_SERVE"
+
+
+def test_a_file_that_ends_early_gets_a_warning():
+    from serve_analyzer.pipeline import _warnings
+
+    phases = PhaseFrames(trophy=20, racket_drop=25, contact=30)
+    cut_off = _warnings(phases, 56, Hand.RIGHT, expected_frames=102)
+    assert any("Only 56 of the video's 102 frames could be read" in w for w in cut_off)
+    assert not any("could be read" in w for w in _warnings(phases, 100, Hand.RIGHT, expected_frames=102))
+    assert not any("could be read" in w for w in _warnings(phases, 56, Hand.RIGHT))

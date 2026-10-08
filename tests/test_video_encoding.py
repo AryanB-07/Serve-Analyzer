@@ -94,3 +94,27 @@ def test_without_ffmpeg_the_opencv_writer_is_used(tmp_path, monkeypatch):
     writer = video.open_browser_writer(tmp_path / "a.mp4", 25, 64, 48)
     assert isinstance(writer, cv2.VideoWriter)
     writer.release()
+
+
+def test_a_nonsense_frame_count_is_treated_as_unknown(tmp_path, monkeypatch):
+    from serve_analyzer import video
+    from serve_analyzer.errors import VideoValidationError
+
+    clip = _mpeg4_clip(tmp_path / "recording.mp4")
+    real_capture = cv2.VideoCapture
+
+    class Capture:
+        """Wraps a real capture (subclassing OpenCV's class crashes at teardown)."""
+
+        def __init__(self, path):
+            self._cap = real_capture(path)
+
+        def get(self, prop):
+            return -2.7e17 if prop == cv2.CAP_PROP_FRAME_COUNT else self._cap.get(prop)
+
+        def __getattr__(self, name):
+            return getattr(self._cap, name)
+
+    monkeypatch.setattr(video.cv2, "VideoCapture", Capture)
+    with pytest.raises(VideoValidationError, match="frame rate or length"):
+        video.probe(clip)

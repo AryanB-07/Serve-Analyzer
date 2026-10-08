@@ -74,3 +74,35 @@ def test_a_file_that_isnt_a_video_is_still_refused(tmp_path):
     junk.write_bytes(b"this is not a video" * 100)
     with pytest.raises(VideoValidationError):
         probe_or_convert(junk, tmp_path)
+
+
+def test_stretched_pixels_are_made_square(tmp_path):
+    from serve_analyzer.video import stream_fixes
+
+    # HDV-style: stored 3/4 as wide, with a pixel aspect ratio that stretches it back.
+    clip = _make(tmp_path, "hdv.mts", "libx264", ["-preset", "ultrafast", "-vf", "scale=iw*3/4:ih,setsar=4/3",
+                                                    "-f", "mpegts"])
+    assert any(f.startswith("scale=") for f in stream_fixes(clip))
+    original, info = probe(SAMPLE), probe_or_convert(clip, tmp_path)
+    assert info.path != clip
+    assert info.width / info.height == pytest.approx(original.width / original.height, abs=0.02)
+
+
+def test_interlaced_video_is_deinterlaced_to_full_frames(tmp_path):
+    from serve_analyzer.video import stream_fixes
+
+    # 60 fields a second, two per frame, as a 1080i camcorder records.
+    clip = _make(tmp_path, "1080i.mts", "libx264", [
+        "-preset", "ultrafast", "-vf", "fps=60,tinterlace=interleave_top,fieldorder=tff",
+        "-flags", "+ildct+ilme", "-x264-params", "tff=1", "-f", "mpegts"])
+    assert any(f.startswith("bwdif") for f in stream_fixes(clip))
+    info = probe_or_convert(clip, tmp_path)
+    assert info.fps == pytest.approx(60, abs=1)  # one full frame per field
+    assert (info.width, info.height) == (probe(SAMPLE).width, probe(SAMPLE).height)
+
+
+def test_ordinary_files_need_no_fixes(tmp_path):
+    from serve_analyzer.video import stream_fixes
+
+    assert stream_fixes(SAMPLE) == []
+    assert stream_fixes(_make(tmp_path, "plain.mov", "libx264", ["-preset", "ultrafast"])) == []

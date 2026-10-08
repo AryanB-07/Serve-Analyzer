@@ -38,9 +38,13 @@ class SequenceAnalysis:
     series: A.Series
 
 def analyze_sequence(
-    raw: PoseSequence, hand: Hand, config: AnalysisConfig, ranges: RangeTable
+    raw: PoseSequence, hand: Hand, config: AnalysisConfig, ranges: RangeTable,
+    expected_frames: int | None = None,
 ) -> SequenceAnalysis:
-    """Everything after pose extraction. Pure: no file or video I/O."""
+    """Everything after pose extraction. Pure: no file or video I/O.
+
+    ``expected_frames`` is the frame count the file's header promises; reading far fewer
+    means the file is cut off, which gets a warning."""
     if np.isnan(raw.landmarks[:, :, :2]).all():
         raise AnalysisError("No person was detected in the video.", code="NO_PERSON_DETECTED")
 
@@ -64,7 +68,7 @@ def analyze_sequence(
         labels=to_labels(assessments),
         ranges=ranges_to_dict(ranges),
         feedback=feedback.generate(assessments),
-        warnings=_warnings(phases, raw.n_frames, hand),
+        warnings=_warnings(phases, raw.n_frames, hand, expected_frames),
     )
     return SequenceAnalysis(result, pose, series)
 
@@ -156,10 +160,18 @@ def swing_speed(pose: PoseSequence, hand: Hand, contact: int) -> float | None:
 EDGE_FRAMES = 2
 
 
+TRUNCATED_BELOW = 0.9  # of the header's frame count
+
+
 def _warnings(
-    phases: PhaseFrames, n_frames: int, hand: Hand
+    phases: PhaseFrames, n_frames: int, hand: Hand, expected_frames: int | None = None
 ) -> list[str]:
     out = []
+    if expected_frames and n_frames < TRUNCATED_BELOW * expected_frames:
+        out.append(
+            f"Only {n_frames} of the video's {expected_frames} frames could be read, so the file "
+            "looks incomplete. If the serve seems cut off, upload the original file again."
+        )
     for name, frame in phases.as_dict().items():
         if frame is None:
             out.append(f"Could not detect the {name.replace('_', ' ')} phase.")
@@ -221,7 +233,7 @@ def _analyze_video(
     raw = pose_extractor(info, model_path)
 
     report("analyzing")
-    analysis = analyze_sequence(raw, hand, config, ranges)
+    analysis = analyze_sequence(raw, hand, config, ranges, expected_frames=info.frame_count)
     result = analysis.result
 
     frames_path = out_dir / FRAMES_FILE

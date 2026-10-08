@@ -1,0 +1,5102 @@
+{
+ "pex_side": {
+  "original": {
+   "status": "ok",
+   "seconds": 71.516108751297,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 336
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ]
+  },
+  "mov-h264": {
+   "status": "ok",
+   "seconds": 68.32290577888489,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-hevc": {
+   "status": "ok",
+   "seconds": 64.52483677864075,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-hevc-aac": {
+   "status": "ok",
+   "seconds": 64.54759120941162,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-hevc-10bit-hdr": {
+   "status": "ok",
+   "seconds": 66.50122547149658,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-prores": {
+   "status": "ok",
+   "seconds": 66.3475170135498,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-rot90": {
+   "status": "ok",
+   "seconds": 65.46649503707886,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-rot180": {
+   "status": "ok",
+   "seconds": 64.57096195220947,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-rot270": {
+   "status": "ok",
+   "seconds": 65.06431078910828,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-h264": {
+   "status": "ok",
+   "seconds": 64.40626764297485,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-h264-aac": {
+   "status": "ok",
+   "seconds": 64.79629445075989,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-hevc": {
+   "status": "ok",
+   "seconds": 64.73081922531128,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-av1": {
+   "status": "ok",
+   "seconds": 72.1153621673584,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-60fps": {
+   "status": "ok",
+   "seconds": 143.30103826522827,
+   "phases": {
+    "trophy": 786,
+    "racket_drop": null,
+    "contact": 812
+   },
+   "n_frames": 881,
+   "fps": 60.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     881,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     881,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": [
+    "contact at 812 (original 336, x2.40)"
+   ]
+  },
+  "mp4-120fps": {
+   "status": "ok",
+   "seconds": 275.027752161026,
+   "phases": {
+    "trophy": 1572,
+    "racket_drop": null,
+    "contact": 1617
+   },
+   "n_frames": 1762,
+   "fps": 120.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     1762,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     1762,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-vfr": {
+   "status": "rejected",
+   "code": "FPS_TOO_LOW",
+   "message": "Video is 21.2 fps; at least 24 fps is needed to capture the fast parts of the serve.",
+   "seconds": 0.29436826705932617,
+   "problems": [
+    "rejected: Video is 21.2 fps; at least 24 fps is needed to capture the fast parts of the serve."
+   ]
+  },
+  "mov-hevc-10bit-hdr-rot90": {
+   "status": "ok",
+   "seconds": 67.23737001419067,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-odd-size": {
+   "status": "ok",
+   "seconds": 65.61800050735474,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1918,
+    1078
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1918,
+     1078
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1918,
+     1078
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-cover-art": {
+   "status": "ok",
+   "seconds": 64.0129747390747,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-truncated": {
+   "status": "rejected",
+   "code": "NOT_A_SERVE",
+   "message": "This doesn't look like a serve. The hitting arm doesn't reach above the head, as it does at serve contact.",
+   "seconds": 33.134939193725586,
+   "problems": []
+  },
+  "m4v-h264": {
+   "status": "ok",
+   "seconds": 64.11164331436157,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "webm-vp9-opus": {
+   "status": "ok",
+   "seconds": 64.54303050041199,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "webm-vp8": {
+   "status": "ok",
+   "seconds": 63.32746481895447,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 336
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "webm-live-no-duration": {
+   "status": "ok",
+   "seconds": 72.80699825286865,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mkv-h264": {
+   "status": "ok",
+   "seconds": 65.05697703361511,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mkv-hevc-flac": {
+   "status": "ok",
+   "seconds": 64.15436339378357,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "avi-mjpeg-pcm": {
+   "status": "ok",
+   "seconds": 68.31025505065918,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "avi-xvid": {
+   "status": "ok",
+   "seconds": 63.95786666870117,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "3gp-h264": {
+   "status": "ok",
+   "seconds": 63.6190242767334,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mts-h264": {
+   "status": "ok",
+   "seconds": 63.97286057472229,
+   "phases": {
+    "trophy": 328,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mts-interlaced": {
+   "status": "ok",
+   "seconds": 159.7643644809723,
+   "phases": {
+    "trophy": 788,
+    "racket_drop": null,
+    "contact": 809
+   },
+   "n_frames": 880,
+   "fps": 60.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     880,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     880,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mts-anamorphic": {
+   "status": "ok",
+   "seconds": 72.48794364929199,
+   "phases": {
+    "trophy": 327,
+    "racket_drop": null,
+    "contact": 337
+   },
+   "n_frames": 367,
+   "fps": 25.0,
+   "size": [
+    1920,
+    1080
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ],
+    "annotated.mp4": [
+     "h264",
+     367,
+     1920,
+     1080
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "text-renamed-mp4": {
+   "status": "rejected",
+   "code": "UNREADABLE_VIDEO",
+   "message": "Could not open video: /tmp/tmp2ueuluqe/text-renamed-mp4.mp4",
+   "seconds": 0.21756529808044434,
+   "problems": []
+  }
+ },
+ "pex_front": {
+  "original": {
+   "status": "ok",
+   "seconds": 34.96437096595764,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": []
+  },
+  "mov-h264": {
+   "status": "ok",
+   "seconds": 35.27521514892578,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 183,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-hevc": {
+   "status": "ok",
+   "seconds": 38.87628173828125,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 191
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-hevc-aac": {
+   "status": "ok",
+   "seconds": 36.08755278587341,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 191
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-hevc-10bit-hdr": {
+   "status": "ok",
+   "seconds": 36.4194118976593,
+   "phases": {
+    "trophy": 178,
+    "racket_drop": 182,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-prores": {
+   "status": "ok",
+   "seconds": 35.26126170158386,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-rot90": {
+   "status": "ok",
+   "seconds": 35.00046467781067,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 178,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-rot180": {
+   "status": "ok",
+   "seconds": 35.20904803276062,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-rot270": {
+   "status": "ok",
+   "seconds": 35.27073335647583,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 187,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-h264": {
+   "status": "ok",
+   "seconds": 35.14080834388733,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 183,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-h264-aac": {
+   "status": "ok",
+   "seconds": 35.02403688430786,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 183,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-hevc": {
+   "status": "ok",
+   "seconds": 35.52510595321655,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 191
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-av1": {
+   "status": "ok",
+   "seconds": 37.802018880844116,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 178,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-60fps": {
+   "status": "ok",
+   "seconds": 80.8562183380127,
+   "phases": {
+    "trophy": 427,
+    "racket_drop": 438,
+    "contact": 457
+   },
+   "n_frames": 550,
+   "fps": 60.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     550,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     550,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-120fps": {
+   "status": "ok",
+   "seconds": 156.65577936172485,
+   "phases": {
+    "trophy": 853,
+    "racket_drop": 856,
+    "contact": 918
+   },
+   "n_frames": 1099,
+   "fps": 120.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     1099,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     1099,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-vfr": {
+   "status": "rejected",
+   "code": "FPS_TOO_LOW",
+   "message": "Video is 21.3 fps; at least 24 fps is needed to capture the fast parts of the serve.",
+   "seconds": 0.20978736877441406,
+   "problems": [
+    "rejected: Video is 21.3 fps; at least 24 fps is needed to capture the fast parts of the serve."
+   ]
+  },
+  "mov-hevc-10bit-hdr-rot90": {
+   "status": "ok",
+   "seconds": 35.77644419670105,
+   "phases": {
+    "trophy": 178,
+    "racket_drop": 182,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-odd-size": {
+   "status": "ok",
+   "seconds": 35.31700849533081,
+   "phases": {
+    "trophy": 178,
+    "racket_drop": 182,
+    "contact": 191
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1278,
+    718
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1278,
+     718
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1278,
+     718
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-cover-art": {
+   "status": "ok",
+   "seconds": 35.07114386558533,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 183,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-truncated": {
+   "status": "rejected",
+   "code": "NOT_A_SERVE",
+   "message": "This doesn't look like a serve. We couldn't find a ball toss before the swing.",
+   "seconds": 22.07761812210083,
+   "problems": []
+  },
+  "m4v-h264": {
+   "status": "ok",
+   "seconds": 35.00786018371582,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 183,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "webm-vp9-opus": {
+   "status": "ok",
+   "seconds": 35.227200508117676,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 178,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "webm-vp8": {
+   "status": "ok",
+   "seconds": 35.44107460975647,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "webm-live-no-duration": {
+   "status": "ok",
+   "seconds": 39.1189022064209,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 178,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mkv-h264": {
+   "status": "ok",
+   "seconds": 35.03216600418091,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 183,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mkv-hevc-flac": {
+   "status": "ok",
+   "seconds": 35.294646978378296,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 191
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "avi-mjpeg-pcm": {
+   "status": "ok",
+   "seconds": 36.71346569061279,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 187,
+    "contact": 191
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "avi-xvid": {
+   "status": "ok",
+   "seconds": 35.28411889076233,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "3gp-h264": {
+   "status": "ok",
+   "seconds": 35.42824721336365,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mts-h264": {
+   "status": "ok",
+   "seconds": 35.246143102645874,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 183,
+    "contact": 190
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mts-interlaced": {
+   "status": "ok",
+   "seconds": 86.78550839424133,
+   "phases": {
+    "trophy": 427,
+    "racket_drop": 439,
+    "contact": 457
+   },
+   "n_frames": 550,
+   "fps": 60.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     550,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     550,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mts-anamorphic": {
+   "status": "ok",
+   "seconds": 37.584630727767944,
+   "phases": {
+    "trophy": 177,
+    "racket_drop": 182,
+    "contact": 191
+   },
+   "n_frames": 229,
+   "fps": 25.0,
+   "size": [
+    1280,
+    720
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ],
+    "annotated.mp4": [
+     "h264",
+     229,
+     1280,
+     720
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "text-renamed-mp4": {
+   "status": "rejected",
+   "code": "UNREADABLE_VIDEO",
+   "message": "Could not open video: /tmp/tmpgz2jtf20/text-renamed-mp4.mp4",
+   "seconds": 0.21521449089050293,
+   "problems": []
+  }
+ },
+ "saque_1": {
+  "original": {
+   "status": "ok",
+   "seconds": 14.286123514175415,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": []
+  },
+  "mov-h264": {
+   "status": "ok",
+   "seconds": 14.216665983200073,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-hevc": {
+   "status": "ok",
+   "seconds": 14.237679481506348,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-hevc-aac": {
+   "status": "ok",
+   "seconds": 14.261531352996826,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-hevc-10bit-hdr": {
+   "status": "ok",
+   "seconds": 14.264530181884766,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-prores": {
+   "status": "ok",
+   "seconds": 14.230594396591187,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-rot90": {
+   "status": "ok",
+   "seconds": 14.229775428771973,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 62
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-rot180": {
+   "status": "ok",
+   "seconds": 14.237765312194824,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-rot270": {
+   "status": "ok",
+   "seconds": 14.981494903564453,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-h264": {
+   "status": "ok",
+   "seconds": 60.28977608680725,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-h264-aac": {
+   "status": "ok",
+   "seconds": 14.250569820404053,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-hevc": {
+   "status": "ok",
+   "seconds": 15.04773473739624,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-av1": {
+   "status": "ok",
+   "seconds": 15.242046356201172,
+   "phases": {
+    "trophy": 53,
+    "racket_drop": 58,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-60fps": {
+   "status": "ok",
+   "seconds": 27.609341621398926,
+   "phases": {
+    "trophy": 104,
+    "racket_drop": 105,
+    "contact": 123
+   },
+   "n_frames": 204,
+   "fps": 60.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     204,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     204,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-120fps": {
+   "status": "ok",
+   "seconds": 54.25424075126648,
+   "phases": {
+    "trophy": 208,
+    "racket_drop": 209,
+    "contact": 251
+   },
+   "n_frames": 408,
+   "fps": 120.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     408,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     408,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-vfr": {
+   "status": "ok",
+   "seconds": 14.286388635635376,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.30582045379809,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-hevc-10bit-hdr-rot90": {
+   "status": "ok",
+   "seconds": 14.208636999130249,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-odd-size": {
+   "status": "ok",
+   "seconds": 14.309203147888184,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 62
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    318,
+    238
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     318,
+     238
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     318,
+     238
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-cover-art": {
+   "status": "ok",
+   "seconds": 14.236953020095825,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mp4-truncated": {
+   "status": "ok",
+   "seconds": 10.377408504486084,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 68,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     68,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     68,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Only 68 of the video's 102 frames could be read, so the file looks incomplete. If the serve seems cut off, upload the original file again."
+   ],
+   "problems": []
+  },
+  "m4v-h264": {
+   "status": "ok",
+   "seconds": 14.328303813934326,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "webm-vp9-opus": {
+   "status": "ok",
+   "seconds": 14.396607637405396,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "webm-vp8": {
+   "status": "ok",
+   "seconds": 14.22739315032959,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "webm-live-no-duration": {
+   "status": "ok",
+   "seconds": 14.63095736503601,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mkv-h264": {
+   "status": "ok",
+   "seconds": 14.63642930984497,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mkv-hevc-flac": {
+   "status": "ok",
+   "seconds": 14.288275003433228,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "avi-mjpeg-pcm": {
+   "status": "ok",
+   "seconds": 14.219613313674927,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "avi-xvid": {
+   "status": "ok",
+   "seconds": 14.228760004043579,
+   "phases": {
+    "trophy": 51,
+    "racket_drop": 52,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "3gp-h264": {
+   "status": "ok",
+   "seconds": 14.260084629058838,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mts-h264": {
+   "status": "ok",
+   "seconds": 14.23475980758667,
+   "phases": {
+    "trophy": 52,
+    "racket_drop": 53,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mts-interlaced": {
+   "status": "ok",
+   "seconds": 28.110654830932617,
+   "phases": {
+    "trophy": 105,
+    "racket_drop": 106,
+    "contact": 124
+   },
+   "n_frames": 204,
+   "fps": 60.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     204,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     204,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mts-anamorphic": {
+   "status": "ok",
+   "seconds": 14.774969339370728,
+   "phases": {
+    "trophy": 53,
+    "racket_drop": 58,
+    "contact": 61
+   },
+   "n_frames": 102,
+   "fps": 30.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     102,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "text-renamed-mp4": {
+   "status": "rejected",
+   "code": "UNREADABLE_VIDEO",
+   "message": "Could not open video: /tmp/tmp2zkbpo1_/text-renamed-mp4.mp4",
+   "seconds": 0.21520423889160156,
+   "problems": []
+  }
+ },
+ "evd_clay_1": {
+  "original": {
+   "status": "ok",
+   "seconds": 12.978386640548706,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ]
+  },
+  "mov-h264": {
+   "status": "ok",
+   "seconds": 12.920198202133179,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-hevc": {
+   "status": "ok",
+   "seconds": 12.81857180595398,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-hevc-aac": {
+   "status": "ok",
+   "seconds": 12.83369517326355,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-hevc-10bit-hdr": {
+   "status": "ok",
+   "seconds": 13.123485565185547,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-prores": {
+   "status": "ok",
+   "seconds": 12.981734275817871,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-rot90": {
+   "status": "ok",
+   "seconds": 12.813864469528198,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-rot180": {
+   "status": "ok",
+   "seconds": 12.857349157333374,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-rot270": {
+   "status": "ok",
+   "seconds": 12.81874966621399,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-h264": {
+   "status": "ok",
+   "seconds": 12.83106803894043,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-h264-aac": {
+   "status": "ok",
+   "seconds": 12.851200342178345,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-hevc": {
+   "status": "ok",
+   "seconds": 12.780837297439575,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-av1": {
+   "status": "ok",
+   "seconds": 13.167122840881348,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-60fps": {
+   "status": "ok",
+   "seconds": 24.993234634399414,
+   "phases": {
+    "trophy": 138,
+    "racket_drop": null,
+    "contact": 157
+   },
+   "n_frames": 185,
+   "fps": 60.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     185,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     185,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-120fps": {
+   "status": "ok",
+   "seconds": 49.005281925201416,
+   "phases": {
+    "trophy": 283,
+    "racket_drop": 311,
+    "contact": 316
+   },
+   "n_frames": 369,
+   "fps": 120.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     369,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     369,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mov-vfr": {
+   "status": "ok",
+   "seconds": 12.820326328277588,
+   "phases": {
+    "trophy": 69,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 30.07062165410248,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mov-hevc-10bit-hdr-rot90": {
+   "status": "ok",
+   "seconds": 12.839017391204834,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-odd-size": {
+   "status": "ok",
+   "seconds": 12.884397029876709,
+   "phases": {
+    "trophy": 69,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    318,
+    238
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     318,
+     238
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     318,
+     238
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-cover-art": {
+   "status": "ok",
+   "seconds": 12.843648433685303,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mp4-truncated": {
+   "status": "ok",
+   "seconds": 9.470708847045898,
+   "phases": {
+    "trophy": 64,
+    "racket_drop": null,
+    "contact": 65
+   },
+   "n_frames": 66,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     66,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     66,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Only 66 of the video's 92 frames could be read, so the file looks incomplete. If the serve seems cut off, upload the original file again.",
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "m4v-h264": {
+   "status": "ok",
+   "seconds": 12.87227177619934,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "webm-vp9-opus": {
+   "status": "ok",
+   "seconds": 12.859938621520996,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "webm-vp8": {
+   "status": "ok",
+   "seconds": 12.79944396018982,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "webm-live-no-duration": {
+   "status": "ok",
+   "seconds": 13.117440938949585,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mkv-h264": {
+   "status": "ok",
+   "seconds": 12.907561540603638,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mkv-hevc-flac": {
+   "status": "ok",
+   "seconds": 12.970293760299683,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "avi-mjpeg-pcm": {
+   "status": "ok",
+   "seconds": 13.528614044189453,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "avi-xvid": {
+   "status": "ok",
+   "seconds": 12.857799768447876,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "3gp-h264": {
+   "status": "ok",
+   "seconds": 17.040141344070435,
+   "phases": {
+    "trophy": 70,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.917,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mts-h264": {
+   "status": "ok",
+   "seconds": 12.801832437515259,
+   "phases": {
+    "trophy": 65,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.916666666666668,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "mts-interlaced": {
+   "status": "ok",
+   "seconds": 25.296820878982544,
+   "phases": {
+    "trophy": 128,
+    "racket_drop": 139,
+    "contact": 157
+   },
+   "n_frames": 184,
+   "fps": 60.0,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     184,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     184,
+     320,
+     240
+    ]
+   },
+   "warnings": [],
+   "problems": []
+  },
+  "mts-anamorphic": {
+   "status": "ok",
+   "seconds": 13.178929090499878,
+   "phases": {
+    "trophy": 69,
+    "racket_drop": null,
+    "contact": 78
+   },
+   "n_frames": 92,
+   "fps": 29.916666666666668,
+   "size": [
+    320,
+    240
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ],
+    "annotated.mp4": [
+     "h264",
+     92,
+     320,
+     240
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase."
+   ],
+   "problems": []
+  },
+  "text-renamed-mp4": {
+   "status": "rejected",
+   "code": "UNREADABLE_VIDEO",
+   "message": "Could not open video: /tmp/tmpjo6stm20/text-renamed-mp4.mp4",
+   "seconds": 0.21676135063171387,
+   "problems": []
+  }
+ },
+ "fixture_front": {
+  "original": {
+   "status": "ok",
+   "seconds": 17.52589726448059,
+   "phases": {
+    "trophy": 114,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ]
+  },
+  "mov-h264": {
+   "status": "ok",
+   "seconds": 17.464620113372803,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mov-hevc": {
+   "status": "ok",
+   "seconds": 17.44877600669861,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mov-hevc-aac": {
+   "status": "ok",
+   "seconds": 17.45575714111328,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mov-hevc-10bit-hdr": {
+   "status": "ok",
+   "seconds": 17.559300184249878,
+   "phases": {
+    "trophy": 111,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mov-prores": {
+   "status": "ok",
+   "seconds": 17.646504163742065,
+   "phases": {
+    "trophy": 113,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mov-rot90": {
+   "status": "ok",
+   "seconds": 17.49692177772522,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mov-rot180": {
+   "status": "ok",
+   "seconds": 17.422354459762573,
+   "phases": {
+    "trophy": 114,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-rot270": {
+   "status": "ok",
+   "seconds": 17.610944986343384,
+   "phases": {
+    "trophy": 114,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-h264": {
+   "status": "ok",
+   "seconds": 17.663293600082397,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-h264-aac": {
+   "status": "ok",
+   "seconds": 17.788182735443115,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-hevc": {
+   "status": "ok",
+   "seconds": 17.538201093673706,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-av1": {
+   "status": "ok",
+   "seconds": 18.11404776573181,
+   "phases": {
+    "trophy": 109,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-60fps": {
+   "status": "ok",
+   "seconds": 40.591423988342285,
+   "phases": {
+    "trophy": 272,
+    "racket_drop": 296,
+    "contact": 299
+   },
+   "n_frames": 300,
+   "fps": 60.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     300,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     300,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-120fps": {
+   "status": "ok",
+   "seconds": 80.73861908912659,
+   "phases": {
+    "trophy": 547,
+    "racket_drop": 590,
+    "contact": 599
+   },
+   "n_frames": 600,
+   "fps": 120.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     600,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     600,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mov-vfr": {
+   "status": "ok",
+   "seconds": 17.539855241775513,
+   "phases": {
+    "trophy": 114,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.116556520101096,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mov-hevc-10bit-hdr-rot90": {
+   "status": "ok",
+   "seconds": 17.698111295700073,
+   "phases": {
+    "trophy": 115,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-odd-size": {
+   "status": "ok",
+   "seconds": 17.527005910873413,
+   "phases": {
+    "trophy": 113,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    638,
+    478
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     638,
+     478
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     638,
+     478
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-cover-art": {
+   "status": "ok",
+   "seconds": 17.4892680644989,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mp4-truncated": {
+   "status": "rejected",
+   "code": "NOT_A_SERVE",
+   "message": "This doesn't look like a serve. We couldn't find a ball toss before the swing.",
+   "seconds": 8.78921103477478,
+   "problems": []
+  },
+  "m4v-h264": {
+   "status": "ok",
+   "seconds": 17.470682382583618,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "webm-vp9-opus": {
+   "status": "ok",
+   "seconds": 17.482763290405273,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "webm-vp8": {
+   "status": "ok",
+   "seconds": 17.44436550140381,
+   "phases": {
+    "trophy": 115,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "webm-live-no-duration": {
+   "status": "ok",
+   "seconds": 18.009807109832764,
+   "phases": {
+    "trophy": 114,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mkv-h264": {
+   "status": "ok",
+   "seconds": 17.48408794403076,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mkv-hevc-flac": {
+   "status": "ok",
+   "seconds": 39.718517780303955,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "avi-mjpeg-pcm": {
+   "status": "ok",
+   "seconds": 19.29173231124878,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "avi-xvid": {
+   "status": "ok",
+   "seconds": 1019.659565448761,
+   "phases": {
+    "trophy": 114,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "3gp-h264": {
+   "status": "ok",
+   "seconds": 343.2676155567169,
+   "phases": {
+    "trophy": 115,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mts-h264": {
+   "status": "ok",
+   "seconds": 18.68205761909485,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mts-interlaced": {
+   "status": "ok",
+   "seconds": 3469.70725774765,
+   "phases": {
+    "trophy": 272,
+    "racket_drop": 298,
+    "contact": 299
+   },
+   "n_frames": 300,
+   "fps": 60.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     300,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     300,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "mts-anamorphic": {
+   "status": "ok",
+   "seconds": 19.385606050491333,
+   "phases": {
+    "trophy": 112,
+    "racket_drop": null,
+    "contact": 123
+   },
+   "n_frames": 125,
+   "fps": 25.0,
+   "size": [
+    640,
+    480
+   ],
+   "videos": {
+    "playback.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ],
+    "annotated.mp4": [
+     "h264",
+     125,
+     640,
+     480
+    ]
+   },
+   "warnings": [
+    "Could not detect the racket drop phase.",
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+   ],
+   "problems": []
+  },
+  "text-renamed-mp4": {
+   "status": "rejected",
+   "code": "UNREADABLE_VIDEO",
+   "message": "Could not open video: /tmp/tmpnowifgxv/text-renamed-mp4.mp4",
+   "seconds": 0.21265673637390137,
+   "problems": []
+  }
+ }
+}

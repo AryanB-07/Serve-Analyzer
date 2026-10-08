@@ -239,6 +239,8 @@ restarts. Rows store a hash of the IP or email, not the address itself.
 
 ## Deploying
 
+`docs/file-formats.md` lists the supported video files, the file quirks the pipeline corrects, and how
+that was tested.
 `docs/deploy-aws-free-tier.md` deploys it on one free-tier EC2 instance, with no domain needed.
 `docs/deployment.md` walks through running the app on a server with HTTPS, managed Postgres and
 S3: `docker compose -f deploy/docker-compose.yml up -d --build`, after filling in

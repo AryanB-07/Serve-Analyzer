@@ -64,6 +64,15 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 - [ ] Self-serve "download my data". The Privacy Policy currently says to email for a copy.
 - [ ] Changing your account's email address (not supported yet).
 
+## Video formats
+
+- [x] MOV, MP4/M4V, WebM, MKV, AVI, 3GP and MTS tested across 160 variant runs, with
+      rotation, interlacing, stretched pixels, AV1, high frame rates and broken files handled
+      (`docs/file-formats.md`)
+- [ ] **Record two or three serves on your iPhone with HDR on** (the camera's default) and add
+  them to the evaluation clips. HDR footage is analysed without tone mapping today, and
+  synthetic HDR wasn't realistic enough to tune it.
+
 ## Accuracy (optional)
 
 - [ ] More real footage from your own players, especially slow motion and non-serves.
