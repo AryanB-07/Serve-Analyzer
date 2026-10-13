@@ -58,16 +58,19 @@ export function useSignUp() {
 }
 
 /**
- * ``onSignedOut`` runs before the session is cleared, so the page can leave the signed-in
- * routes first. (Otherwise the route guard's redirect to /login?next=… races it.)
+ * ``onSignedOut`` leaves the signed-in pages, and the session is cleared only once it has.
+ * Clearing it earlier lets the route guard see a signed-out user on the old page and redirect
+ * to /login?next=…, racing the navigation. Pass navigate(…, { flushSync: true }): the router
+ * otherwise commits the new page in a transition, which React can put off past the session
+ * update even after navigate()'s promise resolves.
  */
-export function useLogOut(onSignedOut?: () => void) {
+export function useLogOut(onSignedOut?: () => void | Promise<void>) {
   const switchUser = useSwitchUser();
   return useMutation({
     mutationFn: () => api.logOut(),
     // Signed out locally even if the request failed: the user asked to leave.
-    onSettled: () => {
-      onSignedOut?.();
+    onSettled: async () => {
+      await onSignedOut?.();
       switchUser(null);
     },
   });
@@ -100,15 +103,15 @@ export function useResetPassword() {
 }
 
 /**
- * ``onDeleted`` runs before the session is cleared, so it can leave the signed-in
- * pages first (otherwise the route guard would send the user to sign in).
+ * Like useLogOut: ``onDeleted`` leaves the signed-in pages, and the session is cleared once it
+ * has (otherwise the route guard would send the user to sign in).
  */
-export function useDeleteAccount(onDeleted: () => void) {
+export function useDeleteAccount(onDeleted: () => void | Promise<void>) {
   const switchUser = useSwitchUser();
   return useMutation({
     mutationFn: (password: string) => api.deleteAccount(password),
-    onSuccess: () => {
-      onDeleted();
+    onSuccess: async () => {
+      await onDeleted();
       switchUser(null);
     },
   });

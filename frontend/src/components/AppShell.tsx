@@ -14,7 +14,7 @@ function navClass({ isActive }: { isActive: boolean }) {
 function AccountControls() {
   const session = useSession();
   const navigate = useNavigate();
-  const logOut = useLogOut(() => navigate("/login", { replace: true }));
+  const logOut = useLogOut(() => navigate("/login", { replace: true, flushSync: true }));
   const user = session.data;
   if (!user) return null;
   return (

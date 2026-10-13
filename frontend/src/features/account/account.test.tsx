@@ -184,6 +184,8 @@ describe("deleting the account", () => {
   it("needs the password and DELETE typed out, then signs out", async () => {
     fake.user = ALICE;
     const router = renderApp("/account");
+    const visited: string[] = [];
+    router.subscribe((state) => visited.push(state.location.pathname + state.location.search));
     await userEvent.click(await screen.findByRole("button", { name: "Delete my account…" }));
     const submit = screen.getByRole("button", { name: "Permanently delete account" });
     await userEvent.type(screen.getByLabelText("Your password"), "secret password");
@@ -193,6 +195,7 @@ describe("deleting the account", () => {
     await userEvent.click(submit);
     expect(await screen.findByRole("heading", { name: "Account deleted" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/account-deleted");
+    expect(visited.filter((path) => path.startsWith("/login"))).toEqual([]);
     expect(fake.deleteAccount).toHaveBeenCalledWith("secret password");
     expect(screen.queryByRole("button", { name: "Sign out" })).not.toBeInTheDocument();
   });

@@ -308,7 +308,7 @@ export function VerifyEmailBanner() {
 function DeleteAccount() {
   const id = useId();
   const navigate = useNavigate();
-  const remove = useDeleteAccount(() => navigate("/account-deleted", { replace: true }));
+  const remove = useDeleteAccount(() => navigate("/account-deleted", { replace: true, flushSync: true }));
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [typed, setTyped] = useState("");

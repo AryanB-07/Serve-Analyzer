@@ -227,10 +227,15 @@ describe("sign out and switching users", () => {
     const { router, queryClient } = renderApp("/history");
     await screen.findByRole("heading", { name: "History page" });
     queryClient.setQueryData(["analyses"], { pages: [{ items: [{ id: "alices-serve" }] }] });
+    const visited: string[] = [];
+    const unsubscribe = router.subscribe((state) => visited.push(state.location.pathname + state.location.search));
     await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+    unsubscribe();
     expect(fake.logOut).toHaveBeenCalled();
     expect(where(router)).toBe("/login");
+    // Never bounced through the route guard's "sign in to continue" redirect on the way.
+    expect(visited.filter((path) => path.includes("next="))).toEqual([]);
     expect(queryClient.getQueryData(["analyses"])).toBeUndefined();
     expect(screen.queryByText("alice@example.com")).not.toBeInTheDocument();
   });
