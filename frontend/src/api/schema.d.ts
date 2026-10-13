@@ -164,6 +164,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Email Change
+         * @description Email a confirmation link to the new address. The account keeps its current
+         *     address until the link is opened.
+         */
+        post: operations["request_email_change_auth_email_change_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email-change/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Email Change
+         * @description Switch to the new address from the emailed link, and tell the old address.
+         *     Works without signing in, like confirming an email.
+         */
+        post: operations["confirm_email_change_auth_email_change_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Data
+         * @description Download everything stored about the account, as one JSON file.
+         */
+        get: operations["export_data_auth_me_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/analyses": {
         parameters: {
             query?: never;
@@ -240,6 +302,30 @@ export interface paths {
         put?: never;
         /** Retry Analysis */
         post: operations["retry_analysis_analyses__analysis_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analyses/{analysis_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Report
+         * @description The report sent about this analysis, or null.
+         */
+        get: operations["get_report_analyses__analysis_id__report_get"];
+        /**
+         * Report Analysis
+         * @description Tell us this result looks wrong. Sending another replaces the previous report.
+         */
+        put: operations["report_analysis_analyses__analysis_id__report_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -370,6 +456,24 @@ export interface components {
             /** Message */
             message: string;
         };
+        /**
+         * ChangeEmailRequest
+         * @description The current password too, so a borrowed or stolen session can't take over the account.
+         */
+        ChangeEmailRequest: {
+            /**
+             * New Email
+             * Format: email
+             */
+            new_email: string;
+            /** Password */
+            password: string;
+        };
+        /** ConfirmEmailChangeRequest */
+        ConfirmEmailChangeRequest: {
+            /** Token */
+            token: string;
+        };
         /** CreateAnalysisRequest */
         CreateAnalysisRequest: {
             /**
@@ -393,6 +497,25 @@ export interface components {
             upload: components["schemas"]["UploadTarget"];
         };
         /**
+         * DataExport
+         * @description Everything stored about an account, as given by "Download my data".
+         */
+        DataExport: {
+            /**
+             * Exported At
+             * Format: date-time
+             */
+            exported_at: string;
+            /**
+             * Links Expire At
+             * Format: date-time
+             */
+            links_expire_at: string;
+            account: components["schemas"]["ExportedAccount"];
+            /** Analyses */
+            analyses: components["schemas"]["ExportedAnalysis"][];
+        };
+        /**
          * DeleteAccountRequest
          * @description The current password, so a borrowed or stolen session can't delete the account.
          */
@@ -404,6 +527,59 @@ export interface components {
         ErrorResponse: {
             /** Detail */
             detail: string;
+        };
+        /** ExportedAccount */
+        ExportedAccount: {
+            /** Email */
+            email: string;
+            /** Email Verified */
+            email_verified: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Terms Version */
+            terms_version?: string | null;
+            /** Terms Accepted At */
+            terms_accepted_at?: string | null;
+        };
+        /** ExportedAnalysis */
+        ExportedAnalysis: {
+            /** Id */
+            id: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Hand
+             * @enum {string}
+             */
+            hand: "right" | "left";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "awaiting_upload" | "queued" | "extracting_pose" | "analyzing" | "rendering" | "succeeded" | "failed";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            error?: components["schemas"]["ApiError"] | null;
+            /** Original Video Deleted At */
+            original_video_deleted_at?: string | null;
+            /** Results */
+            results?: {
+                [key: string]: unknown;
+            } | null;
+            report?: components["schemas"]["Report"] | null;
+            /**
+             * Files
+             * @default {}
+             */
+            files: {
+                [key: string]: string;
+            };
         };
         /** FeedbackItem */
         FeedbackItem: {
@@ -586,6 +762,31 @@ export interface components {
             right_knee: components["schemas"]["RawLandmarkTrack"];
             left_ankle: components["schemas"]["RawLandmarkTrack"];
             right_ankle: components["schemas"]["RawLandmarkTrack"];
+        };
+        /** Report */
+        Report: {
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "not_a_serve" | "wrong_phases" | "wrong_tracking" | "wrong_feedback" | "was_a_serve" | "other";
+            /** Note */
+            note?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ReportRequest */
+        ReportRequest: {
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "not_a_serve" | "wrong_phases" | "wrong_tracking" | "wrong_feedback" | "was_a_serve" | "other";
+            /** Note */
+            note?: string | null;
         };
         /** SignupRequest */
         SignupRequest: {
@@ -1066,6 +1267,171 @@ export interface operations {
             };
         };
     };
+    request_email_change_auth_email_change_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirm_email_change_auth_email_change_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmEmailChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_data_auth_me_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExport"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_analyses_analyses_get: {
         parameters: {
             query?: {
@@ -1415,6 +1781,126 @@ export interface operations {
             };
             /** @description Too Many Requests */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_report_analyses__analysis_id__report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"] | null;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_analysis_analyses__analysis_id__report_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

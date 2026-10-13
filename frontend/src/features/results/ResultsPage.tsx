@@ -6,6 +6,7 @@ import { api, ApiError } from "../../api";
 import { queryKeys, useAnalysis, useFrames, useResult } from "../../api/queries";
 import type { AnalysisResult, AnalysisSummary, FramesPayload } from "../../api/types";
 import { DeleteAnalysisButton } from "../../components/DeleteAnalysisButton";
+import { KnownLimits } from "../../components/KnownLimits";
 import { PlayheadProvider, usePlayheadStore } from "../../playhead/context";
 import { ProcessingView } from "../processing/ProcessingView";
 import { AngleCharts } from "./charts/AngleCharts";
@@ -15,6 +16,7 @@ import { MetricCards } from "./MetricCards";
 import { OverlayToggles } from "./OverlayToggles";
 import { PhaseTimeline } from "./PhaseTimeline";
 import { CurrentPhase, FrameCounter, StatusKey } from "./PlayheadReadout";
+import { ReportProblem } from "./ReportProblem";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { VideoStage, type OverlayOptions } from "./VideoStage";
 
@@ -77,6 +79,8 @@ function ResultsView({
                 </ul>
               </div>
             )}
+            <KnownLimits />
+            <ReportProblem analysisId={summary.id} outcome="succeeded" />
           </aside>
 
           <div className="min-w-0 lg:col-start-1">
@@ -100,6 +104,12 @@ function DeleteFromHere({ summary, className }: { summary: AnalysisSummary; clas
   );
 }
 
+/** A serve rejected as not a serve is exactly the mistake worth hearing about. */
+function failureReport(summary: AnalysisSummary) {
+  if (summary.status !== "failed" || summary.error?.code !== "NOT_A_SERVE") return null;
+  return <ReportProblem analysisId={summary.id} outcome="failed" prompt="This was a serve? Tell us" />;
+}
+
 function Processing({ summary }: { summary: AnalysisSummary }) {
   const queryClient = useQueryClient();
   const [since, setSince] = useState(() => Date.parse(summary.created_at));
@@ -118,6 +128,7 @@ function Processing({ summary }: { summary: AnalysisSummary }) {
       onRetry={() => retry.mutate()}
       retrying={retry.isPending}
       retryError={retry.error?.message ?? null}
+      report={failureReport(summary)}
     />
   );
 }

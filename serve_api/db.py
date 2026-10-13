@@ -25,7 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 
-from .tables import analyses, auth_attempts, email_tokens, sessions, storage_purges, users
+from .tables import analyses, auth_attempts, email_tokens, result_reports, sessions, storage_purges, users
 
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
 ACTIVE = ("queued", *IN_PROGRESS)
@@ -327,30 +327,56 @@ class Database:
     # --- emailed tokens --------------------------------------------------------
 
     def create_email_token(self, user_id: str, purpose: str, token_hash: str,
-                           expires_at: datetime) -> None:
+                           expires_at: datetime, new_email: str | None = None) -> None:
         """Store a new link token. Earlier unused tokens for the same purpose stop working,
-        so only the most recent email's link is valid."""
+        so only the most recent email's link is valid. ``new_email`` is for email changes."""
         with self.engine.begin() as conn:
             conn.execute(delete(email_tokens).where(
                 email_tokens.c.user_id == user_id, email_tokens.c.purpose == purpose,
                 email_tokens.c.used_at.is_(None)))
             conn.execute(insert(email_tokens).values(
                 id=uuid.uuid4().hex, user_id=user_id, purpose=purpose, token_hash=token_hash,
-                created_at=now(), expires_at=expires_at, used_at=None))
+                created_at=now(), expires_at=expires_at, used_at=None, new_email=new_email))
 
     def use_email_token(self, token_hash: str, purpose: str) -> str | None:
-        """Spend a token: returns its user id, or None if it's unknown, used or expired.
+        """Spend a token: returns its user id, or None if it's unknown, used or expired."""
+        spent = self._spend_email_token(token_hash, purpose)
+        return spent[0] if spent else None
 
-        One UPDATE makes it single-use even when two requests race."""
+    def _spend_email_token(self, token_hash: str, purpose: str) -> tuple[str, str | None] | None:
+        """(user id, new email) for a live token, marking it used. One UPDATE makes it
+        single-use even when two requests race."""
         with self.engine.begin() as conn:
             row = conn.execute(
                 update(email_tokens)
                 .where(email_tokens.c.token_hash == token_hash, email_tokens.c.purpose == purpose,
                        email_tokens.c.used_at.is_(None), email_tokens.c.expires_at > now())
                 .values(used_at=now())
-                .returning(email_tokens.c.user_id)
+                .returning(email_tokens.c.user_id, email_tokens.c.new_email)
             ).first()
-        return row[0] if row else None
+        return (row[0], row[1]) if row else None
+
+    def change_email(self, token_hash: str) -> tuple[str, str, str] | Literal["invalid", "taken"]:
+        """Spend an email-change token and switch the account to its new address.
+
+        Returns (user id, old email, new email); "invalid" for an unknown, used or expired
+        link; "taken" if another account registered the address after the link was sent.
+        Opening the link proves control of the new inbox, so the address counts as verified.
+        """
+        spent = self._spend_email_token(token_hash, "email_change")
+        if spent is None or spent[1] is None:
+            return "invalid"
+        user_id, new_email = spent
+        old = self.get_user(user_id)
+        if old is None:
+            return "invalid"
+        try:
+            with self.engine.begin() as conn:
+                conn.execute(update(users).where(users.c.id == user_id)
+                             .values(email=new_email, email_verified_at=now()))
+        except IntegrityError:
+            return "taken"
+        return user_id, old["email"], new_email
 
     # --- deletion ----------------------------------------------------------------
 
@@ -364,6 +390,8 @@ class Database:
         """Delete one of ``user_id``'s analyses and queue its storage ``prefixes`` for removal,
         in one transaction. Returns the purge ids, or None if there was no such analysis."""
         with self.engine.begin() as conn:
+            conn.execute(delete(result_reports).where(
+                result_reports.c.analysis_id == analysis_id, result_reports.c.user_id == user_id))
             gone = conn.execute(delete(analyses).where(
                 analyses.c.id == analysis_id, analyses.c.user_id == user_id)).rowcount
             return self._queue_purges(conn, prefixes) if gone else None
@@ -375,10 +403,54 @@ class Database:
             ids = list(conn.execute(select(analyses.c.id).where(analyses.c.user_id == user_id)).scalars())
             purge_ids = self._queue_purges(conn, [p for i in ids for p in prefixes_for(i)])
             # Explicit deletes rather than relying on ON DELETE CASCADE alone.
-            for table in (analyses, sessions, email_tokens):
+            for table in (result_reports, analyses, sessions, email_tokens):
                 conn.execute(delete(table).where(table.c.user_id == user_id))
             conn.execute(delete(users).where(users.c.id == user_id))
         return purge_ids
+
+    # --- reports that a result looks wrong -------------------------------------------
+
+    def save_report(self, analysis: dict[str, Any], reason: str, note: str | None) -> dict[str, Any]:
+        """Record (or replace) the owner's report on ``analysis``, with its current status."""
+        row = {"analysis_id": analysis["id"], "user_id": analysis["user_id"], "reason": reason,
+               "note": note, "status": analysis["status"], "error_code": analysis["error_code"],
+               "created_at": now()}
+        with self.engine.begin() as conn:
+            conn.execute(delete(result_reports).where(result_reports.c.analysis_id == analysis["id"]))
+            conn.execute(insert(result_reports).values(row))
+        return row
+
+    def get_report(self, analysis_id: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(result_reports).where(
+                result_reports.c.analysis_id == analysis_id)).mappings().first()
+        return dict(row) if row else None
+
+    def reports(self, since: datetime | None = None) -> list[dict[str, Any]]:
+        """Every report, oldest first, with its analysis's hand, upload time and whether the
+        original video has been deleted."""
+        query = (select(result_reports, analyses.c.hand,
+                        analyses.c.created_at.label("uploaded_at"), analyses.c.input_deleted_at)
+                 .join(analyses, analyses.c.id == result_reports.c.analysis_id)
+                 .order_by(result_reports.c.created_at))
+        if since is not None:
+            query = query.where(result_reports.c.created_at >= since)
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(query).mappings()]
+
+    def user_reports(self, user_id: str) -> dict[str, dict[str, Any]]:
+        """A user's reports, by analysis id."""
+        with self.engine.connect() as conn:
+            rows = conn.execute(select(result_reports).where(
+                result_reports.c.user_id == user_id)).mappings()
+            return {r["analysis_id"]: dict(r) for r in rows}
+
+    def all_analyses(self, user_id: str) -> list[dict[str, Any]]:
+        """Every analysis a user has, oldest first (for their data export)."""
+        query = (select(analyses).where(analyses.c.user_id == user_id)
+                 .order_by(analyses.c.created_at, analyses.c.id))
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(query).mappings()]
 
     def pending_purges(self, ids: list[int] | None = None) -> list[tuple[int, str]]:
         query = select(storage_purges.c.id, storage_purges.c.prefix).order_by(storage_purges.c.id)

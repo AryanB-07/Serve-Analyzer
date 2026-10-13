@@ -24,8 +24,12 @@ from .schemas import (
     AnalysisSummary,
     CreateAnalysisRequest,
     CreateAnalysisResponse,
+    FAILED_REASONS,
+    SUCCEEDED_REASONS,
     ErrorResponse,
     FramesPayload,
+    Report,
+    ReportRequest,
     UploadTarget,
     User,
 )
@@ -221,6 +225,29 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
         run_purges(db, storage, purge_ids)
         return Response(status_code=204)
+
+    @app.put("/analyses/{analysis_id}/report", response_model=Report,
+             responses={**ERRORS, 422: {"model": ErrorResponse}})
+    def report_analysis(analysis_id: str, body: ReportRequest, user: User = signed_in) -> Report:
+        """Tell us this result looks wrong. Sending another replaces the previous report."""
+        row = get_row(analysis_id, user)
+        allowed = {"succeeded": SUCCEEDED_REASONS, "failed": FAILED_REASONS}.get(row["status"])
+        if allowed is None:
+            raise HTTPException(status.HTTP_409_CONFLICT,
+                                "Wait for the analysis to finish before reporting a problem.")
+        if body.reason not in allowed:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT,
+                                f"{body.reason!r} doesn't apply to a {row['status']} analysis.")
+        note = (body.note or "").strip() or None
+        saved = db.save_report(row, body.reason, note)
+        return Report(reason=saved["reason"], note=saved["note"], created_at=saved["created_at"])
+
+    @app.get("/analyses/{analysis_id}/report", response_model=Report | None, responses=ERRORS)
+    def get_report(analysis_id: str, user: User = signed_in) -> Report | None:
+        """The report sent about this analysis, or null."""
+        get_row(analysis_id, user)
+        saved = db.get_report(analysis_id)
+        return Report(**{k: saved[k] for k in ("reason", "note", "created_at")}) if saved else None
 
     @app.get("/analyses/{analysis_id}/result", response_model=AnalysisResult, responses=ERRORS)
     def get_result(analysis_id: str, user: User = signed_in) -> AnalysisResult:

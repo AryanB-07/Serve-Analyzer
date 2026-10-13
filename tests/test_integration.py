@@ -87,3 +87,15 @@ def test_annotated_video_matches_input(result_and_dir):
         assert cap.get(cv2.CAP_PROP_FPS) == pytest.approx(25.0)
     finally:
         cap.release()
+
+
+def test_a_player_standing_still_is_rejected_as_not_a_serve(tmp_path):
+    """standing_still.mp4 is the sample's first frame held for 3 s: the clip the end-to-end
+    test (frontend/e2e) uploads to reach the "doesn't look like a serve" screen."""
+    from serve_analyzer.errors import AnalysisError
+
+    with pytest.raises(AnalysisError) as exc:
+        analyze(Path(__file__).parent / "fixtures" / "standing_still.mp4", "right", tmp_path,
+                AnalysisConfig(), render_video=False)
+    assert exc.value.code == "NOT_A_SERVE"
+    assert str(exc.value).startswith("This doesn't look like a serve.")

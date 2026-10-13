@@ -4,6 +4,7 @@ import { AppShell } from "./components/AppShell";
 import {
   AccountDeletedPage,
   AccountPage,
+  ConfirmEmailChangePage,
   ForgotPasswordPage,
   ResetPasswordPage,
   VerifyEmailPage,
@@ -34,6 +35,7 @@ export const routes = [
       { path: "/forgot-password", element: <ForgotPasswordPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/verify-email", element: <VerifyEmailPage /> },
+      { path: "/confirm-email", element: <ConfirmEmailChangePage /> },
       { path: "/account-deleted", element: <AccountDeletedPage /> },
       { path: "/privacy", element: <PrivacyPage /> },
       { path: "/terms", element: <TermsPage /> },

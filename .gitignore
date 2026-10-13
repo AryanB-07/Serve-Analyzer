@@ -9,3 +9,5 @@ __pycache__/
 node_modules/
 /evaluation/.cache/
 /deploy/.env
+/frontend/test-results/
+/frontend/playwright-report/

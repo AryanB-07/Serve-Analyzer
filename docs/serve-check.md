@@ -83,7 +83,9 @@ their 21 windows, all jumping jacks; the new check accepts none.
   they have little room to overfit.
   - The data a learned classifier would need: a few hundred labelled clips, including smashes
     and backhands from several players and angles.
-  - A cheap way to collect it: a "this isn't a serve" button on the results page, plus the
-    `NOT_A_SERVE` failures users dispute.
+  - Collecting it: the results page has a "this result looks wrong" button (with "this isn't a
+    serve" as a reason), and a `NOT_A_SERVE` failure has "this was a serve". Both are listed by
+    `python -m serve_api.reports`. Training on those clips would need the Privacy Policy changed
+    first, since it says videos aren't used to train models.
 - **All the non-serve tennis strokes come from one player and one camera.** Other players'
   strokes may behave differently.

@@ -62,7 +62,7 @@ jobs:
       - name: API tests (Postgres)
         env:
           SERVE_API_DATABASE_URL: postgresql://serve:serve@localhost:5432/serve_test
-        run: uv run pytest -q -m "not integration" tests/test_api.py tests/test_auth.py tests/test_account.py tests/test_privacy.py tests/test_queue.py tests/test_db.py tests/test_ownership.py tests/test_errors.py
+        run: uv run pytest -q -m "not integration" tests/test_api.py tests/test_auth.py tests/test_account.py tests/test_account_data.py tests/test_privacy.py tests/test_queue.py tests/test_db.py tests/test_ownership.py tests/test_errors.py
 
   frontend:
     name: Frontend checks
@@ -80,7 +80,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - name: Type check
-        run: npx tsc --noEmit -p .
+        run: npx tsc --noEmit -p . && npx tsc --noEmit -p e2e
       - name: Generated API types match openapi.json
         run: npm run check:api
       - name: Unit tests
@@ -91,12 +91,30 @@ jobs:
   docker:
     name: Docker images and smoke test
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     needs: [python, frontend]
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Playwright and Chromium
+        working-directory: frontend
+        run: npm ci && npx playwright install --with-deps chromium
       # Builds the production images, starts them with test settings (bundled Postgres,
       # a Mailpit inbox, self-signed HTTPS), then signs up, confirms the email, analyses
       # the sample serve, checks the videos are browser-playable, and deletes everything.
-      - name: Build, start and smoke-test the production stack
+      # Then the browser tests: a clip that isn't a serve, changing email, downloading data.
+      - name: Build, start, smoke-test and browser-test the production stack
+        env:
+          E2E: "1"
         run: scripts/smoke_docker.sh
+      - name: Keep the browser test traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          if-no-files-found: ignore

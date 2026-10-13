@@ -55,6 +55,10 @@ export function PrivacyPage() {
             for playback and one with the skeleton drawn on).
           </li>
           <li>
+            <strong>Problem reports:</strong> if you tell us a result looks wrong, the reason you chose and any note you
+            wrote, stored with that analysis.
+          </li>
+          <li>
             <strong>Sign-in and security records:</strong> a session cookie that keeps you signed in, and short-lived
             records of sign-in attempts used to stop password guessing. The attempt records store your IP address and
             email only as one-way hashes.
@@ -87,8 +91,12 @@ export function PrivacyPage() {
           <li>To run your account: signing in, confirming your email, resetting your password.</li>
           <li>To keep the service secure and working: rate limits, fixing errors, preventing abuse.</li>
           <li>
-            To email you about your account only: confirmation and reset links, and notices when your password changes or
-            your account is deleted. No newsletters or marketing.
+            To improve the analysis: we review the problems you report, and the analyses they're about, to find and fix
+            its mistakes.
+          </li>
+          <li>
+            To email you about your account only: confirmation and reset links, and notices when your password or email
+            address changes or your account is deleted. No newsletters or marketing.
           </li>
         </ul>
         <p>
@@ -125,8 +133,11 @@ export function PrivacyPage() {
             <strong>Sessions:</strong> end 30 days after you were last active, or when you sign out.
           </li>
           <li>
-            <strong>Emailed links:</strong> stop working after 1 hour (password reset) or 24 hours (email confirmation),
-            and are deleted soon after.
+            <strong>Emailed links:</strong> stop working after 1 hour (password reset) or 24 hours (confirming an email
+            address), and are deleted soon after.
+          </li>
+          <li>
+            <strong>Problem reports:</strong> until you delete the analysis they're about, or your account.
           </li>
           <li>
             <strong>Sign-in attempt records:</strong> 1 day.
@@ -152,8 +163,14 @@ export function PrivacyPage() {
             page</Link>. This deletes your account and every video and analysis in it right away.
           </li>
           <li>
-            <strong>Get a copy, correct, or ask about your data</strong> by emailing {contact}. We'll respond within 30
-            days.
+            <strong>Download a copy of your data</strong> from your account page: one file with your account details, every
+            analysis and its results, and links to download your videos.
+          </li>
+          <li>
+            <strong>Change your email address</strong> from your account page, or reset your password from the sign-in page.
+          </li>
+          <li>
+            <strong>Correct or ask about your data</strong> by emailing {contact}. We'll respond within 30 days.
           </li>
         </ul>
         <p>

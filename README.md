@@ -178,6 +178,12 @@ and password accounts:
   same response whether or not the address has an account, and emails are sent after the
   response, so timing doesn't reveal it either. Setting a new password signs out every device.
   Each address gets at most 3 emails an hour.
+- **Changing email.** Needs the current password. A link goes to the new address, and the
+  account keeps its old one until the link is opened (24 hours, single use); the old address is
+  then told about the change. Opening the link confirms the new address.
+- **Download my data.** `GET /auth/me/export` returns one JSON file: the account, every analysis
+  with its results, error and report, and signed links to its videos and per-frame data. Limited
+  to 5 an hour.
 - **Link tokens** are random and single use; like sessions, only their hashes are stored.
 - **Deletion.** Deleting an analysis removes its video and results. Deleting the account (which
   needs the password) removes the account, its sessions and every analysis.
@@ -293,7 +299,14 @@ cd frontend
 npx vitest run                       # unit and component tests (`npm test` to watch)
 npm run typecheck                    # TypeScript
 npm run check:api                    # generated types are up to date with openapi.json
+npm run test:e2e                     # browser tests against the running production stack (below)
 ```
+
+`scripts/smoke_docker.sh` builds the production images, starts them with a Mailpit inbox, runs
+`scripts/smoke_test.py`, then the Playwright browser tests in `frontend/e2e` (CI does the same on
+every push). The browser tests drive Chromium through: a clip that isn't a serve (rejected by
+the real pipeline, then disputed), a real serve's results page and a problem report, changing
+email through the inbox, password reset, and downloading your data.
 
 Backend tests cover the full upload → worker → result flow on a real clip, signed URLs,
 status transitions, pagination and edge cases (tiny clips, missing landmarks, portrait video).
@@ -342,9 +355,12 @@ frontend/
 | `GET /analyses/{id}/result` | Metrics, labels, ranges, feedback, warnings and video URLs |
 | `GET /analyses/{id}/frames` | Per-frame landmarks (raw and smoothed) and angle series |
 | `DELETE /analyses/{id}` | Delete an analysis with its video and results |
+| `PUT /analyses/{id}/report`, `GET` | "This result looks wrong": a reason and an optional note (one per analysis) |
 | `POST /auth/signup`, `/auth/login`, `/auth/logout`, `GET /auth/me` | Accounts and sessions (an HttpOnly cookie) |
 | `POST /auth/verify-email`, `/auth/verify-email/resend` | Confirm the email address from the emailed link |
 | `POST /auth/password-reset`, `/auth/password-reset/confirm` | Email a reset link; set a new password from it (signs out every device) |
+| `POST /auth/email-change`, `/auth/email-change/confirm` | Email a link to a new address; switch to it from the link |
+| `GET /auth/me/export` | Download everything stored about the account as JSON |
 | `DELETE /auth/me` | Delete the account and everything in it (needs the password) |
 
 Interactive docs are at http://localhost:8000/docs while the API is running. Failures carry
@@ -409,8 +425,8 @@ missing (for example, no ball toss before the swing).
 
 **Web app**
 
-- **No password reset or email verification yet.** Signup also reveals whether an email is
-  already registered.
+- **Signup reveals whether an email is already registered** (and so does changing to it), as
+  most sites' signups do.
 - **Uploads that never arrive stay in history** as "Upload not finished" for up to a day before
   the worker deletes them.
 - **Signed video URLs work for anyone holding one** until they expire (up to 6 hours), like any

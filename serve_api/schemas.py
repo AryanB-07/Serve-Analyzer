@@ -212,3 +212,67 @@ class DeleteAccountRequest(BaseModel):
     """The current password, so a borrowed or stolen session can't delete the account."""
 
     password: str = Field(min_length=1, max_length=256)
+
+
+class ChangeEmailRequest(BaseModel):
+    """The current password too, so a borrowed or stolen session can't take over the account."""
+
+    new_email: EmailStr = Field(max_length=320)
+    password: str = Field(min_length=1, max_length=256)
+
+
+class ConfirmEmailChangeRequest(BaseModel):
+    token: str = Field(min_length=1, max_length=128)
+
+
+# "This result looks wrong". The first five are for a finished analysis, the last for one
+# rejected as not a serve; "other" fits either.
+ReportReason = Literal[
+    "not_a_serve", "wrong_phases", "wrong_tracking", "wrong_feedback", "was_a_serve", "other",
+]
+SUCCEEDED_REASONS = ("not_a_serve", "wrong_phases", "wrong_tracking", "wrong_feedback", "other")
+FAILED_REASONS = ("was_a_serve", "other")
+MAX_NOTE_LENGTH = 1000
+
+
+class ReportRequest(BaseModel):
+    reason: ReportReason
+    note: str | None = Field(default=None, max_length=MAX_NOTE_LENGTH)
+
+
+class Report(BaseModel):
+    reason: ReportReason
+    note: str | None = None
+    created_at: datetime
+
+
+class ExportedAccount(BaseModel):
+    email: str
+    email_verified: bool
+    created_at: datetime
+    terms_version: str | None = None
+    terms_accepted_at: datetime | None = None
+
+
+class ExportedAnalysis(BaseModel):
+    id: str
+    filename: str
+    hand: Hand
+    status: AnalysisStatus
+    created_at: datetime
+    error: ApiError | None = None
+    original_video_deleted_at: datetime | None = None
+    # The pipeline's results.json: phases, angles, labels, ranges, feedback and warnings.
+    results: dict[str, Any] | None = None
+    report: Report | None = None
+    # Download links for the stored files (videos, per-frame data), valid for a few hours.
+    files: dict[str, str] = {}
+
+
+class DataExport(BaseModel):
+    """Everything stored about an account, as given by "Download my data"."""
+
+    exported_at: datetime
+    links_expire_at: datetime
+    account: ExportedAccount
+    analyses: list[ExportedAnalysis]

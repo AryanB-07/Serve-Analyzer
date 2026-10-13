@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 
 import type { AnalysisStatus, AnalysisSummary } from "../../api/types";
@@ -86,16 +86,23 @@ function Stages({ summary, since }: { summary: AnalysisSummary; since: number })
   );
 }
 
+/** The server's message often opens with the same sentence as the heading; don't say it twice. */
+export function withoutTitle(message: string, title: string): string {
+  return message.startsWith(`${title}.`) ? message.slice(title.length + 1).trim() || message : message;
+}
+
 function Failed({
   summary,
   onRetry,
   retrying,
   retryError,
+  report,
 }: {
   summary: AnalysisSummary;
   onRetry: () => void;
   retrying: boolean;
   retryError: string | null;
+  report?: ReactNode;
 }) {
   const copy = errorCopyFor(summary.error?.code);
   const primary = "rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-50";
@@ -109,7 +116,7 @@ function Failed({
         </svg>
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{copy.title}</h1>
-          {copy.showDetail && summary.error?.message && <p>{summary.error.message}</p>}
+          {copy.showDetail && summary.error?.message && <p>{withoutTitle(summary.error.message, copy.title)}</p>}
           <p className="text-ink-muted">{copy.advice}</p>
         </div>
       </div>
@@ -127,6 +134,7 @@ function Failed({
         )}
       </div>
       {retryError && <p className="text-sm text-bad">Couldn't retry: {retryError}</p>}
+      {report && <div className="border-t border-border pt-4">{report}</div>}
     </div>
   );
 }
@@ -137,17 +145,20 @@ export function ProcessingView({
   retrying = false,
   retryError = null,
   since,
+  report,
 }: {
   summary: AnalysisSummary;
   onRetry: () => void;
   retrying?: boolean;
   retryError?: string | null;
   since: number;
+  /** Shown under a failure, e.g. a way to dispute "this doesn't look like a serve". */
+  report?: ReactNode;
 }) {
   return (
     <div className="mx-auto max-w-xl rounded-2xl border border-border bg-surface p-6 sm:p-8">
       {summary.status === "failed" ? (
-        <Failed summary={summary} onRetry={onRetry} retrying={retrying} retryError={retryError} />
+        <Failed summary={summary} onRetry={onRetry} retrying={retrying} retryError={retryError} report={report} />
       ) : summary.status === "awaiting_upload" ? (
         <div className="space-y-3">
           <h1 className="text-2xl font-semibold tracking-tight">This upload didn't finish</h1>

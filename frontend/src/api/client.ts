@@ -5,7 +5,10 @@ import type {
   CreateAnalysisRequest,
   CreateAnalysisResponse,
   Credentials,
+  DataExport,
   FramesPayload,
+  Report,
+  ReportRequest,
   SignupRequest,
   UploadTarget,
   User,
@@ -26,6 +29,14 @@ export interface ApiClient {
   resetPassword(token: string, password: string): Promise<void>;
   /** Permanently delete the signed-in account and everything in it. */
   deleteAccount(password: string): Promise<void>;
+  /** Email a confirmation link to ``newEmail``; the account keeps its address until it's opened. */
+  requestEmailChange(newEmail: string, password: string): Promise<void>;
+  confirmEmailChange(token: string): Promise<void>;
+  /** Everything stored about the signed-in account. */
+  exportData(): Promise<DataExport>;
+  /** The report sent about an analysis ("this result looks wrong"), or null. */
+  getReport(id: string): Promise<Report | null>;
+  reportAnalysis(id: string, body: ReportRequest): Promise<Report>;
   deleteAnalysis(id: string): Promise<void>;
   createAnalysis(body: CreateAnalysisRequest): Promise<CreateAnalysisResponse>;
   uploadVideo(
@@ -88,8 +99,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new ApiError(res.status, detail);
   }
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  // 202 Accepted and 204 No Content come back with no body.
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 /** fetch() cannot report upload progress, so the PUT uses XMLHttpRequest. */
@@ -141,6 +153,14 @@ export const httpClient: ApiClient = {
   resetPassword: (token, password) =>
     request("/auth/password-reset/confirm", { method: "POST", body: JSON.stringify({ token, password }) }),
   deleteAccount: (password) => request("/auth/me", { method: "DELETE", body: JSON.stringify({ password }) }),
+  requestEmailChange: (newEmail, password) =>
+    request("/auth/email-change", { method: "POST", body: JSON.stringify({ new_email: newEmail, password }) }),
+  confirmEmailChange: (token) =>
+    request("/auth/email-change/confirm", { method: "POST", body: JSON.stringify({ token }) }),
+  exportData: () => request("/auth/me/export"),
+  getReport: (id) => request(`/analyses/${encodeURIComponent(id)}/report`),
+  reportAnalysis: (id, body) =>
+    request(`/analyses/${encodeURIComponent(id)}/report`, { method: "PUT", body: JSON.stringify(body) }),
   deleteAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}`, { method: "DELETE" }),
   createAnalysis: (body) => request("/analyses", { method: "POST", body: JSON.stringify(body) }),
   uploadVideo: putWithProgress,

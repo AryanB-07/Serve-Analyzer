@@ -11,7 +11,12 @@ const TIPS: [title: string, detail: string][] = [
 
 export function FilmingGuide() {
   return (
-    <section id="filming-guide" aria-labelledby="filming-guide-heading" className="scroll-mt-20 space-y-4 rounded-xl border border-border bg-surface p-5">
+    <section
+      id="filming-guide"
+      aria-labelledby="filming-guide-heading"
+      tabIndex={-1}
+      className="scroll-mt-20 space-y-4 rounded-xl border border-border bg-surface p-5 outline-none focus:ring-2 focus:ring-accent/60"
+    >
       <h2 id="filming-guide-heading" className="text-lg font-semibold">How to film your serve</h2>
       <CameraDiagram />
       <ol className="space-y-3">

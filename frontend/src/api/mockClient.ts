@@ -6,6 +6,7 @@ import type {
   AnalysisStatus,
   AnalysisSummary,
   FramesPayload,
+  Report,
   User,
 } from "./types";
 
@@ -16,7 +17,8 @@ import type {
  * A file whose name contains "fail" fails with NO_PERSON_DETECTED.
  * It starts signed in as MOCK_USER so demos open straight to the app; signing
  * out and in again works in memory with any email and password. New sign-ups
- * start unverified; the token "valid" verifies or resets, anything else is expired.
+ * start unverified; the token "valid" verifies, resets or confirms an email change, anything
+ * else is expired.
  */
 
 export const MOCK_USER: User = {
@@ -63,6 +65,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   let counter = 0;
   let user: User | null = MOCK_USER;
   const deleted = new Set<string>();
+  const reports = new Map<string, Report>();
+  let pendingEmail: string | null = null;
 
   const delay = () => (latency > 0 ? sleep(latency) : Promise.resolve());
 
@@ -165,6 +169,57 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       if (!password) throw new ApiError(403, "Incorrect password.");
       user = null;
       created.clear();
+    },
+
+    async requestEmailChange(newEmail, password) {
+      await delay();
+      if (!password) throw new ApiError(403, "Incorrect password.");
+      const email = newEmail.trim().toLowerCase();
+      if (user && email === user.email) throw new ApiError(400, "That's already your email.");
+      pendingEmail = email;
+    },
+
+    async confirmEmailChange(token) {
+      await delay();
+      if (token !== "valid" || !pendingEmail) {
+        throw new ApiError(400, "This link is invalid or has expired. Request a new one.");
+      }
+      if (user) user = { ...user, email: pendingEmail, email_verified: true };
+      pendingEmail = null;
+    },
+
+    async exportData() {
+      await delay();
+      if (!user) throw new ApiError(401, "Sign in to continue.");
+      const { items } = await this.listAnalyses();
+      const ts = new Date(now());
+      return {
+        exported_at: ts.toISOString(),
+        links_expire_at: new Date(ts.getTime() + 6 * 3600_000).toISOString(),
+        account: { email: user.email, email_verified: user.email_verified ?? false, created_at: user.created_at },
+        analyses: items.map((a) => ({
+          id: a.id,
+          filename: a.filename,
+          hand: a.hand,
+          status: a.status,
+          created_at: a.created_at,
+          error: a.error ?? null,
+          report: reports.get(a.id) ?? null,
+          files: {},
+        })),
+      };
+    },
+
+    async getReport(id) {
+      await delay();
+      return reports.get(id) ?? null;
+    },
+
+    async reportAnalysis(id, body) {
+      await delay();
+      const report: Report = { reason: body.reason, note: body.note?.trim() || null, created_at: new Date(now()).toISOString() };
+      reports.set(id, report);
+      return report;
     },
 
     async deleteAnalysis(id) {

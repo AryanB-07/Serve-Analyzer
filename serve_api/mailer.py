@@ -163,3 +163,34 @@ def account_deleted_email(to: str) -> Email:
         html=_html(["Your account and all of its videos and analyses have been deleted. "
                     "This can't be undone.", "Thanks for trying Serve Analyzer."]),
     )
+
+
+def email_change_email(to: str, url: str) -> Email:
+    return Email(
+        to=to,
+        subject=f"Confirm your new email for {APP_NAME}",
+        text=(f"Someone asked to use this address for their {APP_NAME} account. To confirm it, "
+              f"open:\n\n{url}\n\nThe link works for 24 hours and can be used once. Until then "
+              "the account keeps its old address. If this wasn't you, ignore this email."),
+        html=_html(["Someone asked to use this address for their Serve Analyzer account.",
+                    "The link works for 24 hours and can be used once. Until then the account keeps "
+                    "its old address. If this wasn't you, ignore this email."],
+                   ("Confirm new email", url)),
+    )
+
+
+def email_changed_notice(to: str, new_email: str, app_url: str) -> Email:
+    """Sent to the old address once the change is confirmed. A password reset can't help
+    here (it would go to the new address), so the advice is to contact the operator."""
+    contact = f"{app_url}/privacy"
+    return Email(
+        to=to,
+        subject=f"Your {APP_NAME} email was changed",
+        text=(f"The email for your {APP_NAME} account was changed to {new_email}. Sign-in and "
+              "account emails now go there.\n\nIf you didn't do this, contact us straight away "
+              f"(the address is at {contact}) so we can secure your account."),
+        html=_html([f"The email for your Serve Analyzer account was changed to "
+                    f"<strong>{escape(new_email)}</strong>. Sign-in and account emails now go there.",
+                    f'If you didn\'t do this, <a href="{escape(contact)}">contact us</a> straight '
+                    "away so we can secure your account."]),
+    )

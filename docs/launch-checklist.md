@@ -55,14 +55,20 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 
 ## Product polish (not blocking, but expected by users)
 
-- [ ] Test the "this doesn't look like a serve" failure end to end in the UI.
-- [ ] A first-visit walkthrough pointing to the filming guide.
-- [ ] Show the known limits in the app: smashes and high-finish backhands can pass the serve check,
-  a swing that misses the ball looks like a serve, and the analysis is from one camera.
-- [ ] A "this result looks wrong" button. It's also the way to collect labelled clips for a
-  trained serve classifier later.
-- [ ] Self-serve "download my data". The Privacy Policy currently says to email for a copy.
-- [ ] Changing your account's email address (not supported yet).
+- [x] The "this doesn't look like a serve" failure tested end to end in a real browser, against
+      the production images (`frontend/e2e`, run by `scripts/smoke_docker.sh` and CI).
+- [x] A first-visit walkthrough pointing to the filming guide.
+- [x] The known limits shown in the app, on the upload and results pages.
+- [x] A "this result looks wrong" button, and "this was a serve" on a `NOT_A_SERVE` failure.
+      List the reports with `python -m serve_api.reports` (`docs/deployment.md`).
+- [x] Self-serve "download my data" on the account page.
+- [x] Changing your account's email address, confirmed from a link sent to the new address.
+- [ ] **Review the reports** every week or two after launch. Disputed `NOT_A_SERVE` failures and
+  "this isn't a serve" reports are the serve check's mistakes. Their original videos are deleted
+  30 days after upload, so look at them before then.
+- [ ] **If you want to train a model on reported clips,** change the Privacy Policy first. It
+  currently promises that videos aren't used to train machine-learning models. That's a material
+  change: ask for opt-in consent, bump `TERMS_VERSION` and email users.
 
 ## Video formats
 

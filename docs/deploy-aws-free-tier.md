@@ -172,6 +172,12 @@ docker compose -f deploy/docker-compose.yml --profile bundled-db up -d --build
 
 Database migrations run automatically when the API starts.
 
+To see what people reported with "this result looks wrong":
+
+```bash
+docker compose -f deploy/docker-compose.yml exec api python -m serve_api.reports --days 14
+```
+
 ## When to move up
 
 - **Analyses queue for minutes:** move to a bigger instance (c7i-flex.large on the free plan),

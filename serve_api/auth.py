@@ -14,6 +14,7 @@ whether an address has an account.
 from __future__ import annotations
 
 import hashlib
+import json
 import secrets
 from datetime import timedelta
 from urllib.parse import urlsplit
@@ -23,15 +24,23 @@ from argon2.exceptions import InvalidHashError, VerifyMismatchError
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 
+from . import keys
 from . import mailer as m
 from .db import Database, now
 from .purge import analysis_prefixes, run_purges
 from .schemas import (
+    ApiError,
+    ChangeEmailRequest,
+    ConfirmEmailChangeRequest,
+    DataExport,
     DeleteAccountRequest,
     ErrorResponse,
+    ExportedAccount,
+    ExportedAnalysis,
     LoginRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
+    Report,
     SignupRequest,
     User,
     VerifyEmailRequest,
@@ -45,10 +54,14 @@ EXTEND_AFTER = timedelta(days=1)
 BAD_CREDENTIALS = "Incorrect email or password."
 # The date of the current Terms of Service and Privacy Policy (frontend/src/features/legal).
 # Change it whenever either document changes materially.
-TERMS_VERSION = "2026-10-06"
+TERMS_VERSION = "2026-10-12"
 VERIFY_TTL = timedelta(hours=24)
 RESET_TTL = timedelta(hours=1)
 BAD_LINK = "This link is invalid or has expired. Request a new one."
+EMAIL_TAKEN = "An account with this email already exists."
+# Files listed (as download links) in a data export, for a finished analysis.
+EXPORTED_OUTPUTS = {"playback_video": keys.PLAYBACK, "annotated_video": keys.ANNOTATED,
+                    "thumbnail": keys.THUMBNAIL, "frames": keys.FRAMES}
 
 _hasher = PasswordHasher()
 # Verified against when the email is unknown, so both paths take the same time.
@@ -118,11 +131,61 @@ class Auth:
             db, "login-failure", limit=10, window=timedelta(minutes=15))
         # Each emailed link costs a send from your mail account, so they're limited per address.
         self.emails_per_user = RateLimiter(db, "email", limit=3, window=timedelta(hours=1))
+        # An export reads every result file the account has.
+        self.exports_per_user = RateLimiter(db, "export", limit=5, window=timedelta(hours=1))
 
-    def _issue_link(self, user_id: str, purpose: str, ttl: timedelta, path: str) -> str:
+    def _issue_link(self, user_id: str, purpose: str, ttl: timedelta, path: str,
+                    new_email: str | None = None) -> str:
         token = secrets.token_urlsafe(32)
-        self.db.create_email_token(user_id, purpose, hash_token(token), now() + ttl)
+        self.db.create_email_token(user_id, purpose, hash_token(token), now() + ttl, new_email)
         return f"{self.settings.app_url}{path}?token={token}"
+
+    def _check_password(self, user: User, password: str) -> None:
+        """For account changes: 403 on a wrong password, limited like failed logins."""
+        if wait := self.failures_per_email.retry_after(user.email):
+            raise _too_many(wait)
+        row = self.db.get_user(user.id)
+        if row is None or not verify_password(row["password_hash"], password):
+            self.failures_per_email.hit(user.email)
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Incorrect password.")
+
+    def export(self, user: User) -> DataExport:
+        """Everything stored for ``user``: the account, and each analysis with its results,
+        any report, and download links for its files."""
+        row = self.db.get_user(user.id) or {}
+        reports = self.db.user_reports(user.id)
+        url_for = lambda key: self.storage.presign("GET", key)[0]  # noqa: E731
+        items = []
+        for a in self.db.all_analyses(user.id):
+            files: dict[str, str] = {}
+            if a["input_deleted_at"] is None and a["status"] != "awaiting_upload":
+                files["original_video"] = url_for(keys.input_key(a["id"], a["content_type"]))
+            results = None
+            if a["status"] == "succeeded":
+                files.update({name: url_for(keys.output_key(a["id"], f))
+                              for name, f in EXPORTED_OUTPUTS.items()})
+                try:
+                    results = json.loads(self.storage.read_bytes(keys.output_key(a["id"], keys.RESULTS)))
+                except Exception:  # a missing file shouldn't stop the rest of the export
+                    results = None
+            report = reports.get(a["id"])
+            items.append(ExportedAnalysis(
+                id=a["id"], filename=a["filename"], hand=a["hand"], status=a["status"],
+                created_at=a["created_at"],
+                error=ApiError(code=a["error_code"], message=a["error_message"] or "")
+                if a["error_code"] else None,
+                original_video_deleted_at=a["input_deleted_at"], results=results,
+                report=Report(**{k: report[k] for k in ("reason", "note", "created_at")}) if report else None,
+                files=files,
+            ))
+        return DataExport(
+            exported_at=now(),
+            links_expire_at=now() + timedelta(seconds=self.settings.download_url_ttl_s),
+            account=ExportedAccount(
+                email=user.email, email_verified=user.email_verified, created_at=user.created_at,
+                terms_version=row.get("terms_version"), terms_accepted_at=row.get("terms_accepted_at")),
+            analyses=items,
+        )
 
     def _send(self, tasks: BackgroundTasks, message: m.Email) -> None:
         tasks.add_task(m.send_quietly, self.mailer, message)
@@ -181,8 +244,7 @@ class Auth:
             row = self.db.create_user(normalise_email(body.email), _hasher.hash(body.password),
                                       terms_version=TERMS_VERSION)
             if row is None:
-                raise HTTPException(status.HTTP_409_CONFLICT,
-                                    "An account with this email already exists.")
+                raise HTTPException(status.HTTP_409_CONFLICT, EMAIL_TAKEN)
             self._start_session(request, response, row["id"])
             self._send_verification(tasks, row["id"], row["email"])
             self.emails_per_user.hit(row["id"])
@@ -268,18 +330,65 @@ class Auth:
             self._clear_cookie(response)
             return response
 
+        @router.post("/email-change", status_code=202,
+                     responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse},
+                                403: {"model": ErrorResponse}, 409: {"model": ErrorResponse},
+                                429: {"model": ErrorResponse}})
+        def request_email_change(body: ChangeEmailRequest, tasks: BackgroundTasks,
+                                 user: User = signed_in) -> Response:
+            """Email a confirmation link to the new address. The account keeps its current
+            address until the link is opened."""
+            new_email = normalise_email(body.new_email)
+            self._check_password(user, body.password)
+            if new_email == user.email:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, "That's already your email.")
+            # Signup already says when an address is registered, so this reveals nothing new.
+            if self.db.get_user_by_email(new_email) is not None:
+                raise HTTPException(status.HTTP_409_CONFLICT, EMAIL_TAKEN)
+            if wait := self.emails_per_user.retry_after(user.id):
+                raise _too_many(wait)
+            self.emails_per_user.hit(user.id)
+            url = self._issue_link(user.id, "email_change", VERIFY_TTL, "/confirm-email",
+                                   new_email=new_email)
+            self._send(tasks, m.email_change_email(new_email, url))
+            return Response(status_code=202)
+
+        @router.post("/email-change/confirm", status_code=204,
+                     responses={400: {"model": ErrorResponse}, 409: {"model": ErrorResponse}})
+        def confirm_email_change(body: ConfirmEmailChangeRequest, tasks: BackgroundTasks) -> Response:
+            """Switch to the new address from the emailed link, and tell the old address.
+            Works without signing in, like confirming an email."""
+            changed = self.db.change_email(hash_token(body.token))
+            if changed == "invalid":
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, BAD_LINK)
+            if changed == "taken":
+                raise HTTPException(status.HTTP_409_CONFLICT, EMAIL_TAKEN)
+            _, old_email, new_email = changed
+            self._send(tasks, m.email_changed_notice(old_email, new_email, self.settings.app_url))
+            return Response(status_code=204)
+
+        @router.get("/me/export", response_model=DataExport,
+                    responses={401: {"model": ErrorResponse}, 429: {"model": ErrorResponse}})
+        def export_data(user: User = signed_in) -> JSONResponse:
+            """Download everything stored about the account, as one JSON file."""
+            if wait := self.exports_per_user.retry_after(user.id):
+                raise _too_many(wait)
+            self.exports_per_user.hit(user.id)
+            data = self.export(user)
+            name = f"serve-analyzer-data-{data.exported_at:%Y-%m-%d}.json"
+            return JSONResponse(
+                data.model_dump(mode="json"),
+                headers={"Content-Disposition": f'attachment; filename="{name}"',
+                         "Cache-Control": "no-store"},
+            )
+
         @router.delete("/me", status_code=204,
                        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse},
                                   429: {"model": ErrorResponse}})
         def delete_account(body: DeleteAccountRequest, tasks: BackgroundTasks,
                            user: User = signed_in) -> Response:
             """Permanently delete the account and every video and analysis in it."""
-            if wait := self.failures_per_email.retry_after(user.email):
-                raise _too_many(wait)
-            row = self.db.get_user(user.id)
-            if row is None or not verify_password(row["password_hash"], body.password):
-                self.failures_per_email.hit(user.email)
-                raise HTTPException(status.HTTP_403_FORBIDDEN, "Incorrect password.")
+            self._check_password(user, body.password)
             purge_ids = self.db.delete_user(user.id, analysis_prefixes)
             run_purges(self.db, self.storage, purge_ids)
             self._send(tasks, m.account_deleted_email(user.email))

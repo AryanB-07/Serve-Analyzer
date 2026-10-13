@@ -2,7 +2,10 @@ import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } fr
 import { Link, useNavigate, useSearchParams } from "react-router";
 
 import {
+  useConfirmEmailChange,
   useDeleteAccount,
+  useDownloadData,
+  useRequestEmailChange,
   useRequestPasswordReset,
   useResendVerification,
   useResetPassword,
@@ -380,6 +383,168 @@ function DeleteAccount() {
   );
 }
 
+const secondaryButton =
+  "rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+function ChangeEmail({ current }: { current: string }) {
+  const id = useId();
+  const change = useRequestEmailChange();
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
+
+  function close() {
+    setOpen(false);
+    setEmail("");
+    setPassword("");
+    setProblem(null);
+    change.reset();
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const next = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) return setProblem("Enter a valid email address.");
+    if (next.toLowerCase() === current) return setProblem("That's already your email.");
+    if (!password) return setProblem("Enter your current password.");
+    setProblem(null);
+    change.mutate({ newEmail: next, password });
+  }
+
+  if (change.isSuccess) {
+    return (
+      <div role="status" className="space-y-2 rounded-lg border border-border bg-bg p-3 text-sm">
+        <p>
+          We sent a link to <strong className="break-all">{email.trim()}</strong>. Open it within 24 hours to switch.
+          Until then you keep signing in with <span className="break-all">{current}</span>.
+        </p>
+        <button type="button" onClick={close} className="font-medium text-accent underline">Done</button>
+      </div>
+    );
+  }
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="font-medium text-accent underline">
+        Change your email
+      </button>
+    );
+  }
+  const message = problem ?? (change.error ? authErrorMessage(change.error) : null);
+  return (
+    <form noValidate onSubmit={submit} aria-label="Change your email" className="space-y-3 rounded-lg border border-border bg-bg p-3">
+      <div className="space-y-1.5">
+        <label htmlFor={`${id}-email`} className="text-sm font-medium">New email</label>
+        <input
+          id={`${id}-email`}
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={inputClass}
+          required
+        />
+      </div>
+      <PasswordInput
+        id={`${id}-password`}
+        label="Current password"
+        value={password}
+        onChange={setPassword}
+        autoComplete="current-password"
+      />
+      {message && <ErrorText>{message}</ErrorText>}
+      <div className="flex flex-wrap gap-2">
+        <button type="submit" disabled={change.isPending} className={secondaryButton}>
+          {change.isPending ? "Sending…" : "Send confirmation link"}
+        </button>
+        <button type="button" onClick={close} className="rounded-lg px-4 py-2 text-sm text-ink-muted hover:text-ink">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function DownloadData() {
+  const id = useId();
+  const download = useDownloadData();
+  return (
+    <section aria-labelledby={`${id}-title`} className="space-y-3 rounded-xl border border-border bg-surface p-5">
+      <h2 id={`${id}-title`} className="font-semibold">Your data</h2>
+      <p className="text-sm text-ink-muted">
+        Download everything we store about you as one JSON file: your account details, and every analysis with its
+        results, feedback and any problem you reported. It also has links to download your videos, which work for 6
+        hours.
+      </p>
+      <button type="button" onClick={() => download.mutate()} disabled={download.isPending} className={secondaryButton}>
+        {download.isPending ? "Preparing…" : "Download my data"}
+      </button>
+      {download.isSuccess && (
+        <p role="status" className="text-sm text-ink-muted">
+          Downloaded {download.data.analyses.length} {download.data.analyses.length === 1 ? "analysis" : "analyses"}.
+        </p>
+      )}
+      {download.error && <ErrorText>{authErrorMessage(download.error)}</ErrorText>}
+    </section>
+  );
+}
+
+export function ConfirmEmailChangePage() {
+  const token = useLinkToken();
+  const confirm = useConfirmEmailChange();
+  const session = useSession();
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (token && !started.current) {
+      started.current = true;
+      confirm.mutate(token);
+    }
+  }, [token, confirm]);
+
+  if (!token || confirm.isError) {
+    return (
+      <Page title="We couldn't change your email">
+        <Notice>
+          <p>{confirm.error ? authErrorMessage(confirm.error) : "This link is incomplete. Open it from the email again."}</p>
+          <p className="mt-3 text-sm text-ink-muted">Your account still uses its previous email address.</p>
+        </Notice>
+        <p className="mt-4 text-center text-sm">
+          <Link to={session.data ? "/account" : "/login"} className="font-medium text-accent underline">
+            {session.data ? "Go to your account" : "Sign in"}
+          </Link>
+        </p>
+      </Page>
+    );
+  }
+
+  if (confirm.isSuccess) {
+    return (
+      <Page title="Email changed">
+        <Notice>
+          <p>
+            {session.data ? (
+              <>Your account now uses <strong className="break-all">{session.data.email}</strong>.</>
+            ) : (
+              "Sign in with your new email address from now on."
+            )}
+          </p>
+        </Notice>
+        <Link to={session.data ? "/account" : "/login"} className={`${primaryButton} mt-4 block text-center`}>
+          {session.data ? "Go to your account" : "Sign in"}
+        </Link>
+      </Page>
+    );
+  }
+
+  return (
+    <Page title="Changing your email…">
+      <p role="status" className="text-ink-muted">One moment.</p>
+    </Page>
+  );
+}
+
 export function AccountPage() {
   const session = useSession();
   const user = session.data;
@@ -398,11 +563,15 @@ export function AccountPage() {
           <dt className="text-ink-muted">Member since</dt>
           <dd>{new Date(user.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })}</dd>
         </dl>
-        <p className="pt-2 text-sm">
-          <Link to="/forgot-password" className="font-medium text-accent underline">Change your password</Link>
-          <span className="text-ink-muted"> (we'll email you a link)</span>
-        </p>
+        <div className="space-y-2 pt-2 text-sm">
+          <ChangeEmail current={user.email} />
+          <p>
+            <Link to="/forgot-password" className="font-medium text-accent underline">Change your password</Link>
+            <span className="text-ink-muted"> (we'll email you a link)</span>
+          </p>
+        </div>
       </section>
+      <DownloadData />
       <DeleteAccount />
     </div>
   );

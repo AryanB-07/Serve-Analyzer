@@ -4,6 +4,10 @@
 #
 #   scripts/smoke_docker.sh            # build, test, stop
 #   KEEP=1 scripts/smoke_docker.sh     # leave the stack running afterwards (https://localhost:8443)
+#
+# Then the browser tests (frontend/e2e) run against the same stack, when Playwright is installed
+# (cd frontend && npm ci && npx playwright install chromium). E2E=1 makes them required, E2E=0
+# skips them.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -24,3 +28,14 @@ compose build
 compose up -d --wait --wait-timeout "${WAIT_TIMEOUT:-300}"
 python3 scripts/smoke_test.py https://localhost:8443 --mailpit http://localhost:8025 --insecure \
   --timeout "${ANALYSIS_TIMEOUT:-600}"
+
+if [ "${E2E:-}" != 0 ]; then
+  if [ -x frontend/node_modules/.bin/playwright ]; then
+    (cd frontend && E2E_BASE_URL=https://localhost:8443 MAILPIT_URL=http://localhost:8025 npx playwright test)
+  elif [ "${E2E:-}" = 1 ]; then
+    echo "E2E=1 but Playwright isn't installed (cd frontend && npm ci)" >&2
+    exit 1
+  else
+    echo "Skipping the browser tests: Playwright isn't installed (cd frontend && npm ci)"
+  fi
+fi

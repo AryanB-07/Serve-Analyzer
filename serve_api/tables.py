@@ -90,12 +90,32 @@ email_tokens = Table(
     Column("id", String(32), primary_key=True),
     Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
            index=True),
-    Column("purpose", String(16), nullable=False),  # "verify" | "reset"
+    Column("purpose", String(16), nullable=False),  # "verify" | "reset" | "email_change"
     # SHA-256 of the token in the emailed link; the token itself is never stored.
     Column("token_hash", String(64), nullable=False, unique=True),
     Column("created_at", UTCDateTime, nullable=False),
     Column("expires_at", UTCDateTime, nullable=False),
     Column("used_at", UTCDateTime),
+    # For "email_change": the address the link was sent to, which becomes the account's email.
+    Column("new_email", String(320)),
+)
+
+result_reports = Table(
+    "result_reports",
+    metadata,
+    # "This result looks wrong": at most one per analysis (a new report replaces the old one),
+    # deleted with the analysis. Labels for finding the pipeline's mistakes. (Training a model on
+    # the clips would need the Privacy Policy changed first: it says videos aren't used for that.)
+    Column("analysis_id", String(32), ForeignKey("analyses.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+           index=True),
+    Column("reason", String(32), nullable=False),
+    Column("note", Text),
+    # The analysis's status and error code when it was reported.
+    Column("status", String(32), nullable=False),
+    Column("error_code", String(64)),
+    Column("created_at", UTCDateTime, nullable=False),
+    Index("result_reports_created", "created_at"),
 )
 
 storage_purges = Table(

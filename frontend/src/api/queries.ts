@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { createStatusBackoff, isActive } from "../lib/polling";
 import { api } from ".";
+import type { ReportRequest } from "./types";
 
 export const queryKeys = {
   analyses: ["analyses"] as const,
@@ -70,5 +71,20 @@ export function useDeleteAnalysis(onDeleted?: () => void) {
       }
       return queryClient.invalidateQueries({ queryKey: queryKeys.analyses });
     },
+  });
+}
+
+export const reportKey = (id: string) => ["report", id] as const;
+
+/** The "this result looks wrong" report sent about an analysis, or null. */
+export function useReport(id: string, enabled = true) {
+  return useQuery({ queryKey: reportKey(id), queryFn: () => api.getReport(id), enabled, staleTime: Infinity });
+}
+
+export function useReportAnalysis(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ReportRequest) => api.reportAnalysis(id, body),
+    onSuccess: (report) => queryClient.setQueryData(reportKey(id), report),
   });
 }

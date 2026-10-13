@@ -142,8 +142,13 @@ site and create an account.
   workers have stopped.
 - **Smoke test:** `python3 scripts/smoke_test.py https://<domain>` signs up, checks the API and
   website, and deletes the test account. `scripts/smoke_docker.sh` runs the full version
-  (including an analysis and email) against the production images locally; CI runs it on every
-  push.
+  (including an analysis and email), then the Playwright browser tests, against the production
+  images locally; CI runs it on every push.
+- **Problem reports:** `docker compose -f deploy/docker-compose.yml exec api python -m
+  serve_api.reports --days 14` prints what people flagged with "this result looks wrong" as CSV:
+  the analysis, reason, note, and the date its original video will be deleted. Watch out for
+  `was_a_serve` on `NOT_A_SERVE` failures (the serve check rejected a real serve) and
+  `not_a_serve` on finished ones (it let something else through).
 - **Backups:** your managed Postgres handles the database. Keep its automated backup retention
   equal to `backupRetentionDays` in `frontend/src/features/legal/config.ts` (RDS defaults to 7
   days), because the Privacy Policy states that number. For the bucket, see the versioning note

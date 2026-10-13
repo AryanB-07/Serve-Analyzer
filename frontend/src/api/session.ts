@@ -113,3 +113,44 @@ export function useDeleteAccount(onDeleted: () => void) {
     },
   });
 }
+
+export function useRequestEmailChange() {
+  return useMutation({
+    mutationFn: ({ newEmail, password }: { newEmail: string; password: string }) =>
+      api.requestEmailChange(newEmail, password),
+  });
+}
+
+/** Confirming the new address updates the signed-in user, if this browser is signed in. */
+export function useConfirmEmailChange() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (token: string) => api.confirmEmailChange(token),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: sessionKey }),
+  });
+}
+
+/** The export's file name, dated like the server's: serve-analyzer-data-2026-10-12.json. */
+export function exportFilename(exportedAt: string): string {
+  return `serve-analyzer-data-${exportedAt.slice(0, 10)}.json`;
+}
+
+/** Fetch everything stored about the account and save it as a JSON file. */
+export function useDownloadData() {
+  return useMutation({
+    mutationFn: async () => {
+      const data = await api.exportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = exportFilename(data.exported_at);
+      document.body.append(link);
+      link.click();
+      link.remove();
+      // Revoked on the next tick: some browsers start the download asynchronously.
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      return data;
+    },
+  });
+}

@@ -15,3 +15,12 @@ Notes for tests:
 - Right-handed player facing the camera. The clip ends at ball contact (last frame).
 - MediaPipe reports the hitting elbow with low visibility throughout, so the racket drop
   phase is not detected with default settings.
+
+`standing_still.mp4` is the first frame of `sample_serve.mp4` held for 3 s (75 frames at
+25 fps, H.264), under the same licence. The player never swings, so the pipeline rejects it
+with `NOT_A_SERVE`; the browser end-to-end test (`frontend/e2e`) uploads it to reach that
+screen. Rebuild it with:
+
+    ffmpeg -i sample_serve.mp4 -vf "select=eq(n\,0),loop=loop=74:size=1:start=0,setpts=N/25/TB" \
+      -r 25 -frames:v 75 -an -c:v libx264 -preset veryslow -crf 28 -pix_fmt yuv420p \
+      -movflags +faststart standing_still.mp4
