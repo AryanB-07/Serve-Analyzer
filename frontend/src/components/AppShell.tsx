@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router";
 
 import { USE_MOCKS } from "../api";
 import { useLogOut, useSession } from "../api/session";
+import { SIGNING_OUT } from "../features/auth/AuthPages";
 import { HelpButton, HelpProvider } from "../features/help/HelpProvider";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -14,7 +15,7 @@ function navClass({ isActive }: { isActive: boolean }) {
 function AccountControls() {
   const session = useSession();
   const navigate = useNavigate();
-  const logOut = useLogOut(() => navigate("/login", { replace: true, flushSync: true }));
+  const logOut = useLogOut(() => navigate("/login", { replace: true, flushSync: true, state: SIGNING_OUT }));
   const user = session.data;
   if (!user) return null;
   return (

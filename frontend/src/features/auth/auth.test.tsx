@@ -2,7 +2,9 @@
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router";
+// The app's RouterProvider (main.tsx): only this one honours navigate()'s flushSync.
+import { createMemoryRouter } from "react-router";
+import { RouterProvider } from "react-router/dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { User } from "../../api/types";
@@ -234,8 +236,9 @@ describe("sign out and switching users", () => {
     unsubscribe();
     expect(fake.logOut).toHaveBeenCalled();
     expect(where(router)).toBe("/login");
-    // Never bounced through the route guard's "sign in to continue" redirect on the way.
-    expect(visited.filter((path) => path.includes("next="))).toEqual([]);
+    // Straight there: not bounced through the route guard's "sign in to continue" redirect,
+    // nor sent home by the sign-in page while the session was still being cleared.
+    expect(visited).toEqual(["/login"]);
     expect(queryClient.getQueryData(["analyses"])).toBeUndefined();
     expect(screen.queryByText("alice@example.com")).not.toBeInTheDocument();
   });
@@ -247,6 +250,17 @@ describe("sign out and switching users", () => {
     await screen.findByRole("heading", { name: "Upload page" });
     await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+  });
+
+  it("signs straight back in from the page sign-out lands on", async () => {
+    fake.user = ALICE;
+    const { router } = renderApp("/history");
+    await screen.findByRole("heading", { name: "History page" });
+    await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("heading", { name: "Sign in" });
+    await fillAndSubmit("alice@example.com", "correct horse", /sign in/i);
+    expect(await screen.findByRole("heading", { name: "Upload page" })).toBeInTheDocument();
+    expect(where(router)).toBe("/");
   });
 
   it("drops the previous user's cached data when someone else signs in", async () => {

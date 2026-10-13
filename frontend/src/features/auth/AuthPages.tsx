@@ -1,4 +1,4 @@
-import { Link, Navigate, useSearchParams } from "react-router";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router";
 
 import { useLogIn, useSession, useSignUp } from "../../api/session";
 import { nextParam, safeNext } from "../../lib/safeNext";
@@ -11,12 +11,17 @@ function useNext() {
   return safeNext(params.get("next"));
 }
 
+/** Navigation state the header's sign-out sets: it arrives here a moment before the session clears. */
+export const SIGNING_OUT = { signingOut: true } as const;
+
 export function LoginPage() {
   const next = useNext();
   const session = useSession();
   const logIn = useLogIn();
+  const signingOut = (useLocation().state as typeof SIGNING_OUT | null)?.signingOut === true;
 
-  if (session.data) return <Navigate to={next} replace />;
+  // Don't send the person who is signing out straight back in; do once they sign in here.
+  if (session.data && (!signingOut || logIn.isSuccess)) return <Navigate to={next} replace />;
   return (
     <AuthForm
       mode="login"

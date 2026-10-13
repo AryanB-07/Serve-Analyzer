@@ -2,7 +2,9 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router";
+// The app's RouterProvider (main.tsx): only this one honours navigate()'s flushSync.
+import { createMemoryRouter } from "react-router";
+import { RouterProvider } from "react-router/dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AnalysisSummary, Report, ReportRequest } from "../../api/types";
