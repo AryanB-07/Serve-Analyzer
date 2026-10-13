@@ -58,6 +58,9 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 - [x] The "this doesn't look like a serve" failure tested end to end in a real browser, against
       the production images (`frontend/e2e`, run by `scripts/smoke_docker.sh` and CI).
 - [x] A first-visit walkthrough pointing to the filming guide.
+- [x] A Help button (?) in the header on every page: getting started, the filming guide, the
+      known limits and keyboard shortcuts. To add help for a new feature, add a topic to
+      `HELP_TOPICS` in `frontend/src/features/help/topics.tsx`; links can open one with `?help=<id>`.
 - [x] The known limits shown in the app, on the upload and results pages.
 - [x] A "this result looks wrong" button, and "this was a serve" on a `NOT_A_SERVE` failure.
       List the reports with `python -m serve_api.reports` (`docs/deployment.md`).

@@ -9,6 +9,8 @@ export function useKeyboardShortcuts(store: PlayheadStore, phases: PhaseFrames):
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.defaultPrevented || shouldIgnore(e.target, e.key)) return;
+      // A dialog (such as Help) is open over the page: its keys aren't for the video.
+      if (document.querySelector('[aria-modal="true"]')) return;
       const action = shortcutFor(e);
       if (!action) return;
       e.preventDefault();

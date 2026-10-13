@@ -46,6 +46,12 @@ describe("the first-visit walkthrough", () => {
     expect(screen.getByText("Step through it frame by frame")).toBeInTheDocument();
   });
 
+  it("says where to find it again once dismissed", async () => {
+    renderWelcome();
+    const card = (await screen.findByRole("heading", { name: /three steps/ })).closest("section")!;
+    expect(card).toHaveTextContent("This guide stays in Help: the ?question mark button at the top of every page.");
+  });
+
   it("takes you to the filming guide", async () => {
     const scroll = vi.fn();
     Element.prototype.scrollIntoView = scroll;

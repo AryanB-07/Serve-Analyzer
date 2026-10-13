@@ -306,7 +306,8 @@ npm run test:e2e                     # browser tests against the running product
 `scripts/smoke_test.py`, then the Playwright browser tests in `frontend/e2e` (CI does the same on
 every push). The browser tests drive Chromium through: a clip that isn't a serve (rejected by
 the real pipeline, then disputed), a real serve's results page and a problem report, changing
-email through the inbox, password reset, and downloading your data.
+email through the inbox, password reset, downloading your data, and the help dialog (keyboard,
+Back button, phone layout).
 
 Backend tests cover the full upload → worker → result flow on a real clip, signed URLs,
 status transitions, pagination and edge cases (tiny clips, missing landmarks, portrait video).

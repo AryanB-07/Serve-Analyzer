@@ -9,15 +9,10 @@ const TIPS: [title: string, detail: string][] = [
   ["30 fps or more, good light", "60 fps or slow-motion catches the fast part of the swing much better."],
 ];
 
-export function FilmingGuide() {
+/** The camera diagram and the five tips: on the upload page, and in the help dialog. */
+export function FilmingTips() {
   return (
-    <section
-      id="filming-guide"
-      aria-labelledby="filming-guide-heading"
-      tabIndex={-1}
-      className="scroll-mt-20 space-y-4 rounded-xl border border-border bg-surface p-5 outline-none focus:ring-2 focus:ring-accent/60"
-    >
-      <h2 id="filming-guide-heading" className="text-lg font-semibold">How to film your serve</h2>
+    <>
       <CameraDiagram />
       <ol className="space-y-3">
         {TIPS.map(([title, detail], i) => (
@@ -32,6 +27,20 @@ export function FilmingGuide() {
           </li>
         ))}
       </ol>
+    </>
+  );
+}
+
+export function FilmingGuide() {
+  return (
+    <section
+      id="filming-guide"
+      aria-labelledby="filming-guide-heading"
+      tabIndex={-1}
+      className="scroll-mt-20 space-y-4 rounded-xl border border-border bg-surface p-5 outline-none focus:ring-2 focus:ring-accent/60"
+    >
+      <h2 id="filming-guide-heading" className="text-lg font-semibold">How to film your serve</h2>
+      <FilmingTips />
     </section>
   );
 }

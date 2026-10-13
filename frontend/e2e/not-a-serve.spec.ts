@@ -18,6 +18,15 @@ test("a clip that isn't a serve is rejected with a reason, and can be disputed",
   await page.getByRole("button", { name: "Show me how to film it" }).click();
   await expect(page.getByRole("region", { name: "How to film your serve" })).toBeFocused();
   await page.getByRole("button", { name: "Got it" }).click();
+  await expect(page.getByRole("heading", { name: /three steps/ })).toBeHidden();
+
+  // Dismissed, but the guide is still under the ? button.
+  await page.getByRole("button", { name: "Help" }).click();
+  await page.getByRole("dialog", { name: "Help" }).getByRole("tab", { name: "How to film your serve" }).click();
+  await expect(page.getByRole("tabpanel").getByRole("img", { name: /Camera placement/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("button", { name: "Help" })).toBeFocused();
 
   // The radio itself is visually hidden; its label is the button people click.
   await page.getByText("Right-handed", { exact: true }).click();

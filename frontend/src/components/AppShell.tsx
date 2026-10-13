@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router";
 
 import { USE_MOCKS } from "../api";
 import { useLogOut, useSession } from "../api/session";
+import { HelpButton, HelpProvider } from "../features/help/HelpProvider";
 import { ThemeToggle } from "./ThemeToggle";
 
 function navClass({ isActive }: { isActive: boolean }) {
@@ -39,6 +40,14 @@ function AccountControls() {
 }
 
 export function AppShell() {
+  return (
+    <HelpProvider>
+      <Shell />
+    </HelpProvider>
+  );
+}
+
+function Shell() {
   const signedIn = Boolean(useSession().data);
   return (
     <div className="flex min-h-dvh flex-col">
@@ -77,6 +86,7 @@ export function AppShell() {
                 Mock data
               </span>
             )}
+            <HelpButton />
             <ThemeToggle />
             <AccountControls />
           </div>

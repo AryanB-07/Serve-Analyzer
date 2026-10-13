@@ -22,6 +22,19 @@ export const LIMITS: [title: string, detail: string][] = [
   ],
 ];
 
+export function LimitsList() {
+  return (
+    <ul className="space-y-2.5">
+      {LIMITS.map(([title, detail]) => (
+        <li key={title} className="text-sm">
+          <p className="font-medium">{title}</p>
+          <p className="text-ink-muted">{detail}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function KnownLimits({ open = false }: { open?: boolean }) {
   return (
     <details open={open} className="group rounded-xl border border-border bg-surface p-4 [&_summary::-webkit-details-marker]:hidden">
@@ -31,14 +44,9 @@ export function KnownLimits({ open = false }: { open?: boolean }) {
           <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </summary>
-      <ul className="mt-3 space-y-2.5">
-        {LIMITS.map(([title, detail]) => (
-          <li key={title} className="text-sm">
-            <p className="font-medium">{title}</p>
-            <p className="text-ink-muted">{detail}</p>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-3">
+        <LimitsList />
+      </div>
     </details>
   );
 }

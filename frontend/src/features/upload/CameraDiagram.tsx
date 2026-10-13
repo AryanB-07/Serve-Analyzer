@@ -1,23 +1,28 @@
+import { useId } from "react";
+
 /**
  * Top-down sketch: player on the baseline serving toward the net, camera on
  * a tripod to the side, 5-10 m away, looking straight across at the player.
- * Drawn with theme tokens so it works in light and dark mode.
+ * Drawn with theme tokens so it works in light and dark mode. The ids are per copy, since the
+ * diagram can be on the page and in the help dialog at once.
  */
 export function CameraDiagram() {
+  const id = useId();
+  const arrow = `url(#${id}-arrow)`;
   return (
     <svg
       viewBox="0 0 320 220"
       role="img"
-      aria-labelledby="camera-diagram-title camera-diagram-desc"
+      aria-labelledby={`${id}-title ${id}-desc`}
       className="w-full max-w-md text-ink"
     >
-      <title id="camera-diagram-title">Camera placement, seen from above</title>
-      <desc id="camera-diagram-desc">
+      <title id={`${id}-title`}>Camera placement, seen from above</title>
+      <desc id={`${id}-desc`}>
         The player stands on the baseline serving toward the net. The camera is on a tripod to the
         player's side, 5 to 10 metres away, pointing straight at them so the whole body is in frame.
       </desc>
       <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <marker id={`${id}-arrow`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
           <path d="M0 0 10 5 0 10Z" fill="var(--ink-muted)" />
         </marker>
       </defs>
@@ -30,7 +35,7 @@ export function CameraDiagram() {
       <text x="95" y="198" textAnchor="middle" fontSize="10" fill="var(--ink-muted)">baseline</text>
 
       {/* serve direction */}
-      <line x1="95" y1="160" x2="95" y2="60" stroke="var(--ink-muted)" strokeWidth="1.5" strokeDasharray="4 4" markerEnd="url(#arrow)" />
+      <line x1="95" y1="160" x2="95" y2="60" stroke="var(--ink-muted)" strokeWidth="1.5" strokeDasharray="4 4" markerEnd={arrow} />
       <text x="101" y="100" fontSize="10" fill="var(--ink-muted)">serve</text>
 
       {/* player */}
@@ -51,7 +56,7 @@ export function CameraDiagram() {
       <text x="281" y="210" textAnchor="middle" fontSize="10" fill="var(--ink-muted)">at hip height</text>
 
       {/* distance */}
-      <line x1="112" y1="128" x2="266" y2="128" stroke="var(--ink-muted)" strokeWidth="1" markerStart="url(#arrow)" markerEnd="url(#arrow)" />
+      <line x1="112" y1="128" x2="266" y2="128" stroke="var(--ink-muted)" strokeWidth="1" markerStart={arrow} markerEnd={arrow} />
       <text x="189" y="122" textAnchor="middle" fontSize="11" fontWeight="600" fill="var(--ink)">5–10 m</text>
     </svg>
   );

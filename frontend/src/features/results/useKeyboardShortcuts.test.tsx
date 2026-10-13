@@ -28,4 +28,16 @@ describe("useKeyboardShortcuts", () => {
     fireEvent.keyDown(view.getByLabelText("notes"), { key: "3" });
     expect(view.store.getState().frame).toBe(0);
   });
+
+  it("ignores keys while a dialog such as Help is open over the page", () => {
+    const view = renderWithPlayhead(<Shortcuts />);
+    const dialog = document.createElement("div");
+    dialog.setAttribute("aria-modal", "true");
+    document.body.append(dialog);
+    fireEvent.keyDown(window, { key: "3" });
+    expect(view.store.getState().frame).toBe(0);
+    dialog.remove();
+    fireEvent.keyDown(window, { key: "3" });
+    expect(view.store.getState().frame).toBe(124);
+  });
 });

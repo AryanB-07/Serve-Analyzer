@@ -28,15 +28,35 @@ export function showFilmingGuide(): void {
   guide.focus({ preventScroll: true });
 }
 
-const STEPS: [title: string, detail: string][] = [
+export const STEPS: [title: string, detail: string][] = [
   ["Film one serve, side-on", "The camera position matters more than anything else. The guide shows where to put your phone."],
   ["Choose your hand and upload", "Pick the hand you serve with, then drop in the clip. It takes about a minute to analyze."],
   ["Step through it frame by frame", "You'll see your skeleton on the video, your angles at the trophy position, racket drop and contact, and what to work on."],
 ];
 
+/** The three numbered steps: in the welcome card, and in the help dialog's "Getting started". */
+export function GettingStartedSteps() {
+  return (
+    <ol className="space-y-3">
+      {STEPS.map(([title, detail], i) => (
+        <li key={title} className="grid grid-cols-[auto_1fr] gap-x-3">
+          <span className="tabular grid size-6 place-items-center rounded-full bg-accent text-xs font-semibold text-on-accent" aria-hidden>
+            {i + 1}
+          </span>
+          <div>
+            <p className="text-sm font-medium">{title}</p>
+            <p className="text-sm text-ink-muted">{detail}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 /**
  * A first-visit walkthrough: shown until dismissed, and only while the account has no analyses
- * (someone with history already knows the way round).
+ * (someone with history already knows the way round). Its steps and the filming guide stay in
+ * the help dialog (the ? button in the header) after it's gone.
  */
 export function Welcome() {
   const history = useAnalysesList();
@@ -64,19 +84,7 @@ export function Welcome() {
           </svg>
         </button>
       </div>
-      <ol className="space-y-3">
-        {STEPS.map(([title, detail], i) => (
-          <li key={title} className="grid grid-cols-[auto_1fr] gap-x-3">
-            <span className="tabular grid size-6 place-items-center rounded-full bg-accent text-xs font-semibold text-on-accent" aria-hidden>
-              {i + 1}
-            </span>
-            <div>
-              <p className="text-sm font-medium">{title}</p>
-              <p className="text-sm text-ink-muted">{detail}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <GettingStartedSteps />
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -89,6 +97,13 @@ export function Welcome() {
           Got it
         </button>
       </div>
+      <p className="text-xs text-ink-muted">
+        This guide stays in Help: the{" "}
+        <span className="inline-grid size-4 place-items-center rounded-full border border-border align-middle text-[10px] font-semibold" aria-hidden>
+          ?
+        </span>
+        <span className="sr-only">question mark</span> button at the top of every page.
+      </p>
     </section>
   );
 }

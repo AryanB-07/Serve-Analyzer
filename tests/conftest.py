@@ -69,3 +69,26 @@ def _fresh_postgres_schema():
     existing.drop_all(engine)
     engine.dispose()
     yield
+
+
+@pytest.fixture(autouse=True)
+def _close_postgres_connections(monkeypatch):
+    """Close every connection pool a test opened once it's done. Each app holds its own pool, and
+    without this a long run passes Postgres's connection limit ("too many clients already")."""
+    if not POSTGRES_URL:
+        yield
+        return
+    from serve_api import db as db_module
+
+    engines = []
+    real_make_engine = db_module.make_engine
+
+    def tracked(url):
+        engine = real_make_engine(url)
+        engines.append(engine)
+        return engine
+
+    monkeypatch.setattr(db_module, "make_engine", tracked)
+    yield
+    for engine in engines:
+        engine.dispose()
