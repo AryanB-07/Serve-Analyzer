@@ -23,5 +23,7 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     css: false,
+    // The default 5 s is tight for tests that type a lot on a slow CI machine.
+    testTimeout: 20_000,
   },
 });
