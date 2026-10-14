@@ -296,7 +296,7 @@ uv run pytest -m "not integration"   # skip the tests that run the real pipeline
 SERVE_API_DATABASE_URL=postgresql://… uv run pytest   # the same suite on an empty Postgres database
 
 cd frontend
-npx vitest run                       # unit and component tests (`npm test` to watch)
+npx vitest run                       # unit and component tests (`npm test` to watch; also works from the repo root)
 npm run typecheck                    # TypeScript
 npm run check:api                    # generated types are up to date with openapi.json
 npm run test:e2e                     # browser tests against the running production stack (below)
