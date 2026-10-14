@@ -22,7 +22,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  reporter: [["list"]],
+  // On GitHub, failures also become annotations on the run, readable without downloading traces.
+  reporter: process.env.GITHUB_ACTIONS ? [["list"], ["github"]] : [["list"]],
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "https://localhost:8443",
     ignoreHTTPSErrors: true, // the smoke stack uses Caddy's self-signed certificate
