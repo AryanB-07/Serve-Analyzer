@@ -13,6 +13,7 @@ import type {
   UploadTarget,
   User,
 } from "./types";
+import { demoFile, isDemoId } from "./demo";
 
 /** Everything the UI needs from the backend. Implemented over HTTP and by the mock. */
 export interface ApiClient {
@@ -134,6 +135,13 @@ export function putWithProgress(
   });
 }
 
+/** A demo analysis's static file (see demo.ts), fetched without the API or a session. */
+async function demo<T>(id: string, file: Parameters<typeof demoFile>[1]): Promise<T> {
+  const res = await fetch(demoFile(id, file));
+  if (!res.ok) throw new ApiError(res.status, "Demo analysis not found");
+  return (await res.json()) as T;
+}
+
 export const httpClient: ApiClient = {
   getMe: async () => {
     try {
@@ -158,7 +166,7 @@ export const httpClient: ApiClient = {
   confirmEmailChange: (token) =>
     request("/auth/email-change/confirm", { method: "POST", body: JSON.stringify({ token }) }),
   exportData: () => request("/auth/me/export"),
-  getReport: (id) => request(`/analyses/${encodeURIComponent(id)}/report`),
+  getReport: (id) => (isDemoId(id) ? Promise.resolve(null) : request(`/analyses/${encodeURIComponent(id)}/report`)),
   reportAnalysis: (id, body) =>
     request(`/analyses/${encodeURIComponent(id)}/report`, { method: "PUT", body: JSON.stringify(body) }),
   deleteAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}`, { method: "DELETE" }),
@@ -166,9 +174,9 @@ export const httpClient: ApiClient = {
   uploadVideo: putWithProgress,
   startAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}/start`, { method: "POST" }),
   retryAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}/retry`, { method: "POST" }),
-  getAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}`),
+  getAnalysis: (id) => (isDemoId(id) ? demo(id, "summary.json") : request(`/analyses/${encodeURIComponent(id)}`)),
   listAnalyses: (cursor) =>
     request(`/analyses${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`),
-  getResult: (id) => request(`/analyses/${encodeURIComponent(id)}/result`),
-  getFrames: (id) => request(`/analyses/${encodeURIComponent(id)}/frames`),
+  getResult: (id) => (isDemoId(id) ? demo(id, "result.json") : request(`/analyses/${encodeURIComponent(id)}/result`)),
+  getFrames: (id) => (isDemoId(id) ? demo(id, "frames.json") : request(`/analyses/${encodeURIComponent(id)}/frames`)),
 };

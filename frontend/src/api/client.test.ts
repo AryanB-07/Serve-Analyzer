@@ -49,4 +49,22 @@ describe("the HTTP client", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("<html>Bad gateway</html>", { status: 502, statusText: "Bad Gateway" })));
     await expect(httpClient.exportData()).rejects.toMatchObject({ status: 502, message: "Bad Gateway" });
   });
+
+  it("reads the public demo from the site's static files, never the API", async () => {
+    const fetch = respond(200, JSON.stringify({ id: "demo-serve-1", status: "succeeded" }));
+    await expect(httpClient.getAnalysis("demo-serve-1")).resolves.toMatchObject({ status: "succeeded" });
+    await httpClient.getResult("demo-serve-1");
+    await httpClient.getFrames("demo-serve-1");
+    expect(fetch.mock.calls.map((c) => (c as unknown[])[0])).toEqual([
+      "/mock/demo-serve-1/summary.json", "/mock/demo-serve-1/result.json", "/mock/demo-serve-1/frames.json",
+    ]);
+    await expect(httpClient.getReport("demo-serve-1")).resolves.toBeNull();
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("still asks the API for every other analysis", async () => {
+    const fetch = respond(200, JSON.stringify({ id: "abc" }));
+    await httpClient.getAnalysis("abc");
+    expect(fetch).toHaveBeenCalledWith("/api/analyses/abc", expect.anything());
+  });
 });

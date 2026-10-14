@@ -6,7 +6,11 @@ with reference ranges, and plain-English feedback on what to work on. You can al
 serves side by side, synced by phase, to see whether you're improving.
 
 It's built as three parts: a Python pose-analysis pipeline, a FastAPI backend with a job worker,
-and a React frontend.
+and a React frontend. Once deployed, `/demo` shows a real analysis without signing up.
+
+- **Why each part is built the way it is:** [docs/decisions.md](docs/decisions.md)
+- **Running it for free on AWS:** [docs/deploy-aws-free-tier.md](docs/deploy-aws-free-tier.md)
+- **What it costs:** no paid APIs; every outside service and its free plan is in [docs/costs.md](docs/costs.md)
 
 ## Features
 
@@ -32,21 +36,69 @@ and a React frontend.
 
 ## Screenshots
 
-> _Placeholder: add screenshots or a GIF of the results page, the compare view and the
-> upload flow here._
+The public sample analysis (`/demo`), at the trophy position: the skeleton and joint angles on
+the video, the coaching feedback, and each measurement against its reference range.
+
+![The results page for the sample serve](docs/images/results.png)
+
+| On a phone | The Help dialog's filming guide |
+|---|---|
+| <img src="docs/images/results-phone.png" alt="The results page on a phone" width="260"> | <img src="docs/images/help.png" alt="The Help dialog showing the filming guide" width="520"> |
+
+The sample video is from Cacioppo et al. (2014), *Frontiers in Human Neuroscience*, on
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Intention-understanding-over-T-a-neuroimaging-study-on-shared-representations-and-tennis-return-Movie1.ogv),
+CC BY 4.0.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    browser["Browser<br/>React + TypeScript"]
+    subgraph server["One server (Docker Compose)"]
+        caddy["Caddy<br/>HTTPS, the website,<br/>security headers"]
+        api["API<br/>FastAPI"]
+        worker["Worker<br/>pose + analysis + video"]
+        db[("Postgres<br/>data + job queue")]
+        files[("Video storage<br/>disk or S3")]
+    end
+    mail["Email<br/>(Brevo, SMTP)"]
+
+    browser -- "HTTPS" --> caddy
+    caddy -- "/api" --> api
+    browser -. "signed URLs:<br/>upload and play videos" .-> files
+    api --> db
+    worker -- "claims jobs<br/>(SKIP LOCKED)" --> db
+    worker --> files
+    api -- "links to confirm,<br/>reset, change email" --> mail
 ```
- Browser (React)                 FastAPI (serve_api)            Worker (serve_api.worker)
- ───────────────                 ───────────────────            ─────────────────────────
- POST /analyses        ───────►  create record, return
-                                 signed upload URL
- PUT video (progress)  ───────►  storage (local; S3 later)
- POST /analyses/{id}/start ───►  status = queued  ──────────►  claim job, run pipeline
- GET /analyses/{id}  (poll)  ◄──  status and stage   ◄──────────  report each stage
- GET …/result, …/frames      ◄──  results.json, frames.json ◄──  serve_analyzer writes outputs
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant A as API
+    participant D as Postgres
+    participant S as Storage
+    participant W as Worker
+    B->>A: POST /analyses (hand, file type, size)
+    A-->>B: a signed upload URL
+    B->>S: PUT the video (with a progress bar)
+    B->>A: POST /analyses/{id}/start
+    A->>D: status = queued
+    W->>D: claim the oldest queued job (SKIP LOCKED)
+    W->>S: read the video
+    Note over W: convert if needed, track the pose in a<br/>child process, find the phases, measure,<br/>draw the overlay, encode H.264
+    W->>S: publish results.json, frames.json, videos
+    W->>D: status = succeeded (each stage reported on the way)
+    loop polling, backing off while nothing changes
+        B->>A: GET /analyses/{id}
+        A-->>B: queued → extracting_pose → analyzing → rendering → succeeded
+    end
+    B->>A: GET result and frames
+    B->>S: play the videos (signed URLs)
 ```
+
+Why it's built this way, with the evidence for each choice, is in
+[docs/decisions.md](docs/decisions.md).
 
 - **`serve_analyzer/`: the pipeline.** Plain Python with no web dependencies. It writes
   `results.json` (metrics, labels, feedback), `frames.json` (per-frame landmarks and angle

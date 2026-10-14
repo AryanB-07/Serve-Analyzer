@@ -29,7 +29,7 @@ async function expectAccessible(page: Page, what: string) {
 test("signed-out pages", async ({ page }) => {
   for (const [path, heading] of [
     ["/login", "Sign in"], ["/signup", "Create your account"], ["/forgot-password", "Reset your password"],
-    ["/privacy", "Privacy Policy"], ["/terms", "Terms of Service"],
+    ["/privacy", "Privacy Policy"], ["/terms", "Terms of Service"], ["/demo", "Sample analysis"],
   ] as const) {
     await page.goto(path);
     await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();

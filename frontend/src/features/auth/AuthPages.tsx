@@ -38,6 +38,7 @@ export function LoginPage() {
           <br />
           New here?{" "}
           <Link to={`/signup${nextParam(next)}`} className="font-medium text-accent underline">Create an account</Link>
+          {" "}or <Link to="/demo" className="font-medium text-accent underline">see a sample analysis</Link>
         </>
       }
     />
@@ -64,6 +65,8 @@ export function SignupPage() {
         <>
           Already have an account?{" "}
           <Link to={`/login${nextParam(next)}`} className="font-medium text-accent underline">Sign in</Link>
+          <br />
+          Not sure yet? <Link to="/demo" className="font-medium text-accent underline">See a sample analysis</Link>
         </>
       }
     />

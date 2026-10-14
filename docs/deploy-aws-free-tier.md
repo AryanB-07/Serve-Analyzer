@@ -26,9 +26,54 @@ several analyses in a row:
 So an analysis peaks at about 0.9 GB for the worker, and about 1.1 GB with everything else.
 The worker returns to about 250 MB between jobs and doesn't grow over time.
 
-- **t3.small (2 GB):** fits comfortably.
-- **t3.micro (1 GB):** works with the swap file below; expect some slowdown while it swaps
-  during an analysis.
+### Rehearsal: the worst clips allowed, on a 1 GB and a 2 GB server
+
+`scripts/memory_rehearsal.py` measures every container's peak memory (the kernel's cgroup
+counter, so short-lived children like the pose process and ffmpeg count) while analysing:
+- the largest clips the upload limits still allow: 15 s of 1080p at 120 fps, which is 1,800
+  frames, the maximum;
+- 15 s of 10-bit 4K HEVC, an iPhone-style file that gets scaled down first;
+- an ordinary 15 s 1080p clip.
+
+`deploy/docker-compose.memory.yml` caps each container at its share of the server. Ubuntu and
+Docker take about 250 MB, and the worker gets the rest, plus the 2 GB swap file the setup
+script makes. These numbers are from Docker Desktop on a Mac emulating x86, so the times are
+slower than a real t3 and only the comparisons between rows matter.
+
+| Server | Clip | Result | Time | Worker peak | All containers |
+|---|---|---|---|---|---|
+| No caps | 1080p, 25 fps | succeeded | 63 s | 722 MB | 1,058 MB |
+| No caps | 1080p, 120 fps (the maximum) | succeeded | 265 s | 757 MB | 1,097 MB |
+| No caps | 4K HEVC, before one-thread decoding | succeeded | 69 s | **1,323 MB** | 1,663 MB |
+| No caps | 4K HEVC, one-thread decoding (now) | succeeded | 69 s | 734 MB | 974 MB |
+| **t3.small** (worker 1,450 MB + swap) | 1080p, 25 fps | succeeded | 63 s | 727 MB | 969 MB |
+| **t3.small** | 1080p, 120 fps | succeeded | 297 s | 715 MB | 957 MB |
+| **t3.small** | 4K HEVC | succeeded | 69 s | 741 MB | 999 MB |
+| **t3.micro** (worker 450 MB + swap) | 1080p, 25 fps | succeeded | 78 s | 450 MB, the rest swapped | 677 MB |
+| **t3.micro** | 1080p, 120 fps | succeeded | 304 s | 450 MB, the rest swapped | 680 MB |
+| **t3.micro** | 4K HEVC | succeeded | 81 s | 450 MB, the rest swapped | 682 MB |
+
+Two things came out of it:
+
+- **4K needed fixing:** ffmpeg decoded it on every core, each thread holding full-size frames.
+  The conversion now decodes with one thread, which halved the worker's peak at the same
+  speed.
+- **Every worst case fits both servers:**
+  - **t3.small (2 GB):** fits comfortably. The worker never comes near its share, and about
+    700 MB is left over. **Recommended.**
+  - **t3.micro (1 GB):** every analysis still finishes, but the worker runs with half its
+    memory in swap, which made analyses 15–25% slower here. EBS-backed swap on a real t3.micro
+    is slower than a Mac's SSD, so expect more. Fine for trying it out; move to a t3.small
+    before sharing the link widely.
+
+Reproduce it with the smoke stack running (`KEEP=1 E2E=0 scripts/smoke_docker.sh`):
+
+```bash
+REHEARSAL_WORKER_MEM=450m REHEARSAL_WORKER_SWAP=2450m docker compose -p serve-smoke \
+  --env-file deploy/smoke.env -f deploy/docker-compose.yml -f deploy/docker-compose.smoke.yml \
+  -f deploy/docker-compose.memory.yml --profile bundled-db up -d --wait
+python3 scripts/memory_rehearsal.py https://localhost:8443 --mailpit http://localhost:8025 your-clips.mp4
+```
 
 ## Pick the instance
 

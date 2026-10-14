@@ -88,6 +88,20 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 - [x] One-command server setup (`scripts/server_setup.sh`), tested in a fresh Ubuntu container
 - [x] Backup and restore scripts, with a restore tested on every push
 
+## Portfolio and operations
+
+- [x] A public demo at `/demo`: a real analysis of the sample clip, no account needed, linked from
+      the sign-in and sign-up pages. Put `https://<your host>/demo` in the README and on your CV.
+- [x] A decision log (`docs/decisions.md`): each major choice, what else was considered, and the
+      evidence. Interview preparation.
+- [x] Architecture diagrams in the README (Mermaid, which GitHub draws).
+- [x] Costs: no paid APIs; every outside service and its free plan in `docs/costs.md`.
+- [x] Optional error reporting (Sentry's free plan or GlitchTip), off until configured.
+- [ ] **If you turn on error reporting:** sign up for Sentry's free Developer plan (or GlitchTip),
+  put the DSN in `deploy/.env` as `SERVE_API_SENTRY_DSN`, set `errorReporting: true` in
+  `frontend/src/features/legal/config.ts`, and bump `TERMS_VERSION` and `LAST_UPDATED`.
+- [x] Screenshots of the demo in the README (`docs/images`).
+
 ## Video formats
 
 - [x] MOV, MP4/M4V, WebM, MKV, AVI, 3GP and MTS tested across 160 variant runs, with

@@ -31,10 +31,13 @@ function ResultsView({
   summary,
   result,
   frames,
+  demo,
 }: {
   summary: AnalysisSummary;
   result: AnalysisResult;
   frames: FramesPayload;
+  /** The public sample (/demo): nothing to delete or report. */
+  demo: boolean;
 }) {
   const [options, setOptions] = useState(DEFAULT_OPTIONS);
   return (
@@ -47,7 +50,7 @@ function ResultsView({
             {new Date(summary.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })} ·{" "}
             {result.hand === "right" ? "Right" : "Left"}-handed · {result.fps} fps
           </p>
-          <DeleteFromHere summary={summary} className="ml-auto" />
+          {!demo && <DeleteFromHere summary={summary} className="ml-auto" />}
         </header>
 
         {/* Phone order is DOM order (video, analysis, charts); on large screens the
@@ -80,7 +83,7 @@ function ResultsView({
               </div>
             )}
             <KnownLimits />
-            <ReportProblem analysisId={summary.id} outcome="succeeded" />
+            {!demo && <ReportProblem analysisId={summary.id} outcome="succeeded" />}
           </aside>
 
           <div className="min-w-0 lg:col-start-1">
@@ -142,8 +145,10 @@ function CenteredMessage({ title, children }: { title: string; children?: ReactN
   );
 }
 
-export function ResultsPage() {
-  const { id = "" } = useParams();
+/** An analysis's page, by the id in the URL; or, with ``demoId``, the public sample. */
+export function ResultsPage({ demoId }: { demoId?: string } = {}) {
+  const params = useParams();
+  const id = demoId ?? params.id ?? "";
   const analysis = useAnalysis(id);
   const succeeded = analysis.data?.status === "succeeded";
   const result = useResult(id, succeeded);
@@ -194,5 +199,5 @@ export function ResultsPage() {
   }
   if (!result.data || !frames.data) return <CenteredMessage title="Loading results…" />;
 
-  return <ResultsView key={id} summary={analysis.data} result={result.data} frames={frames.data} />;
+  return <ResultsView key={id} summary={analysis.data} result={result.data} frames={frames.data} demo={Boolean(demoId)} />;
 }

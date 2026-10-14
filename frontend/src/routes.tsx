@@ -12,6 +12,7 @@ import {
 import { LoginPage, SignupPage } from "./features/auth/AuthPages";
 import { RequireAuth } from "./features/auth/RequireAuth";
 import { ComparePage } from "./features/compare/ComparePage";
+import { DemoPage } from "./features/demo/DemoPage";
 import { HistoryPage } from "./features/history/HistoryPage";
 import { PrivacyPage, TermsPage } from "./features/legal/LegalPages";
 import { ResultsPage } from "./features/results/ResultsPage";
@@ -39,6 +40,7 @@ export const routes = [
       { path: "/account-deleted", element: <AccountDeletedPage /> },
       { path: "/privacy", element: <PrivacyPage /> },
       { path: "/terms", element: <TermsPage /> },
+      { path: "/demo", element: <DemoPage /> },
       {
         element: <RequireAuth />,
         children: [
