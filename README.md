@@ -27,6 +27,8 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
   - metric cards and feedback that jump the video to the moment they describe
 - **Upload flow:** a filming guide, checks in the browser before uploading, a direct upload
   with a real progress bar, live processing stages, and friendly error screens with retry.
+- **Camera position (optional):** "Where was your camera?" at upload. The results then mark the
+  measurements that position can't read or reads only roughly ([docs/view-detection.md](docs/view-detection.md)).
 - **History and compare:** past analyses with summaries; compare two serves with the videos
   aligned at trophy and contact, a before/after table and overlaid charts.
 - **Mock mode:** the whole frontend runs on real pipeline output with no backend, for demos
@@ -399,7 +401,7 @@ frontend/
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /analyses` | Create an analysis; returns a signed `PUT` URL for the video |
+| `POST /analyses` | Create an analysis (hand, file, optional `camera_view`); returns a signed `PUT` URL for the video |
 | `PUT <signed url>` | Upload the video directly to storage |
 | `POST /analyses/{id}/start` | Queue the analysis after the upload finishes |
 | `GET /analyses/{id}` | Status: `queued → extracting_pose → analyzing → rendering → succeeded / failed` |

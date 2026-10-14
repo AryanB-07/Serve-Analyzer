@@ -10,6 +10,7 @@ from .config import AnalysisConfig
 from .errors import PipelineError
 from .models import Hand
 from .pipeline import analyze
+from .view import CAMERA_VIEWS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +27,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--model", choices=["lite", "full", "heavy"], default="heavy")
     p.add_argument("--debug-plots", action="store_true",
                    help="also save a before/after smoothing plot (needs matplotlib)")
+    p.add_argument("--camera", choices=CAMERA_VIEWS,
+                   help="where the camera was, relative to the hitting arm; marks what it can't read")
     return parser
 
 
@@ -38,7 +41,8 @@ def main(argv: list[str] | None = None) -> int:
         reference_ranges_path=args.ranges,
     )
     try:
-        result = analyze(args.video, args.hand, args.out, config, debug_plots=args.debug_plots)
+        result = analyze(args.video, args.hand, args.out, config, debug_plots=args.debug_plots,
+                         camera_view=args.camera)
     except (PipelineError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
@@ -48,6 +52,11 @@ def main(argv: list[str] | None = None) -> int:
     print("Feedback:")
     for point in result.feedback:
         print(f"  - {point.text}")
+    if result.quality:
+        hidden = [f"{p.replace('_', ' ')} {m.replace('_', ' ')}" for p, by in result.quality.items()
+                  for m, q in by.items() if q == "unreadable"]
+        if hidden:
+            print(f"Can't be read from this camera position: {', '.join(hidden)}")
     for warning in result.warnings:
         print(f"warning: {warning}", file=sys.stderr)
     for name, path in result.outputs.items():

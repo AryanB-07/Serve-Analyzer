@@ -24,6 +24,7 @@ from .pose import ensure_model, extract_pose_sequence
 from .preprocessing import clean
 from .reference import RangeTable, assess, load_ranges, ranges_to_dict, to_labels
 from .video import probe_or_convert, validate, write_playback_copy, write_thumbnail
+from .view import UNREADABLE, hitting_arm_hidden, measurement_quality
 
 __all__ = ["AnalysisError", "SequenceAnalysis", "Stage", "analyze", "analyze_sequence"]
 
@@ -37,14 +38,22 @@ class SequenceAnalysis:
     pose: PoseSequence
     series: A.Series
 
+HIDDEN_ARM_WARNING = (
+    "Your hitting arm was hard to see around the trophy position, so its angles there may be "
+    "missing or rough."
+)
+
+
 def analyze_sequence(
     raw: PoseSequence, hand: Hand, config: AnalysisConfig, ranges: RangeTable,
-    expected_frames: int | None = None,
+    expected_frames: int | None = None, camera_view: str | None = None,
 ) -> SequenceAnalysis:
     """Everything after pose extraction. Pure: no file or video I/O.
 
     ``expected_frames`` is the frame count the file's header promises; reading far fewer
-    means the file is cut off, which gets a warning."""
+    means the file is cut off, which gets a warning. ``camera_view`` is where the person says
+    the camera was (serve_analyzer.view.CAMERA_VIEWS): measurements that position can't read
+    are marked, and get no feedback."""
     if np.isnan(raw.landmarks[:, :, :2]).all():
         raise AnalysisError("No person was detected in the video.", code="NO_PERSON_DETECTED")
 
@@ -56,6 +65,12 @@ def analyze_sequence(
     pose, series, phases = m.pose, m.series, m.phases
     metrics = compute_metrics(series, phases)
     assessments = assess(metrics, ranges)
+    range_dict = ranges_to_dict(ranges)
+    quality = measurement_quality(camera_view, range_dict)
+    readable = [a for a in assessments if not quality or quality.get(a.phase, {}).get(a.metric) != UNREADABLE]
+    warnings = _warnings(phases, raw.n_frames, hand, expected_frames)
+    if hitting_arm_hidden(raw, hand, phases.trophy):
+        warnings.append(HIDDEN_ARM_WARNING)
 
     result = AnalysisResult(
         hand=hand,
@@ -66,9 +81,11 @@ def analyze_sequence(
         phases=phases,
         metrics=metrics,
         labels=to_labels(assessments),
-        ranges=ranges_to_dict(ranges),
-        feedback=feedback.generate(assessments),
-        warnings=_warnings(phases, raw.n_frames, hand, expected_frames),
+        ranges=range_dict,
+        feedback=feedback.generate(readable),
+        warnings=warnings,
+        camera_view=camera_view,
+        quality=quality,
     )
     return SequenceAnalysis(result, pose, series)
 
@@ -201,12 +218,13 @@ def analyze(
     render_video: bool = True,
     on_stage: Callable[[Stage], None] | None = None,
     pose_extractor: PoseExtractor | None = None,
+    camera_view: str | None = None,
 ) -> AnalysisResult:
     """Validate, extract pose, analyse, and write outputs into ``out_dir``.
 
     ``on_stage`` is called as each stage starts, for progress reporting. ``pose_extractor``
     replaces ``extract_pose_sequence``; the worker passes ``extract_pose_in_subprocess`` so
-    MediaPipe's memory is released after each video.
+    MediaPipe's memory is released after each video. ``camera_view``: see analyze_sequence.
     """
     config = config or AnalysisConfig()
     hand = Hand(hand)
@@ -218,12 +236,13 @@ def analyze(
     with tempfile.TemporaryDirectory(prefix="serve-analyzer-") as scratch:
         info = probe_or_convert(video_path, scratch, max_duration_s=config.max_duration_s)
         return _analyze_video(info, hand, out_dir, config, debug_plots, render_video, report,
-                              pose_extractor or extract_pose_sequence)
+                              pose_extractor or extract_pose_sequence, camera_view)
 
 
 def _analyze_video(
     info: VideoInfo, hand: Hand, out_dir: Path, config: AnalysisConfig, debug_plots: bool,
     render_video: bool, report: Callable[[Stage], None], pose_extractor: PoseExtractor,
+    camera_view: str | None = None,
 ) -> AnalysisResult:
     validate(info, config.max_duration_s, config.min_fps)
     ranges = load_ranges(config.reference_ranges_path)
@@ -233,7 +252,8 @@ def _analyze_video(
     raw = pose_extractor(info, model_path)
 
     report("analyzing")
-    analysis = analyze_sequence(raw, hand, config, ranges, expected_frames=info.frame_count)
+    analysis = analyze_sequence(raw, hand, config, ranges, expected_frames=info.frame_count,
+                                camera_view=camera_view)
     result = analysis.result
 
     frames_path = out_dir / FRAMES_FILE

@@ -1429,6 +1429,37 @@
             "type": "array",
             "title": "Warnings"
           },
+          "camera_view": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "side_hitting",
+                  "side_toss",
+                  "behind",
+                  "behind_diagonal_hitting",
+                  "behind_diagonal_toss",
+                  "front",
+                  "front_diagonal_hitting",
+                  "front_diagonal_toss"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Camera View"
+          },
+          "quality": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhaseQualities"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "video_url": {
             "type": "string",
             "title": "Video Url"
@@ -1655,6 +1686,27 @@
             "type": "integer",
             "exclusiveMinimum": 0.0,
             "title": "Size Bytes"
+          },
+          "camera_view": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "side_hitting",
+                  "side_toss",
+                  "behind",
+                  "behind_diagonal_hitting",
+                  "behind_diagonal_toss",
+                  "front",
+                  "front_diagonal_hitting",
+                  "front_diagonal_toss"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Camera View"
           }
         },
         "type": "object",
@@ -1836,6 +1888,27 @@
                 "type": "null"
               }
             ]
+          },
+          "camera_view": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "side_hitting",
+                  "side_toss",
+                  "behind",
+                  "behind_diagonal_hitting",
+                  "behind_diagonal_toss",
+                  "front",
+                  "front_diagonal_hitting",
+                  "front_diagonal_toss"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Camera View"
           },
           "original_video_deleted_at": {
             "anyOf": [
@@ -2174,6 +2247,92 @@
         },
         "type": "object",
         "title": "MetricLabels"
+      },
+      "MetricQualities": {
+        "properties": {
+          "front_knee_flexion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "measured",
+                  "approximate",
+                  "unreadable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Front Knee Flexion"
+          },
+          "back_knee_flexion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "measured",
+                  "approximate",
+                  "unreadable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Back Knee Flexion"
+          },
+          "elbow_angle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "measured",
+                  "approximate",
+                  "unreadable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elbow Angle"
+          },
+          "trunk_tilt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "measured",
+                  "approximate",
+                  "unreadable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trunk Tilt"
+          },
+          "wrist_height": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "measured",
+                  "approximate",
+                  "unreadable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wrist Height"
+          }
+        },
+        "type": "object",
+        "title": "MetricQualities"
       },
       "MetricRange": {
         "properties": {
@@ -2540,6 +2699,21 @@
           "contact"
         ],
         "title": "PhaseMetrics"
+      },
+      "PhaseQualities": {
+        "properties": {
+          "trophy": {
+            "$ref": "#/components/schemas/MetricQualities"
+          },
+          "racket_drop": {
+            "$ref": "#/components/schemas/MetricQualities"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/MetricQualities"
+          }
+        },
+        "type": "object",
+        "title": "PhaseQualities"
       },
       "PhaseRanges": {
         "properties": {

@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { AnalysisResult, FramesPayload } from "../../api/types";
 import { canvasBackingSize, mediaRect, type Size } from "../../lib/coords";
 import { phaseForSegment, segmentAt } from "../../lib/phases";
+import { qualityOf, readableLabels } from "../../lib/quality";
 import { angleLabels, jointStatuses, metricStatuses, poseAt, type LandmarkSource } from "../../lib/skeleton";
 import { usePlayheadStore } from "../../playhead/context";
 import { useVideoClock } from "../../playhead/useVideoClock";
@@ -61,6 +62,8 @@ export function VideoStage({
     if (!canvas || !ctx) return;
     let size: Size = { width: 0, height: 0 };
     const media = { width: frames.width, height: frames.height };
+    // Unreadable measurements get no good/borderline/off colour on the skeleton.
+    const labels = readableLabels(result);
 
     const draw = () => {
       const { frame } = store.getState();
@@ -71,9 +74,11 @@ export function VideoStage({
         size,
         rect: mediaRect(size, media, "contain"),
         pose,
-        jointStatus: jointStatuses(result.labels, phase, result.hand),
-        labels: opts.showLabels ? angleLabels(frames, frame, result.hand, pose) : [],
-        labelStatus: metricStatuses(result.labels, phase),
+        jointStatus: jointStatuses(labels, phase, result.hand),
+        labels: opts.showLabels
+          ? angleLabels(frames, frame, result.hand, pose).filter((l) => !phase || qualityOf(result, phase, l.metric) !== "unreadable")
+          : [],
+        labelStatus: metricStatuses(labels, phase),
         showSkeleton: opts.showSkeleton,
         showLabels: opts.showLabels,
       });

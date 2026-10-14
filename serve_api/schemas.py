@@ -23,6 +23,13 @@ MetricName = Literal[
 ]
 # One canonical type per container; the frontend picks it from the file extension (browsers
 # report these inconsistently). The pipeline also converts other codecs, such as AV1, with ffmpeg.
+# Where the camera was, relative to the hitting arm (serve_analyzer.view.CAMERA_VIEWS). Optional:
+# people are asked at upload, because guessing it from the skeleton wasn't reliable enough.
+CameraView = Literal[
+    "side_hitting", "side_toss", "behind", "behind_diagonal_hitting", "behind_diagonal_toss",
+    "front", "front_diagonal_hitting", "front_diagonal_toss",
+]
+MeasurementQuality = Literal["measured", "approximate", "unreadable"]
 UploadContentType = Literal[
     "video/mp4", "video/quicktime", "video/webm", "video/x-matroska", "video/x-msvideo",
     "video/3gpp", "video/mp2t",
@@ -68,6 +75,7 @@ class CreateAnalysisRequest(BaseModel):
     filename: str = Field(min_length=1, max_length=255)
     content_type: UploadContentType
     size_bytes: int = Field(gt=0)
+    camera_view: CameraView | None = None
 
 
 class UploadTarget(BaseModel):
@@ -99,6 +107,8 @@ MetricRanges = _keyed("MetricRanges", METRIC_NAMES, MetricRange | None, None)
 PhaseMetrics = _keyed("PhaseMetrics", PHASE_NAMES, MetricValues)
 PhaseLabels = _keyed("PhaseLabels", PHASE_NAMES, MetricLabels)
 PhaseRanges = _keyed("PhaseRanges", PHASE_NAMES, MetricRanges)
+MetricQualities = _keyed("MetricQualities", METRIC_NAMES, MeasurementQuality | None, None)
+PhaseQualities = _keyed("PhaseQualities", PHASE_NAMES, MetricQualities, None)
 
 
 class FeedbackItem(BaseModel):
@@ -121,6 +131,9 @@ class AnalysisResult(BaseModel):
     ranges: PhaseRanges
     feedback: list[FeedbackItem]
     warnings: list[str]
+    camera_view: CameraView | None = None
+    # What camera_view can read, per phase and measurement; None when it wasn't given.
+    quality: PhaseQualities | None = None
     video_url: str
     annotated_video_url: str | None = None
     thumbnail_url: str | None = None
@@ -261,6 +274,7 @@ class ExportedAnalysis(BaseModel):
     status: AnalysisStatus
     created_at: datetime
     error: ApiError | None = None
+    camera_view: CameraView | None = None
     original_video_deleted_at: datetime | None = None
     # The pipeline's results.json: phases, angles, labels, ranges, feedback and warnings.
     results: dict[str, Any] | None = None

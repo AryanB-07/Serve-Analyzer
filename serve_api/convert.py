@@ -23,8 +23,14 @@ def public_message(code: str, detail: str) -> str:
     return PUBLIC_MESSAGES.get(code, detail)
 
 
-def counts_from_labels(labels: dict[str, dict[str, str]]) -> dict[str, int]:
-    tally = Counter(status for by_metric in labels.values() for status in by_metric.values())
+def counts_from_labels(labels: dict[str, dict[str, str]],
+                       quality: dict[str, dict[str, str]] | None = None) -> dict[str, int]:
+    """Good/borderline/off/unknown tallies for History. Measurements the camera position can't
+    read count as unknown: their labels would be noise."""
+    def status(phase: str, metric: str, label: str) -> str:
+        return "unknown" if quality and quality.get(phase, {}).get(metric) == "unreadable" else label
+
+    tally = Counter(status(p, m, s) for p, by_metric in labels.items() for m, s in by_metric.items())
     return {s: tally.get(s, 0) for s in ("good", "borderline", "off", "unknown")}
 
 
@@ -59,6 +65,9 @@ def result_from_file(analysis_id: str, results: dict[str, Any], url_for: UrlFor)
         ranges=results["ranges"],
         feedback=results["feedback"],
         warnings=results["warnings"],
+        # Absent from results written before the camera question existed.
+        camera_view=results.get("camera_view"),
+        quality=results.get("quality"),
         video_url=url_for(keys.output_key(analysis_id, keys.PLAYBACK)),
         annotated_video_url=url_for(keys.output_key(analysis_id, keys.ANNOTATED)),
         thumbnail_url=url_for(keys.output_key(analysis_id, keys.THUMBNAIL)),

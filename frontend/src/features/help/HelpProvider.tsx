@@ -16,6 +16,11 @@ interface HelpContextValue {
 
 const HelpContext = createContext<HelpContextValue | null>(null);
 
+/** Like useHelp, but null outside a HelpProvider: for parts that also render on their own. */
+export function useOptionalHelp(): HelpContextValue | null {
+  return useContext(HelpContext);
+}
+
 export function useHelp(): HelpContextValue {
   const value = useContext(HelpContext);
   if (!value) throw new Error("useHelp needs a <HelpProvider> (AppShell has one)");

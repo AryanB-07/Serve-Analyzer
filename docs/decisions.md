@@ -58,6 +58,21 @@ and what would change the decision. Numbers link to the reports and docs they co
   - Experiments change one factor at a time, and the reports are committed under `evaluation/reports/`.
 - **Why:** the synthetic data alone misses real failure modes (it never hides joints at the scored frames), and the real set alone is too small to trust.
 
+### 6b. Asking where the camera was, instead of guessing
+
+- **Tried:** estimating the camera position from the skeleton: the shoulder and hip lines' turn
+  at the set position, minus the usual stance turn (`docs/view-detection.md`).
+- **Evidence:**
+  - Real clips: 77% side-on detection, 69% side, 42% category, against targets of 95/95/85.
+  - Players' stance varies by about 90° between people, and MediaPipe swaps left and right in
+    profile views, so the skeleton can't tell where the net is.
+- **Chosen:** an optional question at upload, and a relaxed rule.
+  - A measurement is hidden only when the rig's error for that position is wider than its good
+    range; otherwise it's shown, marked approximate if it's over 10°.
+  - People who skip the question see exactly what they did before.
+- **What would change it:** labelled clips from the question, to tune or replace the rig's
+  ratings with real ones.
+
 ## Video handling
 
 ### 7. Every common phone and camera format, converted only when needed

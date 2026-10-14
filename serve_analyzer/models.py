@@ -70,7 +70,7 @@ Metrics = dict[str, dict[str, float | None]]
 Labels = dict[str, dict[str, str]]
 Ranges = dict[str, dict[str, dict[str, list[float]]]]
 
-RESULTS_SCHEMA_VERSION = 2
+RESULTS_SCHEMA_VERSION = 3  # 3: camera_view and quality
 
 
 @dataclass
@@ -97,6 +97,10 @@ class AnalysisResult:
     feedback: list[FeedbackItem]
     warnings: list[str] = field(default_factory=list)
     outputs: dict[str, str] = field(default_factory=dict)
+    # Where the person said the camera was, and what that position can read
+    # ({phase: {metric: "measured" | "approximate" | "unreadable"}}); None when not given.
+    camera_view: str | None = None
+    quality: dict[str, dict[str, str]] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -112,5 +116,7 @@ class AnalysisResult:
             "ranges": self.ranges,
             "feedback": [asdict(f) for f in self.feedback],
             "warnings": self.warnings,
+            "camera_view": self.camera_view,
+            "quality": self.quality,
             "outputs": self.outputs,
         }

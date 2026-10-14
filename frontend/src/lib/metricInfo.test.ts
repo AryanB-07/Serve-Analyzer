@@ -33,13 +33,23 @@ describe("readingFor", () => {
   it("reads each metric at its key phase", () => {
     expect(readingFor("front_knee_flexion", result)).toEqual({
       metric: "front_knee_flexion", phase: "trophy", frame: 113, value: 86.2, status: "borderline",
-      range: { good: [50, 80], borderline: [35, 95] }, direction: "high",
+      range: { good: [50, 80], borderline: [35, 95] }, direction: "high", quality: null,
     });
     expect(readingFor("wrist_height", result)).toMatchObject({ phase: "contact", value: 1.287, direction: "low" });
   });
 
   it("reports unmeasured metrics as unknown", () => {
     expect(readingFor("elbow_angle", result)).toMatchObject({ value: null, status: "unknown", direction: null });
+  });
+
+  it("hides an unreadable measurement's value and verdict, and flags approximate ones", () => {
+    const quality = { trophy: { front_knee_flexion: "unreadable", trunk_tilt: "approximate" } };
+    const marked = { ...result, camera_view: "front", quality } as unknown as AnalysisResult;
+    expect(readingFor("front_knee_flexion", marked)).toMatchObject({
+      value: null, status: "unknown", direction: null, quality: "unreadable",
+    });
+    expect(readingFor("trunk_tilt", marked)).toMatchObject({ quality: "approximate" });
+    expect(readingFor("wrist_height", marked)).toMatchObject({ value: 1.287, quality: null });
   });
 
   it("treats a missing key phase as not measured", () => {

@@ -4,6 +4,7 @@ import { formatMetric } from "../../lib/chartData";
 import { CARD_ORDER, METRIC_INFO, rangeBarLayout, readingFor, type MetricReading } from "../../lib/metricInfo";
 import { PHASE_LABELS, segmentAt } from "../../lib/phases";
 import { usePlayhead, usePlayheadStore } from "../../playhead/context";
+import { CameraNote } from "./CameraNote";
 
 const STATUS_BORDER: Record<MetricStatus, string> = {
   good: "border-l-good",
@@ -12,7 +13,10 @@ const STATUS_BORDER: Record<MetricStatus, string> = {
   unknown: "border-l-border",
 };
 
+export const UNREADABLE_TEXT = "Can't be read from this angle";
+
 export function statusLine(reading: MetricReading): string {
+  if (reading.quality === "unreadable") return UNREADABLE_TEXT;
   if (reading.status === "unknown") return STATUS_TEXT.unknown;
   if (!reading.direction) return STATUS_TEXT[reading.status];
   const side = reading.direction === "low" ? "low" : "high";
@@ -73,11 +77,25 @@ export function MetricCard({ reading, phases }: { reading: MetricReading; phases
           {statusLine(reading)}
         </span>
       </header>
-      <p className="flex items-baseline gap-2">
-        <span className="tabular text-2xl font-semibold tracking-tight">{formatMetric(reading.metric, reading.value)}</span>
-        <span className="text-sm text-ink-muted">at {phaseLabel.toLowerCase()}</span>
-      </p>
-      <RangeBar reading={reading} />
+      {reading.quality === "unreadable" ? (
+        <p className="text-sm text-ink-muted">
+          Your camera position can't see this clearly enough to score it, so it has no feedback.
+        </p>
+      ) : (
+        <>
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            <span className="tabular text-2xl font-semibold tracking-tight">
+              {reading.quality === "approximate" && reading.value !== null && <span aria-hidden>≈</span>}
+              {formatMetric(reading.metric, reading.value)}
+            </span>
+            <span className="text-sm text-ink-muted">at {phaseLabel.toLowerCase()}</span>
+            {reading.quality === "approximate" && reading.value !== null && (
+              <span className="rounded-full border border-border px-2 text-xs text-ink-muted">approximate from this angle</span>
+            )}
+          </p>
+          <RangeBar reading={reading} />
+        </>
+      )}
       <p className="text-sm text-ink-muted">{info.explanation}</p>
       {reading.frame !== null ? (
         <button
@@ -101,6 +119,7 @@ export function MetricCards({ result }: { result: AnalysisResult }) {
       <h2 id="metrics-heading" className="text-lg font-semibold">
         Key positions
       </h2>
+      <CameraNote result={result} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         {readings.map((reading) => (
           <MetricCard key={reading.metric} reading={reading} phases={result.phases} />

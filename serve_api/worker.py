@@ -93,8 +93,10 @@ def process(job: dict, db: Database, storage: Storage, token: str,
         try:
             with storage.local_copy(input_key) as video:
                 result = analyze(video, job["hand"], work, on_stage=write,
-                                 pose_extractor=extract_pose_in_subprocess)
-            counts = counts_from_labels(json.loads((work / keys.RESULTS).read_text())["labels"])
+                                 pose_extractor=extract_pose_in_subprocess,
+                                 camera_view=job.get("camera_view"))
+            written = json.loads((work / keys.RESULTS).read_text())
+            counts = counts_from_labels(written["labels"], written.get("quality"))
         except PipelineError as exc:
             log.info("analysis %s failed: %s (%s)", analysis_id, exc.code, exc)
             write("failed", error_code=exc.code, error_message=public_message(exc.code, str(exc)))

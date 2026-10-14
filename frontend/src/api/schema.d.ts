@@ -408,6 +408,9 @@ export interface components {
             feedback: components["schemas"]["FeedbackItem"][];
             /** Warnings */
             warnings: string[];
+            /** Camera View */
+            camera_view?: ("side_hitting" | "side_toss" | "behind" | "behind_diagonal_hitting" | "behind_diagonal_toss" | "front" | "front_diagonal_hitting" | "front_diagonal_toss") | null;
+            quality?: components["schemas"]["PhaseQualities"] | null;
             /** Video Url */
             video_url: string;
             /** Annotated Video Url */
@@ -490,6 +493,8 @@ export interface components {
             content_type: "video/mp4" | "video/quicktime" | "video/webm" | "video/x-matroska" | "video/x-msvideo" | "video/3gpp" | "video/mp2t";
             /** Size Bytes */
             size_bytes: number;
+            /** Camera View */
+            camera_view?: ("side_hitting" | "side_toss" | "behind" | "behind_diagonal_hitting" | "behind_diagonal_toss" | "front" | "front_diagonal_hitting" | "front_diagonal_toss") | null;
         };
         /** CreateAnalysisResponse */
         CreateAnalysisResponse: {
@@ -566,6 +571,8 @@ export interface components {
              */
             created_at: string;
             error?: components["schemas"]["ApiError"] | null;
+            /** Camera View */
+            camera_view?: ("side_hitting" | "side_toss" | "behind" | "behind_diagonal_hitting" | "behind_diagonal_toss" | "front" | "front_diagonal_hitting" | "front_diagonal_toss") | null;
             /** Original Video Deleted At */
             original_video_deleted_at?: string | null;
             /** Results */
@@ -649,6 +656,19 @@ export interface components {
             /** Wrist Height */
             wrist_height?: ("good" | "borderline" | "off" | "unknown") | null;
         };
+        /** MetricQualities */
+        MetricQualities: {
+            /** Front Knee Flexion */
+            front_knee_flexion?: ("measured" | "approximate" | "unreadable") | null;
+            /** Back Knee Flexion */
+            back_knee_flexion?: ("measured" | "approximate" | "unreadable") | null;
+            /** Elbow Angle */
+            elbow_angle?: ("measured" | "approximate" | "unreadable") | null;
+            /** Trunk Tilt */
+            trunk_tilt?: ("measured" | "approximate" | "unreadable") | null;
+            /** Wrist Height */
+            wrist_height?: ("measured" | "approximate" | "unreadable") | null;
+        };
         /** MetricRange */
         MetricRange: {
             /** Good */
@@ -731,6 +751,12 @@ export interface components {
             trophy: components["schemas"]["MetricValues"];
             racket_drop: components["schemas"]["MetricValues"];
             contact: components["schemas"]["MetricValues"];
+        };
+        /** PhaseQualities */
+        PhaseQualities: {
+            trophy?: components["schemas"]["MetricQualities"];
+            racket_drop?: components["schemas"]["MetricQualities"];
+            contact?: components["schemas"]["MetricQualities"];
         };
         /** PhaseRanges */
         PhaseRanges: {

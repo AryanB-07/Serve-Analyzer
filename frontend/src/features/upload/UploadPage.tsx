@@ -6,6 +6,8 @@ import { DEMO_IDS } from "../../api/demo";
 import type { CreateAnalysisRequest, Hand } from "../../api/types";
 import { KnownLimits } from "../../components/KnownLimits";
 import { VerifyEmailBanner } from "../account/AccountPages";
+import type { CameraView } from "../../lib/quality";
+import { CameraPicker } from "./CameraPicker";
 import { Dropzone } from "./Dropzone";
 import { FilmingGuide } from "./FilmingGuide";
 import { HandSelector } from "./HandSelector";
@@ -87,6 +89,7 @@ function UploadProgressBar({ progress, size, onCancel }: { progress: UploadProgr
 
 export function UploadPage() {
   const [hand, setHand] = useState<Hand | null>(null);
+  const [cameraView, setCameraView] = useState<CameraView | null>(null);
   const [selected, setSelected] = useState<Selected | null>(null);
   const [checking, setChecking] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -138,7 +141,7 @@ export function UploadPage() {
           className="space-y-5"
           onSubmit={(e) => {
             e.preventDefault();
-            if (selected && hand) upload({ file: selected.file, hand, contentType: selected.contentType });
+            if (selected && hand) upload({ file: selected.file, hand, contentType: selected.contentType, cameraView });
           }}
         >
           <HandSelector value={hand} onChange={setHand} disabled={isUploading} />
@@ -157,6 +160,8 @@ export function UploadPage() {
               </p>
             )}
           </div>
+
+          <CameraPicker value={cameraView} onChange={setCameraView} hand={hand} disabled={isUploading} />
 
           {isUploading && selected && <UploadProgressBar progress={progress} size={selected.file.size} onCancel={cancel} />}
           {error && (

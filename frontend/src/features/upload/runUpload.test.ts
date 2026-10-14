@@ -44,7 +44,7 @@ describe("runUpload", () => {
     expect(steps).toEqual(["creating", "uploading", "starting"]);
     expect(progress).toEqual([0.5, 1]);
     expect(client.createAnalysis).toHaveBeenCalledWith({
-      hand: "left", filename: "serve.mp4", content_type: "video/mp4", size_bytes: 2048,
+      hand: "left", filename: "serve.mp4", content_type: "video/mp4", size_bytes: 2048, camera_view: null,
     });
     expect(client.startAnalysis).toHaveBeenCalledWith("a1");
     expect(result.status).toBe("queued");

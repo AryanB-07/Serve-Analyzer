@@ -146,6 +146,7 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
         row = db.create_within_limit(
             user.id, body.hand, body.filename, body.content_type, body.size_bytes,
             since=now() - timedelta(days=1), limit=settings.daily_analysis_limit,
+            camera_view=body.camera_view,
         )
         if row is None:
             raise HTTPException(

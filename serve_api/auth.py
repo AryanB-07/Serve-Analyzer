@@ -54,7 +54,7 @@ EXTEND_AFTER = timedelta(days=1)
 BAD_CREDENTIALS = "Incorrect email or password."
 # The date of the current Terms of Service and Privacy Policy (frontend/src/features/legal).
 # Change it whenever either document changes materially.
-TERMS_VERSION = "2026-10-12"
+TERMS_VERSION = "2026-10-14"
 VERIFY_TTL = timedelta(hours=24)
 RESET_TTL = timedelta(hours=1)
 BAD_LINK = "This link is invalid or has expired. Request a new one."
@@ -171,7 +171,7 @@ class Auth:
             report = reports.get(a["id"])
             items.append(ExportedAnalysis(
                 id=a["id"], filename=a["filename"], hand=a["hand"], status=a["status"],
-                created_at=a["created_at"],
+                created_at=a["created_at"], camera_view=a.get("camera_view"),
                 error=ApiError(code=a["error_code"], message=a["error_message"] or "")
                 if a["error_code"] else None,
                 original_video_deleted_at=a["input_deleted_at"], results=results,

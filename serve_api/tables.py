@@ -51,6 +51,8 @@ analyses = Table(
     Column("filename", String(255), nullable=False),
     Column("content_type", String(64), nullable=False),
     Column("size_bytes", BigInteger, nullable=False),
+    # Where the person said the camera was (schemas.CameraView), or null.
+    Column("camera_view", String(32)),
     # Also the job queue: awaiting_upload -> queued -> extracting_pose/analyzing/rendering
     # -> succeeded | failed.
     Column("status", String(32), nullable=False),

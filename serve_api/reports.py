@@ -21,8 +21,8 @@ from datetime import timedelta
 from .db import Database, now
 from .settings import Settings
 
-COLUMNS = ["created_at", "analysis_id", "reason", "status", "error_code", "hand", "note",
-           "original_until"]
+COLUMNS = ["created_at", "analysis_id", "reason", "status", "error_code", "hand", "camera_view",
+           "note", "original_until"]
 
 
 def main(argv: list[str] | None = None) -> None:

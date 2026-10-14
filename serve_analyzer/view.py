@@ -143,3 +143,69 @@ def estimate_view(
     # Confidence: the frames agree (strength), and the angle isn't on a category's edge.
     confidence = turn.strength * (0.5 + 0.5 * inside)
     return ViewEstimate(name, side, angle, round(confidence, 3), (start, end))
+
+
+# --- the camera position people choose at upload ------------------------------------------------
+#
+# Detecting the view automatically missed its targets (docs/view-detection.md), so the person is
+# asked instead. Positions are relative to the hitting hand, like the angles above.
+
+CAMERA_VIEWS = (
+    "side_hitting", "side_toss", "behind", "behind_diagonal_hitting", "behind_diagonal_toss",
+    "front", "front_diagonal_hitting", "front_diagonal_toss",
+)
+MEASURED, APPROXIMATE, UNREADABLE = "measured", "approximate", "unreadable"
+MEASURED_WITHIN = {"angle": 10.0, "wrist_height": 0.1}  # degrees, body heights
+
+
+def _reliability_table() -> dict[str, dict[str, float]]:
+    import json
+    from importlib import resources
+
+    return json.loads(resources.files("serve_analyzer").joinpath("data/view_reliability.json").read_text())["views"]
+
+
+def measurement_quality(camera_view: str | None, ranges: dict) -> dict[str, dict[str, str]] | None:
+    """How far each measurement can be trusted from ``camera_view``: {phase: {metric: quality}}.
+
+    From the rig's error for that view (data/view_reliability.json):
+    - "measured": within 10° (0.1 body heights for wrist height);
+    - "approximate": within the width of the measurement's good range, so it can still place
+      you roughly in or out of it;
+    - "unreadable": wider than that, so its good/borderline/off label would be noise.
+    None when the camera position isn't known: then everything is shown as measured.
+    ``ranges`` is the reference table as a dict ({phase: {metric: {"good": [lo, hi], ...}}}).
+    """
+    if camera_view is None:
+        return None
+    if camera_view not in CAMERA_VIEWS:
+        raise ValueError(f"unknown camera view {camera_view!r}")
+    errors = _reliability_table()[camera_view]
+    out: dict[str, dict[str, str]] = {}
+    for key, error in errors.items():
+        phase, metric = key.split(".")
+        rng = ranges.get(phase, {}).get(metric)
+        if rng is None:
+            continue
+        bar = MEASURED_WITHIN["wrist_height" if metric == "wrist_height" else "angle"]
+        width = rng["good"][1] - rng["good"][0]
+        quality = MEASURED if error <= bar else APPROXIMATE if error <= width else UNREADABLE
+        out.setdefault(phase, {})[metric] = quality
+    return out
+
+
+HIDDEN_ARM_VISIBILITY = 0.4
+
+
+def hitting_arm_hidden(seq: PoseSequence, hand: Hand, trophy: int | None) -> bool:
+    """Whether the hitting arm was mostly out of sight around the trophy position.
+
+    Deliberately says nothing about which side the camera was on: MediaPipe's left/right swaps
+    in profile make the arm look hidden on some clips filmed from the hitting side too.
+    """
+    if trophy is None:
+        return False
+    arm = L.hitting_arm(hand)
+    window = seq.landmarks[max(0, trophy - 2):trophy + 3]
+    vis = [np.nanmedian(window[:, j, 2]) for j in (arm.elbow, arm.wrist)]
+    return bool(np.nanmean(vis) < HIDDEN_ARM_VISIBILITY)

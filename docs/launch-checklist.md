@@ -102,6 +102,18 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
   `frontend/src/features/legal/config.ts`, and bump `TERMS_VERSION` and `LAST_UPDATED`.
 - [x] Screenshots of the demo in the README (`docs/images`).
 
+## Camera position
+
+- [x] Automatic view detection evaluated: it missed its targets (`docs/view-detection.md`), so the
+      app asks "Where was your camera?" at upload, optionally.
+- [x] With an answer, measurements are rated measured, approximate or "can't be read from this
+      angle" by the rig's error for that position, against each measurement's good range.
+- [x] A hidden-arm note when the hitting arm is mostly out of sight at the trophy position.
+- [ ] **Review the open questions** in `docs/view-detection.md`. The rig rates the behind and
+  back-corner views as well as side-on, and its ratings assume its own stance.
+- [ ] **Once real answers come in:** compare people's stated camera positions against the
+  problem reports, to check the ratings.
+
 ## Video formats
 
 - [x] MOV, MP4/M4V, WebM, MKV, AVI, 3GP and MTS tested across 160 variant runs, with

@@ -1,3 +1,4 @@
+import { qualityOf, type Quality } from "./quality";
 import type { AnalysisResult, MetricName, MetricRange, MetricStatus, PhaseName } from "../api/types";
 
 export interface MetricInfo {
@@ -57,6 +58,8 @@ export interface MetricReading {
   status: MetricStatus;
   range: MetricRange | null;
   direction: "low" | "high" | null;
+  /** What the chosen camera position can read; null when nobody said where the camera was. */
+  quality: Quality | null;
 }
 
 export function directionFor(value: number | null, range: MetricRange | null): "low" | "high" | null {
@@ -73,8 +76,13 @@ export function readingFor(metric: MetricName, result: AnalysisResult): MetricRe
   const frame = result.phases[phase];
   const value = frame === null ? null : (result.metrics[phase][metric] ?? null);
   const range = result.ranges[phase][metric] ?? null;
+  const quality = qualityOf(result, phase, metric);
+  if (quality === "unreadable") {
+    // Its verdict would be noise: no value, status or direction to show.
+    return { metric, phase, frame, value: null, status: "unknown", range, direction: null, quality };
+  }
   const status = value === null ? "unknown" : (result.labels[phase][metric] ?? "unknown");
-  return { metric, phase, frame, value, status, range, direction: directionFor(value, range) };
+  return { metric, phase, frame, value, status, range, direction: directionFor(value, range), quality };
 }
 
 export interface RangeBarLayout {

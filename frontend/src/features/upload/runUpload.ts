@@ -7,6 +7,8 @@ export interface UploadRequest {
   file: File;
   hand: Hand;
   contentType: CreateAnalysisRequest["content_type"];
+  /** Where the camera was, if the person said (optional). */
+  cameraView?: CreateAnalysisRequest["camera_view"];
 }
 
 export interface UploadCallbacks {
@@ -24,7 +26,7 @@ export interface UploadCallbacks {
  */
 export async function runUpload(
   client: ApiClient,
-  { file, hand, contentType }: UploadRequest,
+  { file, hand, contentType, cameraView }: UploadRequest,
   { onStep, onProgress, signal }: UploadCallbacks = {},
 ): Promise<AnalysisSummary> {
   onStep?.("creating");
@@ -33,6 +35,7 @@ export async function runUpload(
     filename: file.name,
     content_type: contentType,
     size_bytes: file.size,
+    camera_view: cameraView ?? null,
   });
   if (signal?.aborted) throw new UploadAbortedError();
 

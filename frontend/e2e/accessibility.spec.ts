@@ -48,8 +48,11 @@ test("signed-in pages: upload, results, failure, history, account", async ({ pag
 
   await page.getByText("Right-handed", { exact: true }).click();
   await page.getByTestId("file-input").setInputFiles(SAMPLE);
+  await page.getByText("Across the net", { exact: true }).click();
+  await expectAccessible(page, "upload page with a file, hand and camera position chosen");
   await page.getByRole("button", { name: "Analyze serve" }).click();
   await expect(page.getByRole("heading", { name: "Coaching feedback" })).toBeVisible({ timeout: 4 * 60_000 });
+  await expect(page.getByRole("region", { name: "Filmed from across the net" })).toBeVisible();
   await page.getByText("What this analysis can't do").click();
   await page.getByRole("button", { name: "This result looks wrong?" }).click();
   await expectAccessible(page, "results page with the report form open");

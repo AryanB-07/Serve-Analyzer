@@ -52,7 +52,8 @@ export function PrivacyPage() {
           <li>
             <strong>Videos you upload</strong> and what we compute from them: body joint positions in each frame, joint
             angles, the serve's phases, your results and feedback, a thumbnail, and two processed copies of the video (one
-            for playback and one with the skeleton drawn on).
+            for playback and one with the skeleton drawn on). If you tell us where your camera was, we keep that with the
+            analysis too.
           </li>
           <li>
             <strong>Problem reports:</strong> if you tell us a result looks wrong, the reason you chose and any note you

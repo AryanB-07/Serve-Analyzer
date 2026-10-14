@@ -83,13 +83,13 @@ class Database:
 
     def create_within_limit(
         self, user_id: str, hand: str, filename: str, content_type: str, size_bytes: int,
-        since: datetime, limit: int,
+        since: datetime, limit: int, camera_view: str | None = None,
     ) -> dict[str, Any] | None:
         """Create an analysis unless the user already created ``limit`` since ``since``."""
         with self._locked_for(user_id) as conn:
             if self._count_created_since(conn, user_id, since) >= limit:
                 return None
-            return self._insert(conn, user_id, hand, filename, content_type, size_bytes)
+            return self._insert(conn, user_id, hand, filename, content_type, size_bytes, camera_view)
 
     def transition_within_limit(
         self, analysis_id: str, user_id: str, from_statuses: tuple[str, ...], to_status: str,
@@ -107,19 +107,20 @@ class Database:
             return "ok"
 
     def create(
-        self, user_id: str, hand: str, filename: str, content_type: str, size_bytes: int
+        self, user_id: str, hand: str, filename: str, content_type: str, size_bytes: int,
+        camera_view: str | None = None,
     ) -> dict[str, Any]:
         with self.engine.begin() as conn:
-            return self._insert(conn, user_id, hand, filename, content_type, size_bytes)
+            return self._insert(conn, user_id, hand, filename, content_type, size_bytes, camera_view)
 
     def _insert(
         self, conn: Connection, user_id: str, hand: str, filename: str, content_type: str,
-        size_bytes: int,
+        size_bytes: int, camera_view: str | None = None,
     ) -> dict[str, Any]:
         ts = now()
         row = {
             "id": uuid.uuid4().hex, "user_id": user_id, "hand": hand, "filename": filename,
-            "content_type": content_type, "size_bytes": size_bytes,
+            "content_type": content_type, "size_bytes": size_bytes, "camera_view": camera_view,
             "status": "awaiting_upload", "error_code": None, "error_message": None,
             "counts": None, "created_at": ts, "updated_at": ts,
             "claim_token": None, "heartbeat_at": None, "attempts": 0, "input_deleted_at": None,
@@ -429,7 +430,7 @@ class Database:
     def reports(self, since: datetime | None = None) -> list[dict[str, Any]]:
         """Every report, oldest first, with its analysis's hand, upload time and whether the
         original video has been deleted."""
-        query = (select(result_reports, analyses.c.hand,
+        query = (select(result_reports, analyses.c.hand, analyses.c.camera_view,
                         analyses.c.created_at.label("uploaded_at"), analyses.c.input_deleted_at)
                  .join(analyses, analyses.c.id == result_reports.c.analysis_id)
                  .order_by(result_reports.c.created_at))
