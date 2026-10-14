@@ -70,6 +70,9 @@ class Settings:
         default_factory=lambda: int(_env("UPLOAD_RETENTION_DAYS", "30")))
     # /health/queue reports a problem when a job has waited longer than this (workers down).
     queue_alert_after_s: int = field(default_factory=lambda: int(_env("QUEUE_ALERT_AFTER_S", "600")))
+    # Optional exception reporting (serve_api/error_reporting.py): a Sentry or GlitchTip DSN.
+    # Empty sends nothing anywhere.
+    sentry_dsn: str = field(default_factory=lambda: _env("SENTRY_DSN", ""))
     max_upload_bytes: int = 200 * 1024 * 1024
     upload_url_ttl_s: int = 15 * 60
     # Long enough that seeking (new Range requests) keeps working while a results page is open.

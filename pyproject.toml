@@ -22,6 +22,7 @@ api = [
     "argon2-cffi>=23.1",
     "email-validator>=2.1",
     "boto3>=1.34",
+    "sentry-sdk>=2.20",
 ]
 dev = [
     "pytest>=8.0",

@@ -17,6 +17,15 @@ describe("legal pages", () => {
     expect(LEGAL.uploadRetentionDays).toBe(30); // keep in step with SERVE_API_UPLOAD_RETENTION_DAYS
   });
 
+  it("names an error-reporting provider only when one is switched on", () => {
+    renderPage(<PrivacyPage />);
+    const provider = screen.queryByText(/error-reporting provider/);
+    if (LEGAL.errorReporting) expect(provider).toHaveTextContent("Never your videos, password, sign-in cookie");
+    else expect(provider).toBeNull();
+    // The browser itself never talks to it: reporting runs on the server only.
+    expect(screen.getByText(/The app loads nothing from other companies' servers/)).toBeInTheDocument();
+  });
+
   it("covers age, ownership and the analysis' limits in the terms", () => {
     renderPage(<TermsPage />);
     expect(screen.getByText(/You must be at least 13/)).toBeInTheDocument();

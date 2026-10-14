@@ -112,6 +112,13 @@ export function PrivacyPage() {
         <ul className={list}>
           <li>Our cloud hosting provider (servers, database and file storage), in {LEGAL.hostingRegion}.</li>
           <li>Our email delivery provider, which sends account emails to your address.</li>
+          {LEGAL.errorReporting && (
+            <li>
+              Our error-reporting provider, which receives technical details when something breaks on our servers: the
+              error and where in our code it happened. Never your videos, password, sign-in cookie or the links we email
+              you, and email addresses are removed first.
+            </li>
+          )}
         </ul>
         <p>We may disclose information if the law requires it, for example in response to a valid court order.</p>
       </Section>

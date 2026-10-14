@@ -16,7 +16,10 @@ async function expectAccessible(page: Page, what: string) {
   for (const theme of ["dark", "light"] as const) {
     await page.evaluate((t) => { document.documentElement.dataset.theme = t; }, theme);
     // Let colour transitions finish, or the scan measures colours half-way between themes.
-    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+    // Only transitions: a spinner's animation never finishes.
+    await page.evaluate(() =>
+      Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished)),
+    );
     const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     const summary = violations.map((v) => `${v.id} (${v.impact}): ${v.help} — ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(", ")}`);
     expect(summary, `${what}, ${theme} theme`).toEqual([]);

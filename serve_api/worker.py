@@ -27,6 +27,7 @@ from serve_analyzer.pose import extract_pose_in_subprocess
 from . import keys, migrate
 from .convert import counts_from_labels, public_message
 from .db import Database, now
+from .error_reporting import init_error_reporting
 from .purge import analysis_prefixes, run_purges
 from .settings import Settings
 from .storage import Storage, make_storage
@@ -185,7 +186,9 @@ def main() -> None:
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logging.getLogger("alembic").setLevel(logging.WARNING)
-    run(Settings(), once=args.once)
+    settings = Settings()
+    init_error_reporting(settings, "worker")
+    run(settings, once=args.once)
 
 
 if __name__ == "__main__":

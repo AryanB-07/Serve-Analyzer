@@ -14,6 +14,7 @@ from sqlalchemy import text
 
 from . import keys, migrate
 from .auth import Auth, origin_guard
+from .error_reporting import init_error_reporting
 from .mailer import Mailer
 from .purge import analysis_prefixes, run_purges
 from .convert import result_from_file, summary_from_row
@@ -61,6 +62,7 @@ VERIFY_FIRST = ("Confirm your email address to analyze serves. Check your inbox 
 def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -> FastAPI:
     settings = settings or Settings()
     settings.check()
+    init_error_reporting(settings, "api")
     db = Database(settings.sqlalchemy_url)
     if settings.auto_migrate:
         migrate.upgrade(db.engine)

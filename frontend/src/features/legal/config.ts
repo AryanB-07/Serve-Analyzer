@@ -23,6 +23,12 @@ export const LEGAL = {
   /** Must match the database's automated backup retention (RDS defaults to 7 days). */
   backupRetentionDays: 7,
   minimumAge: 13,
+  /**
+   * Set true when SERVE_API_SENTRY_DSN is set (error reporting to Sentry or GlitchTip): the
+   * policy then names the error-reporting provider. Turning it on is a change to the policy:
+   * bump TERMS_VERSION and LAST_UPDATED.
+   */
+  errorReporting: false,
 } as const;
 
 /** True while any placeholder above is still unfilled. */

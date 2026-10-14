@@ -144,7 +144,9 @@ def probe_or_convert(path: str | Path, scratch: str | Path, max_duration_s: floa
     converted = Path(scratch) / "converted.mp4"
     try:
         subprocess.run(
-            [ffmpeg, "-y", "-loglevel", "error", "-i", str(path), "-an", "-map", "0:v:0",
+            # One decoding thread: each one holds its own full-size frames, so decoding 4K HEVC on
+            # all cores peaked at 1.2 GB; one thread, 0.5 GB (docs/deploy-aws-free-tier.md).
+            [ffmpeg, "-y", "-loglevel", "error", "-threads", "1", "-i", str(path), "-an", "-map", "0:v:0",
              "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-threads", "2",
              "-vf", ",".join([*fixes, "scale=trunc(iw/2)*2:trunc(ih/2)*2"]), str(converted)],
             check=True, capture_output=True, timeout=600,

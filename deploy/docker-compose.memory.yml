@@ -1,0 +1,19 @@
+# Memory caps for the memory rehearsal (scripts/memory_rehearsal.py), on top of the smoke stack:
+# each container gets its share of a small server, and the worker may use the swap file that
+# scripts/server_setup.sh creates. Not for real deployments.
+#
+#   t3.micro (1 GB):  REHEARSAL_WORKER_MEM=450m  REHEARSAL_WORKER_SWAP=2450m
+#   t3.small (2 GB):  REHEARSAL_WORKER_MEM=1450m REHEARSAL_WORKER_SWAP=3450m
+#
+# (Ubuntu, dockerd and containerd take about 250 MB; the API, Postgres and Caddy get the caps
+# below; the worker gets the rest, plus the 2 GB of swap.)
+services:
+  web:
+    mem_limit: 50m
+  api:
+    mem_limit: 200m
+  postgres:
+    mem_limit: 120m
+  worker:
+    mem_limit: ${REHEARSAL_WORKER_MEM:?set REHEARSAL_WORKER_MEM}
+    memswap_limit: ${REHEARSAL_WORKER_SWAP:?set REHEARSAL_WORKER_SWAP}
