@@ -50,6 +50,52 @@ def probe(path: str | Path) -> VideoInfo:
     return VideoInfo(path, fps, frame_count, width, height)
 
 
+# The largest video analysed as it is. Bigger ones are scaled down (4K to 1080p, keeping the
+# orientation) and high frame rates are reduced, so no upload can take far more memory or time
+# than the 1080p clips the server was sized for (docs/deploy-aws-free-tier.md): at most
+# 15 s x 120 fps = 1,800 frames of 1920 px.
+MAX_SIDE = 1920
+MAX_FPS = 120.0
+
+
+def _banner(path: str | Path, ffmpeg: str) -> str:
+    """ffmpeg's description of the file (what ``ffmpeg -i`` prints), or "" if it can't run."""
+    try:
+        return subprocess.run([ffmpeg, "-hide_banner", "-i", str(path)], capture_output=True,
+                              text=True, timeout=60).stderr
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+
+
+def _video_line(banner: str) -> str:
+    return next((ln for ln in banner.splitlines() if "Video:" in ln and "attached pic" not in ln), "")
+
+
+def banner_duration(banner: str) -> float | None:
+    """The container's duration in seconds, or None when it doesn't say (live WebM: N/A)."""
+    m = re.search(r"Duration: (\d+):(\d\d):(\d\d(?:\.\d+)?)", banner)
+    return int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3]) if m else None
+
+
+def _fixes(line: str) -> list[str]:
+    fixes = []
+    interlaced = re.search(r"\b(top|bottom) (coded )?first\b", line) is not None
+    if interlaced:
+        fixes.append("bwdif=mode=send_field")
+    size = re.search(r", (\d{2,5})x(\d{2,5})\b", line)
+    width, height = (int(size[1]), int(size[2])) if size else (0, 0)
+    sar = re.search(r"SAR (\d+):(\d+)", line)
+    if sar and int(sar[2]) and abs(Fraction(int(sar[1]), int(sar[2])) - 1) > Fraction(1, 100):
+        fixes.append("scale=trunc(iw*sar/2)*2:ih,setsar=1")
+        width = round(width * int(sar[1]) / int(sar[2]))
+    fps = re.search(r", ([\d.]+) fps\b", line)
+    if fps and float(fps[1]) * (2 if interlaced else 1) > MAX_FPS + 0.5:
+        fixes.append(f"fps={MAX_FPS:g}")
+    if max(width, height) > MAX_SIDE:
+        fixes.append(f"scale={MAX_SIDE}:{MAX_SIDE}:force_original_aspect_ratio=decrease:force_divisible_by=2")
+    return fixes
+
+
 def stream_fixes(path: str | Path, ffmpeg: str | None = None) -> list[str]:
     """ffmpeg filters a video needs before analysis, from its stream description.
 
@@ -58,38 +104,35 @@ def stream_fixes(path: str | Path, ffmpeg: str | None = None) -> list[str]:
       full frame per field ("bwdif" in field mode), which also doubles the frame rate.
     - Non-square pixels (HDV's 1440x1080 shown as 1920x1080) make the person look squeezed,
       which would distort every angle; they're scaled to square pixels.
+    - Over MAX_FPS (240 fps slow motion) the frame rate is reduced to MAX_FPS, and over
+      MAX_SIDE pixels (4K) the picture is scaled down to fit MAX_SIDE x MAX_SIDE.
     HDR (iPhone HLG, HDR10) is decoded as it is for now: tone-mapping synthetic HLG test
     footage didn't bring it closer to the original, so it needs tuning on real iPhone clips.
     """
     ffmpeg = ffmpeg or shutil.which("ffmpeg")
     if ffmpeg is None:
         return []
-    try:
-        banner = subprocess.run([ffmpeg, "-hide_banner", "-i", str(path)], capture_output=True,
-                                text=True, timeout=60).stderr
-    except (OSError, subprocess.TimeoutExpired):
-        return []
-    line = next((ln for ln in banner.splitlines() if "Video:" in ln and "attached pic" not in ln), "")
-    fixes = []
-    if re.search(r"\b(top|bottom) (coded )?first\b", line):
-        fixes.append("bwdif=mode=send_field")
-    sar = re.search(r"SAR (\d+):(\d+)", line)
-    if sar and int(sar[2]) and abs(Fraction(int(sar[1]), int(sar[2])) - 1) > Fraction(1, 100):
-        fixes.append("scale=trunc(iw*sar/2)*2:ih,setsar=1")
-    return fixes
+    return _fixes(_video_line(_banner(path, ffmpeg)))
 
 
-def probe_or_convert(path: str | Path, scratch: str | Path) -> VideoInfo:
+def probe_or_convert(path: str | Path, scratch: str | Path, max_duration_s: float | None = None) -> VideoInfo:
     """Probe a video, converting it with ffmpeg first when that's needed to analyse it.
 
     OpenCV reads the usual formats (MP4, MOV, WebM, MKV, AVI, 3GP, MTS with H.264, HEVC,
     VP8/9, ProRes) but has no AV1 decoder, and it ignores interlacing and non-square pixels
     (see ``stream_fixes``). In those cases ffmpeg, when installed, converts the video into
     ``scratch`` (also applying any rotation tag) and the returned info points at that copy.
+
+    With ``max_duration_s``, a file whose header says it's longer is refused before any
+    conversion, so a long upload can't keep the worker busy converting it.
     """
     path = Path(path)
     ffmpeg = shutil.which("ffmpeg")
-    fixes = stream_fixes(path, ffmpeg) if ffmpeg and path.is_file() else []
+    banner = _banner(path, ffmpeg) if ffmpeg and path.is_file() else ""
+    duration = banner_duration(banner)
+    if max_duration_s is not None and duration is not None and duration > max_duration_s + 0.5:
+        raise too_long(duration, max_duration_s)
+    fixes = _fixes(_video_line(banner))
     unreadable: VideoValidationError | None = None
     if not fixes:
         try:
@@ -114,13 +157,16 @@ def probe_or_convert(path: str | Path, scratch: str | Path) -> VideoInfo:
     return probe(converted)
 
 
+def too_long(duration_s: float, max_duration_s: float) -> VideoValidationError:
+    return VideoValidationError(
+        f"Video is {duration_s:.1f}s long; the limit is {max_duration_s:.0f}s. Trim it to a single serve.",
+        code="VIDEO_TOO_LONG",
+    )
+
+
 def validate(info: VideoInfo, max_duration_s: float, min_fps: float) -> None:
     if info.duration_s > max_duration_s:
-        raise VideoValidationError(
-            f"Video is {info.duration_s:.1f}s long; the limit is {max_duration_s:.0f}s. "
-            "Trim it to a single serve.",
-            code="VIDEO_TOO_LONG",
-        )
+        raise too_long(info.duration_s, max_duration_s)
     if info.fps < min_fps:
         raise VideoValidationError(
             f"Video is {info.fps:.1f} fps; at least {min_fps:.0f} fps is needed "

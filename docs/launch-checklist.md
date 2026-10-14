@@ -73,6 +73,21 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
   currently promises that videos aren't used to train machine-learning models. That's a material
   change: ask for opt-in consent, bump `TERMS_VERSION` and email users.
 
+## Hardening
+
+- [x] Video limits enforced on the server: over 15 s refused before any conversion, over 120 fps
+      reduced to 120, over 1920 px scaled down (`docs/file-formats.md`)
+- [x] Security review of the API and proxy. Fixed:
+  - a strict Content-Security-Policy, with the inline script moved out to allow it;
+  - a 1 MB limit on JSON request bodies;
+  - the API docs hidden outside development;
+  - Permissions-Policy and Cross-Origin-Opener-Policy headers.
+  Dependencies: `pip-audit` found nothing; `npm audit` found one build-time issue, now updated.
+- [x] Accessibility: axe-core scans every page type in both themes on every push (WCAG 2.1 AA).
+      Fixed the low contrast of button text and the phase timeline's labels in the dark theme.
+- [x] One-command server setup (`scripts/server_setup.sh`), tested in a fresh Ubuntu container
+- [x] Backup and restore scripts, with a restore tested on every push
+
 ## Video formats
 
 - [x] MOV, MP4/M4V, WebM, MKV, AVI, 3GP and MTS tested across 160 variant runs, with

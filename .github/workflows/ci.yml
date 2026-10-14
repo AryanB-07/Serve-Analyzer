@@ -111,6 +111,9 @@ jobs:
         env:
           E2E: "1"
         run: scripts/smoke_docker.sh
+      # The one-command server setup, in a fresh Ubuntu 24.04 container (Docker stubbed out).
+      - name: Server setup script
+        run: scripts/test_server_setup.sh
       - name: Keep the browser test traces
         if: failure()
         uses: actions/upload-artifact@v4

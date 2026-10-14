@@ -2,7 +2,7 @@
  * Uploading a clip that isn't a serve, through the real stack: the worker runs the actual pipeline
  * on it, rejects it, and the browser shows why, with a way to say it was a serve.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 import { deleteAccount, newEmail, signUpAndVerify } from "./helpers";
 

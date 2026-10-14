@@ -88,7 +88,7 @@ export function PhaseTimeline({ phases }: { phases: PhaseFrames }) {
               key={s.segment}
               style={{ ...segmentStyle(s.segment), width: `${((s.end - s.start) / nFrames) * 100}%` }}
               className={`flex h-full min-w-0 items-center border-r-2 border-bg px-2 text-xs font-semibold last:border-r-0 ${
-                s.segment === "stance" ? "text-ink" : "text-white"
+                s.segment === "stance" ? "text-ink" : "text-[var(--on-phase)]"
               }`}
             >
               <span className="truncate">{SEGMENT_LABELS[s.segment]}</span>

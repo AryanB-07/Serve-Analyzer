@@ -5,7 +5,8 @@
 #   scripts/smoke_docker.sh            # build, test, stop
 #   KEEP=1 scripts/smoke_docker.sh     # leave the stack running afterwards (https://localhost:8443)
 #
-# Then the browser tests (frontend/e2e) run against the same stack, when Playwright is installed
+# Then a backup is restored (scripts/test_backup_restore.sh; BACKUP_TEST=0 skips it), and the
+# browser tests (frontend/e2e) run against the same stack, when Playwright is installed
 # (cd frontend && npm ci && npx playwright install chromium). E2E=1 makes them required, E2E=0
 # skips them.
 set -euo pipefail
@@ -28,6 +29,11 @@ compose build
 compose up -d --wait --wait-timeout "${WAIT_TIMEOUT:-300}"
 python3 scripts/smoke_test.py https://localhost:8443 --mailpit http://localhost:8025 --insecure \
   --timeout "${ANALYSIS_TIMEOUT:-600}"
+
+if [ "${BACKUP_TEST:-1}" != 0 ]; then
+  COMPOSE_ARGS="-p serve-smoke --env-file deploy/smoke.env -f deploy/docker-compose.yml -f deploy/docker-compose.smoke.yml --profile bundled-db" \
+    scripts/test_backup_restore.sh https://localhost:8443
+fi
 
 if [ "${E2E:-}" != 0 ]; then
   if [ -x frontend/node_modules/.bin/playwright ]; then

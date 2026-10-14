@@ -83,6 +83,19 @@ or Brevo's domain verification) when you buy one.
 
 ## 4. Set up the server
 
+One command does steps 4, 5 and 7: it installs Docker, adds the swap file, downloads the code,
+writes `deploy/.env` with generated secrets, schedules the nightly backup, starts everything,
+and checks the site answers. It asks for the hostname and the three Brevo details.
+
+```bash
+ssh -i your-key.pem ubuntu@<elastic-ip>
+curl -fsSL https://raw.githubusercontent.com/AryanB-07/Serve-Analyzer/main/scripts/server_setup.sh | bash
+```
+
+Optional: add `DUCKDNS_TOKEN=<your token>` before `bash` to keep the DuckDNS name pointed at
+the server. It's safe to run again; it keeps an existing `deploy/.env`. Read the script first
+if you like (`scripts/server_setup.sh`); the rest of this section is what it does, by hand.
+
 ```bash
 ssh -i your-key.pem ubuntu@<elastic-ip>
 
@@ -150,15 +163,24 @@ email, and analyse a serve from your phone.
 
 ## 7. Backups and the Privacy Policy
 
-The bundled Postgres has no automatic backups. A nightly dump, kept for 7 days to match the
-Privacy Policy's `backupRetentionDays`:
+The bundled Postgres has no automatic backups. `scripts/backup_db.sh` writes a nightly dump
+to `~/backups`, kept for 7 days to match the Privacy Policy's `backupRetentionDays`, and refuses
+to keep an incomplete one. The setup script schedules it; by hand:
 
 ```bash
-mkdir -p ~/backups
 crontab -e
 # add:
-0 3 * * * cd ~/Serve-Analyzer && docker compose -f deploy/docker-compose.yml exec -T postgres pg_dump -U serve serve_analyzer | gzip > ~/backups/db-$(date +\%F).sql.gz && find ~/backups -name 'db-*.sql.gz' -mtime +7 -delete
+0 3 * * * $HOME/Serve-Analyzer/scripts/backup_db.sh >> $HOME/backups.log 2>&1
 ```
+
+To restore one (it stops the API and workers while it loads):
+
+```bash
+scripts/restore_db.sh ~/backups/db-2026-10-14.sql.gz
+```
+
+`scripts/test_backup_restore.sh` proves the pair works, and runs on every push as part of the
+smoke test: it backs up, wipes the database, restores, and checks an account came back.
 
 Videos live on the instance's disk (the `objects` Docker volume), so take an EBS snapshot now
 and then if you want them backed up too. Snapshots beyond the free allowance cost money.

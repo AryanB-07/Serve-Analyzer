@@ -67,7 +67,11 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     storage = make_storage(settings)
     auth = Auth(db, settings, storage, mailer)
 
-    app = FastAPI(title="Serve Analyzer API", version="1.0.0")
+    # The interactive docs (/docs, /redoc, /openapi.json) only in development: a live site has
+    # no reason to publish a map of its API. app.openapi() still works for scripts/export_openapi.py.
+    dev = settings.environment == "development"
+    app = FastAPI(title="Serve Analyzer API", version="1.0.0", docs_url="/docs" if dev else None,
+                  redoc_url="/redoc" if dev else None, openapi_url="/openapi.json" if dev else None)
     app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.middleware("http")(origin_guard(settings))
     app.include_router(auth.router())

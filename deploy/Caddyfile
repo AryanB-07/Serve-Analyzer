@@ -8,11 +8,23 @@
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
 		X-Frame-Options DENY
+		# Only this site's own scripts, styles and data. With S3 storage, set CSP_STORAGE_ORIGIN
+		# in deploy/.env to the bucket's origin (https://<bucket>.s3.<region>.amazonaws.com) so
+		# the browser may upload to it and play videos from it.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: {$CSP_STORAGE_ORIGIN}; media-src 'self' blob: {$CSP_STORAGE_ORIGIN}; connect-src 'self' {$CSP_STORAGE_ORIGIN}; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy same-origin
 		-Server
 	}
 
 	# The API, with the /api prefix removed (the same layout as the Vite dev proxy).
 	handle_path /api/* {
+		# JSON requests are tiny; only video uploads (/storage/..., capped at 200 MB by the API
+		# itself) may be big. Stops a huge request body from filling the API's memory.
+		@not_upload not path /storage/*
+		request_body @not_upload {
+			max_size 1MB
+		}
 		reverse_proxy {$API_UPSTREAM:api:8000}
 	}
 

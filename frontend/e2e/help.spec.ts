@@ -1,5 +1,5 @@
 /** The help dialog in a real browser: open from any page, link to a topic, close with Back. */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test("help opens from the header, even signed out, and Back closes it", async ({ page }) => {
   await page.goto("/login");

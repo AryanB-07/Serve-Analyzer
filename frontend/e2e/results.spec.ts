@@ -1,5 +1,5 @@
 /** A real serve analysed end to end: the results page, its known limits, and reporting a problem. */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 import { deleteAccount, newEmail, signUpAndVerify } from "./helpers";
 

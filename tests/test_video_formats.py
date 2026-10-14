@@ -106,3 +106,47 @@ def test_ordinary_files_need_no_fixes(tmp_path):
 
     assert stream_fixes(SAMPLE) == []
     assert stream_fixes(_make(tmp_path, "plain.mov", "libx264", ["-preset", "ultrafast"])) == []
+
+
+# --- limits on size, frame rate and length -------------------------------------------------------
+
+def _clip(folder: Path, name: str, vf: str, seconds: float = 1.0, rate: str | None = None) -> Path:
+    out = folder / name
+    rate_args = ["-r", rate] if rate else []
+    subprocess.run([FFMPEG, "-loglevel", "error", "-y", "-stream_loop", "-1", "-i", str(SAMPLE), "-t", str(seconds),
+                    "-an", "-vf", vf, *rate_args, "-c:v", "libx264", "-preset", "ultrafast", str(out)], check=True)
+    return out
+
+
+@pytest.mark.parametrize("size, expected", [("3840:2160", (1920, 1080)), ("2160:3840", (1080, 1920))],
+                         ids=["4k-landscape", "4k-portrait"])
+def test_4k_is_scaled_down_to_fit_1920_keeping_its_orientation(tmp_path, size, expected):
+    clip = _clip(tmp_path, "4k.mp4", f"scale={size}")
+    info = probe_or_convert(clip, tmp_path)
+    assert info.path != clip
+    assert (info.width, info.height) == expected
+
+
+def test_slow_motion_over_120_fps_is_reduced_to_120_keeping_time(tmp_path):
+    clip = _clip(tmp_path, "240fps.mp4", "fps=240", seconds=2.0)
+    assert probe(clip).fps == pytest.approx(240, abs=1)
+    info = probe_or_convert(clip, tmp_path)
+    assert info.fps == pytest.approx(120, abs=1)
+    assert info.duration_s == pytest.approx(2.0, abs=0.1)
+
+
+def test_120_fps_and_1080p_are_analysed_as_they_are(tmp_path):
+    clip = _clip(tmp_path, "1080p120.mp4", "scale=1920:1080,fps=120")
+    assert probe_or_convert(clip, tmp_path).path == clip
+
+
+def test_a_long_file_is_refused_before_any_conversion(tmp_path):
+    # 240 fps would need converting; the length is checked first, from the header alone.
+    clip = _clip(tmp_path, "long.mp4", "scale=320:240,fps=240", seconds=20.0)
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    with pytest.raises(VideoValidationError) as exc:
+        probe_or_convert(clip, scratch, max_duration_s=15)
+    assert exc.value.code == "VIDEO_TOO_LONG"
+    assert str(exc.value).startswith("Video is 20.0s long; the limit is 15s.")
+    assert list(scratch.iterdir()) == []

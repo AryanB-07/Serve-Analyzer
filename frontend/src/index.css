@@ -14,9 +14,9 @@
   --border: #263041;
   --ink: #e8edf3;
   --ink-muted: #9aa7b8;
-  --accent: #3987e5;
+  --accent: #4290ea;
   --accent-strong: #5c9ff0;
-  --on-accent: #ffffff;
+  --on-accent: #0a0e13; /* near-black: white on this blue is only 3.6:1 (WCAG AA needs 4.5) */
   --good: #2fbf71;
   --warn: #f0a92b;
   --bad: #f06363;
@@ -26,6 +26,7 @@
   --phase-trophy: #3987e5;
   --phase-racket_drop: #9085e9;
   --phase-contact: #d55181;
+  --on-phase: #0a0e13; /* label text on the trophy/racket-drop/contact colours: 4.9:1 or more */
 }
 
 :root[data-theme="light"] {
@@ -36,7 +37,7 @@
   --border: #d5dce6;
   --ink: #0e1726;
   --ink-muted: #4f5d73;
-  --accent: #2a6fc9;
+  --accent: #2667bd; /* 4.8:1 or more as text on every surface, 5.6:1 under white */
   --accent-strong: #1f5aa8;
   --on-accent: #ffffff;
   --good: #16803c;
@@ -44,9 +45,10 @@
   --bad: #c02626;
   --neutral: #5f6c80;
   --phase-stance: #c3ccd8;
-  --phase-trophy: #2a78d6;
+  --phase-trophy: #2a6fc9;
   --phase-racket_drop: #6a5cd0;
   --phase-contact: #c73a70;
+  --on-phase: #ffffff; /* 4.9:1 or more on each phase colour */
 }
 
 @theme inline {

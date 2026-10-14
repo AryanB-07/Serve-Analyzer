@@ -200,3 +200,12 @@ def test_cookies_are_secure_outside_development(tmp_path):
     res = signup(TestClient(create_app(settings, FakeMailer()), base_url="https://testserver"))
     assert res.status_code == 201
     assert "secure" in res.headers["set-cookie"].lower()
+
+
+def test_the_api_docs_are_only_published_in_development(tmp_path):
+    dev = TestClient(create_app(Settings(data_dir=tmp_path / "dev", secret="test", public_base="")))
+    assert dev.get("/docs").status_code == 200 and dev.get("/openapi.json").status_code == 200
+    live = TestClient(create_app(production_settings(tmp_path / "live")))
+    for path in ("/docs", "/redoc", "/openapi.json"):
+        assert live.get(path).status_code == 404
+    assert live.app.openapi()["info"]["title"] == "Serve Analyzer API"  # still exportable

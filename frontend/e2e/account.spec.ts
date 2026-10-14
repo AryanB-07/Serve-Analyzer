@@ -1,7 +1,7 @@
 /** Changing your email through the Mailpit inbox, and downloading your data, through the real stack. */
 import { readFile } from "node:fs/promises";
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 import { deleteAccount, emailedLink, newEmail, PASSWORD, signUpAndVerify, subjectsFor } from "./helpers";
 

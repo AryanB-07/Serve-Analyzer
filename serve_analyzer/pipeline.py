@@ -216,7 +216,7 @@ def analyze(
 
     # A converted copy (for formats OpenCV can't decode) lives here, outside out_dir.
     with tempfile.TemporaryDirectory(prefix="serve-analyzer-") as scratch:
-        info = probe_or_convert(video_path, scratch)
+        info = probe_or_convert(video_path, scratch, max_duration_s=config.max_duration_s)
         return _analyze_video(info, hand, out_dir, config, debug_plots, render_video, report,
                               pose_extractor or extract_pose_sequence)
 

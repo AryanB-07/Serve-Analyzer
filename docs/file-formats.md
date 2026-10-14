@@ -34,9 +34,16 @@ types inconsistently. The API accepts exactly the types in `UploadContentType`
 | **Non-square pixels** (HDV stores 1440×1080 frames for 1920×1080 display) | The player looks 25% thinner, which distorts every angle | Rescaled to square pixels |
 | **Odd width or height** | H.264 can't encode it | Result videos lose one pixel row or column |
 | **High frame rates** (60, 120 fps) | — | Analysed at full rate; the time-based windows are in seconds, so phases line up |
+| **Over 120 fps** (240 fps slow motion) | Twice the frames for little gain, and a 15 s clip would be 3,600 frames | Reduced to 120 fps, keeping the timing |
+| **Over 1920 pixels** (4K) | Four times the memory of 1080p, more than a small server has | Scaled down to fit 1920 × 1920, so 4K becomes 1080p and portrait stays portrait |
+| **Over 15 seconds** | Converting or analysing it would tie up the worker | Refused from the file's header before any conversion (`VIDEO_TOO_LONG`) |
 | **Variable frame rate** (phones space frames unevenly) | — | Frames are analysed in order, and the result videos play back at a constant rate |
 | **A cover image stored as a second video stream** | — | The real video stream is used |
 | **A file that ends early** (a cut-off copy) | Analysed as if complete | If far fewer frames decode than the header promises, the results warn that the file looks incomplete |
+
+Together these cap every analysis at 15 s × 120 fps = 1,800 frames of at most 1920 pixels, the
+size the server's memory was measured for (`docs/deploy-aws-free-tier.md`). Uploads are also
+limited to 200 MB.
 
 Result videos are always browser-playable H.264 (OpenCV's Linux build can't write it, so frames
 are piped into ffmpeg), with one frame per analysed frame.

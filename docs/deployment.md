@@ -144,6 +144,10 @@ site and create an account.
   website, and deletes the test account. `scripts/smoke_docker.sh` runs the full version
   (including an analysis and email), then the Playwright browser tests, against the production
   images locally; CI runs it on every push.
+- **Content-Security-Policy with S3:** the site only loads from itself. With S3 storage the
+  browser uploads to and plays videos from the bucket, so set `CSP_STORAGE_ORIGIN` in
+  `deploy/.env` to the bucket's origin (`https://<bucket>.s3.<region>.amazonaws.com`), or
+  uploads and playback are blocked.
 - **Problem reports:** `docker compose -f deploy/docker-compose.yml exec api python -m
   serve_api.reports --days 14` prints what people flagged with "this result looks wrong" as CSV:
   the analysis, reason, note, and the date its original video will be deleted. Watch out for
