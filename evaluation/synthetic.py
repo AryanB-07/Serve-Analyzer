@@ -32,6 +32,9 @@ class ServeSpec:
     fps: float = 30.0
     seed: int = 0
     swing: bool = True  # False: toss the ball and let it drop without swinging (not a serve)
+    # How far the chest faces round from the net toward the hitting sideline at the set position
+    # (90 = fully side-on). Real players range from about -20 to 90 (docs/view-detection.md).
+    stance_turn_deg: float = 80.0
 
     @property
     def scale(self) -> float:
@@ -70,11 +73,12 @@ def make_serve(spec: ServeSpec) -> SyntheticServe:
     abduct = curve([(0, 20), (30, 95), (40, 110), (46, 172), (59, 60)])
     toss = curve([(0, 10), (26, 170), (30, 165), (46, 40), (59, 20)])
     lean = curve([(0, 2), (30, 22), (40, 15), (46, 8), (59, 5)])
-    yaw = curve([(0, 80), (30, 75), (40, 55), (46, 10), (59, 0)])  # chest direction: 90 = +X, 0 = +Z
+    st = spec.stance_turn_deg  # chest direction: 90 = +X, 0 = +Z
+    yaw = curve([(0, st), (30, st - 5), (40, 55), (46, 10), (59, 0)])
     if not spec.swing:  # the racket arm stays at the side while the ball is tossed and caught
         elbow = curve([(0, 150), (30, 120), (46, 140), (59, 150)])
         abduct = curve([(0, 20), (30, 45), (46, 35), (59, 20)])
-        yaw = curve([(0, 80), (59, 75)])
+        yaw = curve([(0, st), (59, st - 5)])
 
     kd = np.radians(spec.knee_dir_deg)
     kfwd = np.array([np.sin(kd), 0.0, np.cos(kd)])
