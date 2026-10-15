@@ -12,7 +12,7 @@ import { METRIC_INFO } from "../../lib/metricInfo";
 import { bandOf } from "../../lib/score";
 import { ScoreBar, SCORE_TEXT } from "../results/MetricCards";
 import { ReportForm } from "../messages/ReportForm";
-import { displayName, friendsErrorMessage } from "./FriendsPage";
+import { displayName, FollowTabs, friendsErrorMessage } from "./FriendsPage";
 
 const primary = "rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-50";
 const secondary = "rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-surface-2 disabled:opacity-50";
@@ -283,6 +283,9 @@ export function PersonPage() {
         </div>
       </section>
       <FriendServes person={p} />
+      {p.can_see_lists && p.relationship === "friends" && p.username && (
+        <FollowTabs username={p.username} counts={p.counts} own={false} name={displayName(p)} />
+      )}
       {p.relationship !== "self" && (
         <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
           <BlockControl person={p} onBlocked={setBlocked} />

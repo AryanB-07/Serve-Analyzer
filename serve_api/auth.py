@@ -30,6 +30,8 @@ from .convert import api_error
 from .db import Database, now
 from .purge import analysis_prefixes, run_purges
 from .schemas import (
+    HELD,
+    TAKEN,
     ChangePasswordRequest,
     ExportedBlock,
     ExportedFollow,
@@ -51,10 +53,12 @@ from .schemas import (
     Report,
     SignupRequest,
     User,
+    UsernameCheck,
     VerifyEmailRequest,
 )
 from .settings import Settings
 from .storage import Storage
+from .usernames import username_check
 
 SESSION_COOKIE = "serve_session"
 SESSION_TTL = timedelta(days=30)
@@ -136,6 +140,8 @@ class Auth:
         self.db, self.settings, self.storage = db, settings, storage
         self.mailer = mailer or m.make_mailer(settings)
         self.per_ip = RateLimiter(db, "ip", limit=30, window=timedelta(minutes=10))
+        # The signup form checks the username as it's typed.
+        self.username_checks = RateLimiter(db, "ip-username", limit=120, window=timedelta(minutes=10))
         self.failures_per_email = RateLimiter(
             db, "login-failure", limit=10, window=timedelta(minutes=15))
         # Each emailed link costs a send from your mail account, so they're limited per address.
@@ -282,14 +288,27 @@ class Auth:
                    tasks: BackgroundTasks) -> User:
             """Create an account, sign in, and email a link to confirm the address."""
             self._check_ip(request)
+            if self.db.username_unavailable(body.username) == "held":
+                raise HTTPException(status.HTTP_409_CONFLICT, HELD)
             row = self.db.create_user(normalise_email(body.email), _hasher.hash(body.password),
-                                      terms_version=TERMS_VERSION)
+                                      terms_version=TERMS_VERSION, username=body.username)
             if row is None:
                 raise HTTPException(status.HTTP_409_CONFLICT, EMAIL_TAKEN)
+            if row == "username_taken":
+                raise HTTPException(status.HTTP_409_CONFLICT, TAKEN)
             self._start_session(request, response, row["id"])
             self._send_verification(tasks, row["id"], row["email"])
             self.emails_per_user.hit(row["id"])
             return _user(row)
+
+        @router.get("/username-check", response_model=UsernameCheck, responses={429: {"model": ErrorResponse}})
+        def check_username(username: str, request: Request) -> UsernameCheck:
+            """Whether a username is free, for the signup form (no account yet, so by IP)."""
+            ip = request.client.host if request.client else "unknown"
+            if wait := self.username_checks.retry_after(ip):
+                raise _too_many(wait)
+            self.username_checks.hit(ip)
+            return username_check(self.db, username, None)
 
         @router.post("/login", response_model=User,
                      responses={401: {"model": ErrorResponse}, 429: {"model": ErrorResponse}})

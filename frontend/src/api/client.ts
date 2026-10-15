@@ -8,7 +8,9 @@ import type {
   CreateAnalysisResponse,
   Credentials,
   DataExport,
-  FollowLists,
+  FollowCounts,
+  FollowListKind,
+  FollowPage,
   FramesPayload,
   Leaderboard,
   Message,
@@ -79,8 +81,12 @@ export interface ApiClient {
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
   /** Someone's page by username; 404 if there's no one (or a block either way). */
   getPerson(username: string): Promise<Person>;
-  /** Your friends (people who follow each other with you), followers and following. */
-  listFollows(): Promise<FollowLists>;
+  /** How many friends (people who follow each other with you), followers and following you have. */
+  getFollowCounts(): Promise<FollowCounts>;
+  /** A page of someone's friends, followers or following: only they and their friends can see these. */
+  listFollowPage(username: string, kind: FollowListKind, cursor?: string): Promise<FollowPage>;
+  /** For the signup form: whether a username is free (no account needed). */
+  checkUsernameForSignup(username: string): Promise<UsernameCheck>;
   /** Follow someone, or follow them back. Doing it twice is harmless. */
   follow(username: string): Promise<Person>;
   /** Stop following; ends a friendship. Harmless if you weren't following. */
@@ -231,7 +237,10 @@ export const httpClient: ApiClient = {
   setAvatar: (jpeg) => request("/profile/avatar", { method: "PUT", body: jpeg, headers: { "Content-Type": "image/jpeg" } }),
   removeAvatar: () => request("/profile/avatar", { method: "DELETE" }),
   getPerson: (username) => request(`/people/${encodeURIComponent(username)}`),
-  listFollows: () => request("/follows"),
+  getFollowCounts: () => request("/follows"),
+  listFollowPage: (username, kind, cursor) =>
+    request(`/people/${encodeURIComponent(username)}/${kind}${cursor ? `?${new URLSearchParams({ cursor })}` : ""}`),
+  checkUsernameForSignup: (username) => request(`/auth/username-check?${new URLSearchParams({ username })}`),
   follow: (username) => request(`/follows/${encodeURIComponent(username)}`, { method: "PUT" }),
   unfollow: (username) => request(`/follows/${encodeURIComponent(username)}`, { method: "DELETE" }),
   removeFollower: (username) => request(`/followers/${encodeURIComponent(username)}`, { method: "DELETE" }),

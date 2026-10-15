@@ -60,7 +60,7 @@ export function SignupPage() {
       pendingLabel="Creating account…"
       pending={signUp.isPending}
       error={signUp.error}
-      onSubmit={(email, password) => signUp.mutate({ email, password, accept_terms: true })}
+      onSubmit={(email, password, username) => signUp.mutate({ email, password, username, accept_terms: true })}
       footer={
         <>
           Already have an account?{" "}

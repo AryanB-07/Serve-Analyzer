@@ -20,6 +20,7 @@ import { ConversationPage } from "./features/messages/ConversationPage";
 import { MessagesPage } from "./features/messages/MessagesPage";
 import { HistoryPage } from "./features/history/HistoryPage";
 import { PrivacyPage, TermsPage } from "./features/legal/LegalPages";
+import { ChooseUsernamePage } from "./features/profile/ChooseUsernamePage";
 import { ProfilePage } from "./features/profile/ProfilePage";
 import { ResultsPage } from "./features/results/ResultsPage";
 import { UploadPage } from "./features/upload/UploadPage";
@@ -67,6 +68,7 @@ export const routes = [
               { path: "/history", element: <Moved to="/serves" /> },
               { path: "/compare", element: <ComparePage /> },
               { path: "/profile", element: <ProfilePage /> },
+              { path: "/choose-username", element: <ChooseUsernamePage /> },
               { path: "/friends", element: <FriendsPage /> },
               { path: "/u/:username", element: <PersonPage /> },
               { path: "/messages", element: <MessagesPage /> },

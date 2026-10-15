@@ -84,7 +84,8 @@ def main() -> None:
 
     c = Client(args.base, insecure=True)
     email = f"memory-{uuid.uuid4().hex[:8]}@example.com"
-    c.json("POST", "/api/auth/signup", {"email": email, "password": PASSWORD, "accept_terms": True}, 201)
+    c.json("POST", "/api/auth/signup", {"email": email, "password": PASSWORD, "accept_terms": True,
+                                        "username": f"mem_{uuid.uuid4().hex[:12]}"}, 201)
     c.json("POST", "/api/auth/verify-email", {"token": latest_link(args.mailpit, email, "/verify-email")}, 204)
 
     ids = containers()

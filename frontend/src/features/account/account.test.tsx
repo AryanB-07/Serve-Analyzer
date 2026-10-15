@@ -22,7 +22,7 @@ const fake = vi.hoisted(() => ({
   deleteAccount: vi.fn(),
   deleteAnalysis: vi.fn(),
   getProfile: vi.fn(async () => ({
-    username: null, display_name: null, bio: null, avatar_url: null, member_since: "2026-09-27T10:00:00Z",
+    username: "alice", display_name: null, bio: null, avatar_url: null, member_since: "2026-09-27T10:00:00Z",
     stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null },
   })),
   changePassword: vi.fn(),

@@ -51,9 +51,10 @@ def stranger(app) -> TestClient:
 
 # --- the profile ---------------------------------------------------------------------------------
 
-def test_a_new_account_has_an_empty_profile(me):
+def test_a_new_account_has_its_username_and_nothing_else(me):
     profile = me.get("/profile").json()
-    assert profile["username"] is None and profile["display_name"] is None and profile["bio"] is None
+    assert profile["username"].startswith("u")  # chosen at signup (tests/test_account.signup)
+    assert profile["display_name"] is None and profile["bio"] is None
     assert profile["avatar_url"] is None and profile["member_since"]
     assert profile["stats"] == {"serves": 0, "average_score": None, "averaged_over": 0, "best_score": None}
 
@@ -113,7 +114,7 @@ def test_profiles_need_signing_in_and_are_your_own(app, me):
     assert TestClient(app).get("/profile").status_code == 401
     assert TestClient(app).patch("/profile", json={"bio": "x"}).status_code == 401
     other = stranger(app).get("/profile").json()
-    assert other["username"] is None and other["bio"] is None
+    assert other["username"] != "mine" and other["bio"] is None
 
 
 def test_stats_count_finished_serves_and_average_the_latest_ten(app, me):

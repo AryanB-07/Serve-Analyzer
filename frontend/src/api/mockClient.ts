@@ -75,7 +75,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     username: string | null; display_name: string | null; bio: string | null; avatar_url: string | null; allow_follows: boolean;
     share_stats: boolean; share_positions: boolean; on_leaderboard: boolean;
   } = {
-    username: null, display_name: null, bio: null, avatar_url: null, allow_follows: true,
+    username: "mock_player", display_name: null, bio: null, avatar_url: null, allow_follows: true,
     share_stats: false, share_positions: false, on_leaderboard: false,
   };
   // The pretend friend shares everything, so friends' stats and the leaderboard show in mock mode.
@@ -138,7 +138,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   const mockCounts = (username: string) => ({ followers: username === "ace" ? 14 : 3, following: username === "ace" ? 11 : 2, friends: username === "ace" ? 6 : 1 });
   function personOf(username: string): Person {
     if (username === profile.username) {
-      return { ...summaryOf(username), display_name: profile.display_name, relationship: "self", can_follow: false, bio: profile.bio,
+      return { ...summaryOf(username), display_name: profile.display_name, relationship: "self", can_follow: false, can_see_lists: true, bio: profile.bio,
         counts: { followers: followsMe.size, following: iFollow.size, friends: [...iFollow.keys()].filter(isFriend).length } };
     }
     const you = iFollow.has(username);
@@ -146,7 +146,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     const relationship = you && them ? "friends" : you ? "following" : them ? "follows_you" : "none";
     const friends = relationship === "friends";
     return {
-      ...summaryOf(username), relationship, counts: mockCounts(username), can_follow: !you,
+      ...summaryOf(username), relationship, counts: mockCounts(username), can_follow: !you, can_see_lists: friends,
       bio: friends ? people.get(username)?.bio || null : null,
       friends_since: friends ? [iFollow.get(username)!, followsMe.get(username)!].sort()[1]! : null,
       stats: friends && username === "ace" ? aceStats() : null,
@@ -215,8 +215,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return user;
     },
 
-    async signUp({ email }) {
+    async signUp({ email, username }) {
       await delay();
+      const name = normaliseUsername(username);
+      const problem = usernameProblem(name);
+      if (problem) throw new ApiError(422, problem);
+      if (takenUsernames.has(name)) throw new ApiError(409, "That username is taken.");
+      profile = { ...profile, username: name };
       user = {
         ...MOCK_USER,
         email: email.trim().toLowerCase(),
@@ -377,14 +382,30 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return personOf(findPerson(username));
     },
 
-    async listFollows() {
+    async getFollowCounts() {
       await delay();
-      const entry = (username: string, since: string) => ({ person: summaryOf(username), since, you_follow: iFollow.has(username), follows_you: followsMe.has(username) });
-      const newest = <T extends { since: string }>(xs: T[]) => xs.sort((a, b) => b.since.localeCompare(a.since));
-      const friends = newest([...iFollow.keys()].filter(isFriend).map((u) => entry(u, [iFollow.get(u)!, followsMe.get(u)!].sort()[1]!)));
-      const followers = newest([...followsMe.entries()].map(([u, since]) => entry(u, since)));
-      const following = newest([...iFollow.entries()].map(([u, since]) => entry(u, since)));
-      return { counts: { friends: friends.length, followers: followers.length, following: following.length }, friends, followers, following };
+      return { friends: [...iFollow.keys()].filter(isFriend).length, followers: followsMe.size, following: iFollow.size };
+    },
+
+    async listFollowPage(username, kind) {
+      await delay();
+      const name = findPerson(username);
+      if (name !== profile.username) {
+        if (!isFriend(name)) throw new ApiError(403, "Only friends can see who someone follows and who follows them.");
+        return { items: [], next_cursor: null }; // the mock doesn't know friends' friends
+      }
+      const entry = (u: string, since: string) => ({ person: summaryOf(u), since, you_follow: iFollow.has(u), follows_you: followsMe.has(u) });
+      const pick = kind === "friends"
+        ? [...iFollow.keys()].filter(isFriend).map((u) => entry(u, [iFollow.get(u)!, followsMe.get(u)!].sort()[1]!))
+        : [...(kind === "followers" ? followsMe : iFollow).entries()].map(([u, since]) => entry(u, since));
+      return { items: pick.sort((a, b) => b.since.localeCompare(a.since)), next_cursor: null };
+    },
+
+    async checkUsernameForSignup(username) {
+      await delay();
+      const name = normaliseUsername(username);
+      const problem = usernameProblem(name) ?? (takenUsernames.has(name) ? "That username is taken." : null);
+      return { username: name, available: !problem, problem };
     },
 
     async follow(username) {

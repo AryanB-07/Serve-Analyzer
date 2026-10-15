@@ -35,7 +35,7 @@ def client(app) -> TestClient:
 
 @pytest.mark.parametrize("body", [{}, {"accept_terms": False}])
 def test_signup_needs_the_terms_accepted(client, body):
-    res = client.post("/auth/signup", json={"email": "a@example.com", "password": PASSWORD, **body})
+    res = client.post("/auth/signup", json={"email": "a@example.com", "password": PASSWORD, "username": "terms_test", **body})
     assert res.status_code == 422
     if body:
         assert "accept the Terms of Service and Privacy Policy" in res.text

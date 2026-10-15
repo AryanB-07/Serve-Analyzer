@@ -116,7 +116,8 @@ def main() -> None:
 
     email = f"smoke-{uuid.uuid4().hex[:8]}@example.com"
     step(f"sign up as {email}")
-    me = c.json("POST", "/api/auth/signup", {"email": email, "password": PASSWORD, "accept_terms": True}, 201)
+    me = c.json("POST", "/api/auth/signup", {"email": email, "password": PASSWORD, "accept_terms": True,
+                                             "username": f"smoke_{uuid.uuid4().hex[:12]}"}, 201)
     check(me["email_verified"] is False, "a new account should start unverified")
 
     body = {"hand": "right", "filename": SAMPLE.name, "content_type": "video/mp4",

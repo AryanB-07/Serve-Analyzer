@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from ".";
+import type { FollowListKind } from "./types";
 
 export const friendsKeys = {
   follows: ["follows"] as const,
@@ -9,9 +10,20 @@ export const friendsKeys = {
   leaderboard: ["leaderboard"] as const,
 };
 
-/** Your friends, followers and following, with counts. */
-export function useFollows() {
-  return useQuery({ queryKey: friendsKeys.follows, queryFn: () => api.listFollows() });
+/** How many friends, followers and following you have. */
+export function useFollowCounts() {
+  return useQuery({ queryKey: [...friendsKeys.follows, "counts"], queryFn: () => api.getFollowCounts() });
+}
+
+/** Someone's friends, followers or following, a page at a time (yours, or a friend's). */
+export function useFollowList(username: string | null | undefined, kind: FollowListKind) {
+  return useInfiniteQuery({
+    queryKey: [...friendsKeys.follows, username, kind],
+    queryFn: ({ pageParam }) => api.listFollowPage(username!, kind, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
+    enabled: Boolean(username),
+  });
 }
 
 /** Someone's page. A 404 (no one, or a block) isn't retried. */

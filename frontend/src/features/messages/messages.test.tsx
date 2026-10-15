@@ -81,7 +81,7 @@ beforeEach(() => {
   });
   fake.report.mockReset().mockResolvedValue(undefined);
   fake.block.mockReset().mockResolvedValue(undefined);
-  fake.getPerson.mockReset().mockResolvedValue({ ...BOB, relationship: "friends", can_follow: false, counts: { followers: 3, following: 2, friends: 1 }, bio: null,
+  fake.getPerson.mockReset().mockResolvedValue({ ...BOB, relationship: "friends", can_follow: false, counts: { followers: 3, following: 2, friends: 1 }, can_see_lists: false, bio: null,
     friends_since: "2026-09-01T10:00:00Z", stats: null, positions: null } satisfies Person);
   fake.startConversation.mockReset().mockResolvedValue(CONV);
 });

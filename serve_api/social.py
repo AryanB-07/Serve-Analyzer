@@ -12,9 +12,10 @@ simply doesn't exist (404, the same as a username nobody has), so a block can't 
 
 from __future__ import annotations
 
-from datetime import timedelta
+import base64
+from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
 from .auth import Auth, RateLimiter, _too_many
 from .db import Database, now
@@ -23,7 +24,8 @@ from .schemas import (
     ErrorResponse,
     FollowCounts,
     FollowEntry,
-    FollowLists,
+    FollowListKind,
+    FollowPage,
     Leaderboard,
     LeaderboardEntry,
     Person,
@@ -43,6 +45,19 @@ LEADERBOARD_MIN = 5
 LEADERBOARD_AVERAGED = 10
 NEED_USERNAME = "Choose a username first, so people can see who's following them. You can set one in Settings."
 NOT_ALLOWED = "They aren't accepting new followers."
+LISTS_FRIENDS_ONLY = "Only friends can see who someone follows and who follows them."
+
+
+def _cursor(row: dict) -> str:
+    return base64.urlsafe_b64encode(f"{row['since'].isoformat()}|{row['user_id']}".encode()).decode()
+
+
+def _parse_cursor(cursor: str) -> tuple[datetime, str]:
+    try:
+        at, user_id = base64.urlsafe_b64decode(cursor.encode()).decode().split("|", 1)
+        return datetime.fromisoformat(at), user_id
+    except Exception as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Invalid cursor") from exc
 
 
 def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
@@ -75,7 +90,8 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
     def person_view(person: dict, user: User) -> Person:
         counts = FollowCounts(**db.follow_counts(person["user_id"]))
         if person["user_id"] == user.id:
-            return Person(**summary(person).model_dump(), relationship="self", counts=counts, bio=person["bio"])
+            return Person(**summary(person).model_dump(), relationship="self", counts=counts, bio=person["bio"],
+                          can_see_lists=True)
         rel = relationship(user.id, person["user_id"])
         friends = rel == "friends"
         shared = db.serve_summary(person["user_id"]) if friends and (person["share_stats"] or person["share_positions"]) else None
@@ -83,6 +99,7 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
             **summary(person).model_dump(), relationship=rel, counts=counts,
             can_follow=rel in ("none", "follows_you") and (bool(person["allow_follows"]) or rel == "follows_you"),
             bio=person["bio"] if friends else None,
+            can_see_lists=friends,
             friends_since=db.friends_since(user.id, person["user_id"]) if friends else None,
             # Read when asked, so turning a setting off hides it at once.
             stats=SharedStats(**shared) if shared and person["share_stats"] else None,
@@ -100,17 +117,30 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         limited(lookups, user)
         return person_view(visible(username, user), user)
 
-    @router.get("/follows", response_model=FollowLists, responses=errors)
-    def my_lists(user: User = signed_in) -> FollowLists:
-        """Your friends, followers and following, newest first."""
-        lists = db.follow_lists(user.id)
-        followers = {f["user_id"] for f in lists["followers"]}
-        following = {f["user_id"] for f in lists["following"]}
-        profiles = db.profiles_of(list(followers | following))
-        entry = lambda f: FollowEntry(person=summary(profiles.get(f["user_id"])), since=f["since"],  # noqa: E731
-                                      you_follow=f["user_id"] in following, follows_you=f["user_id"] in followers)
-        return FollowLists(counts=FollowCounts(**{k: len(v) for k, v in lists.items()}),
-                           **{k: [entry(f) for f in v] for k, v in lists.items()})
+    @router.get("/follows", response_model=FollowCounts, responses=errors)
+    def my_counts(user: User = signed_in) -> FollowCounts:
+        """How many friends, followers and following you have. The lists are paged, from
+        /people/{your username}/{friends|followers|following}."""
+        return FollowCounts(**db.follow_counts(user.id))
+
+    @router.get("/people/{username}/{kind}", response_model=FollowPage,
+                responses={**errors, 403: {"model": ErrorResponse}, 422: {"model": ErrorResponse}})
+    def list_page(username: str, kind: FollowListKind, cursor: str | None = None,
+                  limit: int = Query(30, ge=1, le=100), user: User = signed_in) -> FollowPage:
+        """Someone's friends, followers or following, newest first. Only they and their friends
+        (people they follow who follow them back) can see these."""
+        person = visible(username, user)
+        if person["user_id"] != user.id and not db.are_friends(user.id, person["user_id"]):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, LISTS_FRIENDS_ONLY)
+        rows = db.follow_page(person["user_id"], kind, limit + 1, _parse_cursor(cursor) if cursor else None, viewer_id=user.id)
+        page = rows[:limit]
+        ids = [r["user_id"] for r in page]
+        you_follow, follows_you = db.follows_among(user.id, ids)
+        profiles = db.profiles_of(ids)
+        return FollowPage(
+            items=[FollowEntry(person=summary(profiles.get(r["user_id"])), since=r["since"],
+                               you_follow=r["user_id"] in you_follow, follows_you=r["user_id"] in follows_you) for r in page],
+            next_cursor=_cursor(page[-1]) if len(rows) > limit else None)
 
     @router.put("/follows/{username}", response_model=Person,
                 responses={**errors, 400: {"model": ErrorResponse}, 403: {"model": ErrorResponse},

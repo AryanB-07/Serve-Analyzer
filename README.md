@@ -43,8 +43,9 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
 - **Following and friends:** find someone by their exact username (nobody is listed or
   suggested) and follow them; two people who follow each other are friends (worked out from the
   follows, never stored). Unfollow, remove a follower, or block. Lists of friends, followers and
-  following, with counts. Friends see each other's bio; anyone else sees a name, picture and
-  counts. A blocked person can't find or follow the blocker and isn't told. On phones the
+  following, paged, that only you and your friends can see; anyone else sees just the counts.
+  Friends see each other's bio. A username is chosen at signup (checked as it's typed);
+  accounts from before that choose one when they next sign in. A blocked person can't find or follow the blocker and isn't told. On phones the
   sections move to a bottom tab bar.
   Friends can share serve stats (average, best, trend), key-position averages and a place on a
   friends leaderboard: each one opt-in, worked out on the server from the stored scores.
@@ -468,7 +469,9 @@ frontend/
 | `GET /profile/username-check?username=` | Whether a username is valid and free |
 | `PUT /profile/avatar`, `DELETE` | Set (a square JPEG up to 1 MB) or remove the profile picture |
 | `GET /people/{username}` | Someone's page as you see them, and where you stand (404 for no one, or a block) |
-| `GET /follows` | Your friends, followers and following, with counts |
+| `GET /follows` | How many friends, followers and following you have |
+| `GET /people/{username}/{friends\|followers\|following}?cursor=` | A page of someone's list; only they and their friends may see it |
+| `GET /auth/username-check?username=` | Whether a username is free, for the signup form (no account needed) |
 | `PUT /follows/{username}`, `DELETE /follows/{username}` | Follow (or follow back) and unfollow; both idempotent |
 | `DELETE /followers/{username}` | Remove a follower |
 | `GET /blocks`, `POST /blocks`, `DELETE /blocks/{username}` | Blocked people |

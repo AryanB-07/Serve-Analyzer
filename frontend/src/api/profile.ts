@@ -23,10 +23,10 @@ export const useSetAvatar = () => useSaveProfile((jpeg: Blob) => api.setAvatar(j
 export const useRemoveAvatar = () => useSaveProfile(() => api.removeAvatar());
 
 /** Whether ``username`` could be yours. Pass null to skip (empty, or already known to be invalid). */
-export function useUsernameCheck(username: string | null) {
+export function useUsernameCheck(username: string | null, signedOut = false) {
   return useQuery({
-    queryKey: ["username-check", username] as const,
-    queryFn: () => api.checkUsername(username!),
+    queryKey: ["username-check", username, signedOut] as const,
+    queryFn: () => (signedOut ? api.checkUsernameForSignup(username!) : api.checkUsername(username!)),
     enabled: username !== null,
     staleTime: 30_000,
   });

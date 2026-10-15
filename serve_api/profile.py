@@ -15,7 +15,7 @@ from fastapi.concurrency import run_in_threadpool
 from . import keys
 from .auth import Auth, RateLimiter, _too_many
 from .avatars import MAX_BYTES, AvatarError, clean
-from .db import USERNAME_HELD_FOR, Database, now
+from .db import USERNAME_HELD_FOR, Database
 from .purge import run_purges
 from .schemas import (
     ErrorResponse,
@@ -23,14 +23,14 @@ from .schemas import (
     ProfileStats,
     ProfileUpdate,
     User,
+    HELD,
+    TAKEN,
     UsernameCheck,
-    normalise_username,
-    username_problem,
 )
 from .storage import Storage
+from .usernames import username_check
 
-TAKEN = "That username is taken."
-HELD = "Someone used that username recently, so it's held for them for a while. Try another."
+
 SHARING = ("share_stats", "share_positions", "on_leaderboard")
 
 
@@ -78,16 +78,7 @@ def profile_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
     def check_username(username: str, user: User = signed_in) -> UsernameCheck:
         """Whether a username could be yours, for checking as it's typed."""
         limited(checks, user)
-        name = normalise_username(username)[:40]
-        if problem := username_problem(name):
-            return UsernameCheck(username=name, available=False, problem=problem)
-        owner = db.username_owner(name)
-        if owner not in (None, user.id):
-            return UsernameCheck(username=name, available=False, problem=TAKEN)
-        hold = db.username_hold(name)
-        if hold and hold["user_id"] != user.id and hold["released_at"] > now() - USERNAME_HELD_FOR:
-            return UsernameCheck(username=name, available=False, problem=HELD)
-        return UsernameCheck(username=name, available=True)
+        return username_check(db, username, user.id)
 
     @router.put("/avatar", response_model=Profile,
                 responses={**errors, 413: {"model": ErrorResponse}, 415: {"model": ErrorResponse},

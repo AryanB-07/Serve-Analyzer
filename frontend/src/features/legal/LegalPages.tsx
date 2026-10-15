@@ -56,7 +56,8 @@ export function PrivacyPage() {
             analysis too.
           </li>
           <li>
-            <strong>Your profile,</strong> if you fill it in: a username, a display name, a short bio and a profile picture.
+            <strong>Your profile:</strong> the username you choose when you sign up, and if you add them, a display name, a
+            short bio and a profile picture.
             Pictures are cropped and re-saved before they're stored, which removes the location and other details phones
             put in photos. See "What other people see" below for who can see it.
           </li>
@@ -102,16 +103,15 @@ export function PrivacyPage() {
       <Section title="What other people see">
         <ul className={list}>
           <li>
-            Until you choose a username, nobody can find you. Once you have one, anyone signed in who types it exactly sees
-            your display name, username, picture, and how many followers, following and friends you have. Nobody is
-            listed or suggested to anyone.
+            You choose a username when you sign up. Anyone signed in who types it exactly sees your display name, username,
+            picture, and how many followers, following and friends you have. Nobody is listed or suggested to anyone.
           </li>
           <li>
             Anyone who can see you can follow you, unless you turn that off in Settings; people you follow can always
             follow you back. Following is one-way. Two people who follow each other are friends.
           </li>
           <li>
-            Friends also see your bio. They see your serve stats
+            Friends also see your bio, and who your friends, followers and following are; nobody else sees those lists. They see your serve stats
             (how many, average, best, trend), your key-position averages and your place on the friends leaderboard only if
             you turn each one on in Settings; all are off to start with. Nobody sees your email or notes, and turning a
             setting off hides it straight away.

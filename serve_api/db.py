@@ -15,6 +15,8 @@ from sqlalchemy import (
     Connection,
     Engine,
     and_,
+    bindparam,
+    case,
     create_engine,
     delete,
     event,
@@ -24,12 +26,14 @@ from sqlalchemy import (
     select,
     true,
     tuple_,
+    type_coerce,
     update,
 )
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 
 from .tables import (
+    UTCDateTime,
     analyses,
     auth_attempts,
     blocks,
@@ -339,10 +343,12 @@ class Database:
 
     # --- users and sessions ----------------------------------------------------
 
-    def create_user(self, email: str, password_hash: str,
-                    terms_version: str | None = None) -> dict[str, Any] | None:
-        """Returns None if the email is already registered. ``email`` must be normalised.
-        ``terms_version`` records the Terms and Privacy Policy accepted at signup."""
+    def create_user(self, email: str, password_hash: str, terms_version: str | None = None,
+                    username: str | None = None) -> dict[str, Any] | Literal["username_taken"] | None:
+        """Returns None if the email is already registered, "username_taken" if the username is.
+        ``email`` must be normalised. ``terms_version`` records the Terms and Privacy Policy
+        accepted at signup. With ``username``, the profile is made in the same transaction, so
+        the account never exists without it."""
         ts = now()
         row = {"id": uuid.uuid4().hex, "email": email, "password_hash": password_hash,
                "created_at": ts, "email_verified_at": None, "terms_version": terms_version,
@@ -350,9 +356,25 @@ class Database:
         try:
             with self.engine.begin() as conn:
                 conn.execute(insert(users).values(row))
+                if username:
+                    conn.execute(insert(profiles).values(user_id=row["id"], username=username, updated_at=ts))
         except IntegrityError:
-            return None
+            return None if self.get_user_by_email(email) else "username_taken"
         return row
+
+    def username_unavailable(self, username: str, user_id: str | None = None,
+                             held_for: timedelta = USERNAME_HELD_FOR) -> Literal["taken", "held"] | None:
+        """Why ``username`` (already valid) can't be ``user_id``'s (None: a new account), or None."""
+        owner = self.username_owner(username)
+        if owner is not None and owner != user_id:
+            return "taken"
+        hold = self.username_hold(username)
+        # A hold with no owner (the account was deleted) is held for nobody: a new account
+        # (user_id None) mustn't count as its owner.
+        reclaiming = hold is not None and hold["user_id"] is not None and hold["user_id"] == user_id
+        if hold and not reclaiming and hold["released_at"] > now() - held_for:
+            return "held"
+        return None
 
     def get_user_by_email(self, email: str) -> dict[str, Any] | None:
         with self.engine.connect() as conn:
@@ -575,8 +597,7 @@ class Database:
         fields["updated_at"] = now()
         new_name = fields.get("username")
         if new_name and held_for:
-            hold = self.username_hold(new_name)
-            if hold and hold["user_id"] != user_id and hold["released_at"] > now() - held_for:
+            if self.username_unavailable(new_name, user_id, held_for) == "held":
                 return "username_held"
         try:
             with self.engine.begin() as conn:
@@ -787,28 +808,63 @@ class Database:
                 and_(follows.c.follower_id == a, follows.c.followee_id == b),
                 and_(follows.c.follower_id == b, follows.c.followee_id == a)))).scalar_one() == 2
 
-    def _followers_query(self, user_id: str):
-        """People following ``user_id``, leaving out suspended accounts."""
-        return select(follows.c.follower_id.label("user_id"), follows.c.created_at).where(
-            follows.c.followee_id == user_id, follows.c.follower_id.not_in(self.suspended_ids()))
+    def _list_query(self, user_id: str, kind: str, viewer_id: str | None = None):
+        """``user_id``'s followers, following or friends as (user_id, since), leaving out
+        suspended accounts and, when someone else is looking, anyone hidden from them. A
+        friend's ``since`` is when the second of the two follows happened."""
+        gone = self.suspended_ids()
+        if kind == "followers":
+            query = select(follows.c.follower_id.label("user_id"), follows.c.created_at.label("since")).where(
+                follows.c.followee_id == user_id, follows.c.follower_id.not_in(gone))
+        elif kind == "following":
+            query = select(follows.c.followee_id.label("user_id"), follows.c.created_at.label("since")).where(
+                follows.c.follower_id == user_id, follows.c.followee_id.not_in(gone))
+        elif kind == "friends":
+            out, back = follows.alias("out"), follows.alias("back")
+            later = type_coerce(case((out.c.created_at > back.c.created_at, out.c.created_at), else_=back.c.created_at),
+                                UTCDateTime)
+            query = (select(out.c.followee_id.label("user_id"), later.label("since"))
+                     .join(back, and_(back.c.follower_id == out.c.followee_id, back.c.followee_id == user_id))
+                     .where(out.c.follower_id == user_id, out.c.followee_id.not_in(gone)))
+        else:
+            raise ValueError(kind)
+        if viewer_id and viewer_id != user_id:
+            hidden = select(blocks.c.blocked_id).where(blocks.c.blocker_id == viewer_id).union(
+                select(blocks.c.blocker_id).where(blocks.c.blocked_id == viewer_id))
+            query = query.where(query.selected_columns.user_id.not_in(hidden))
+        return query
 
-    def _following_query(self, user_id: str):
-        return select(follows.c.followee_id.label("user_id"), follows.c.created_at).where(
-            follows.c.follower_id == user_id, follows.c.followee_id.not_in(self.suspended_ids()))
+    def follow_page(self, user_id: str, kind: str, limit: int, before: tuple[datetime, str] | None = None,
+                    viewer_id: str | None = None) -> list[dict[str, Any]]:
+        """A page of one of ``user_id``'s lists, newest first; ``before`` is the last row's
+        (since, user_id) from the page before."""
+        sub = self._list_query(user_id, kind, viewer_id).subquery()
+        query = select(sub)
+        if before:
+            query = query.where(tuple_(sub.c.since, sub.c.user_id) < tuple_(bindparam("b_at", before[0], UTCDateTime),
+                                                                            bindparam("b_id", before[1])))
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(query.order_by(sub.c.since.desc(), sub.c.user_id.desc()).limit(limit)).mappings()]
 
     def follow_lists(self, user_id: str) -> dict[str, list[dict[str, Any]]]:
-        """``user_id``'s followers, following and friends, each newest first as {user_id, since}.
-        A friend's ``since`` is when the second of the two follows happened."""
-        with self.engine.connect() as conn:
-            followers = {r.user_id: r.created_at for r in conn.execute(self._followers_query(user_id))}
-            following = {r.user_id: r.created_at for r in conn.execute(self._following_query(user_id))}
-        newest = lambda d: sorted(({"user_id": k, "since": v} for k, v in d.items()), key=lambda x: x["since"], reverse=True)  # noqa: E731
-        friends = {uid: max(at, following[uid]) for uid, at in followers.items() if uid in following}
-        return {"followers": newest(followers), "following": newest(following), "friends": newest(friends)}
+        """All three lists in full, newest first (for the data download)."""
+        return {kind: self.follow_page(user_id, kind, limit=1_000_000) for kind in ("followers", "following", "friends")}
 
     def follow_counts(self, user_id: str) -> dict[str, int]:
-        lists = self.follow_lists(user_id)
-        return {k: len(v) for k, v in lists.items()}
+        with self.engine.connect() as conn:
+            return {kind: conn.execute(select(func.count()).select_from(self._list_query(user_id, kind).subquery())).scalar_one()
+                    for kind in ("followers", "following", "friends")}
+
+    def follows_among(self, viewer_id: str, user_ids: list[str]) -> tuple[set[str], set[str]]:
+        """Of ``user_ids``, who ``viewer_id`` follows, and who follows ``viewer_id``."""
+        if not user_ids:
+            return set(), set()
+        with self.engine.connect() as conn:
+            you = set(conn.execute(select(follows.c.followee_id).where(
+                follows.c.follower_id == viewer_id, follows.c.followee_id.in_(user_ids))).scalars())
+            them = set(conn.execute(select(follows.c.follower_id).where(
+                follows.c.followee_id == viewer_id, follows.c.follower_id.in_(user_ids))).scalars())
+        return you, them
 
     def friend_ids(self, user_id: str) -> list[str]:
         return [f["user_id"] for f in self.follow_lists(user_id)["friends"]]

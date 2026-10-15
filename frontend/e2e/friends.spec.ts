@@ -30,6 +30,9 @@ test("a follow, a follow back that makes friends, and a block that hides each fr
   await expect(ann.getByText(/You'll be friends if they follow you back/)).toBeVisible();
   // A double tap changes nothing.
   expect((await ann.request.put(`/api/follows/${bobName}`)).status()).toBe(200);
+  // Following one way isn't enough to see Bob's lists.
+  await expect(ann.getByRole("region", { name: /friends, followers and following/ })).toHaveCount(0);
+  expect((await ann.request.get(`/api/people/${bobName}/followers`)).status()).toBe(403);
 
   // Bob is notified, sees Ann among his followers, and follows back from there.
   await bob.goto("/");
@@ -50,6 +53,10 @@ test("a follow, a follow back that makes friends, and a block that hides each fr
   await expect(ann.getByText("Bob E2E's bio")).toBeVisible();
   await expect(ann.getByText(/^Friends since/)).toBeVisible();
   await expect(ann.getByText("1 friend", { exact: true })).toBeVisible();
+  // As a friend, she can see his lists: she's on them.
+  const bobsLists = ann.getByRole("region", { name: "Bob E2E's friends, followers and following" });
+  await expect(bobsLists.getByRole("link", { name: "Ann E2E" })).toBeVisible();
+  expect((await ann.request.get(`/api/people/${bobName}/followers`)).status()).toBe(200);
 
   // Nothing about his serves until he chooses to share; then his stats and a leaderboard place.
   await expect(ann.getByText("Bob E2E isn't sharing serve stats with friends.")).toBeVisible();
@@ -77,8 +84,8 @@ test("a follow, a follow back that makes friends, and a block that hides each fr
   await expect(bob.getByRole("heading", { name: "You've blocked Ann E2E" })).toBeVisible();
   await ann.reload();
   await expect(ann.getByRole("heading", { name: "No one has that username" })).toBeVisible();
-  const lists = await (await ann.request.get("/api/follows")).json();
-  expect(lists.counts).toEqual({ followers: 0, following: 0, friends: 0 });
+  const counts = await (await ann.request.get("/api/follows")).json();
+  expect(counts).toEqual({ followers: 0, following: 0, friends: 0 });
 
   // Bob can unblock from Settings; the follows don't come back.
   await bob.goto("/settings#blocked");

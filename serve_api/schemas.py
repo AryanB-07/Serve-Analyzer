@@ -233,8 +233,18 @@ class SignupRequest(BaseModel):
     email: EmailStr = Field(max_length=320)
     # No composition rules (NIST SP 800-63B); the upper bound caps hashing cost.
     password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=256)
+    # Every account has a username from the start: it's how people find and follow you.
+    username: str = Field(min_length=1, max_length=40)
     # The person confirms they're old enough and agree to the Terms and Privacy Policy.
     accept_terms: bool
+
+    @field_validator("username")
+    @classmethod
+    def _username(cls, value: str) -> str:
+        username = normalise_username(value)
+        if problem := username_problem(username):
+            raise ValueError(problem)
+        return username
 
     @field_validator("accept_terms")
     @classmethod
@@ -360,6 +370,10 @@ RESERVED_USERNAMES = frozenset({
     "system", "terms", "undefined", "user", "users",
 })
 _CONTROL = {chr(c) for c in range(32)} | {chr(127)}
+
+
+TAKEN = "That username is taken."
+HELD = "Someone used that username recently, so it's held for them for a while. Try another."
 
 
 def normalise_username(value: str) -> str:
@@ -520,6 +534,7 @@ class Person(PersonSummary):
     relationship: Relationship
     can_follow: bool = False  # whether you could follow them now (they allow it, or follow you)
     counts: FollowCounts
+    can_see_lists: bool = False  # their friends, followers and following: you and their friends only
     bio: str | None = None  # friends only
     friends_since: datetime | None = None
     # Friends only, and only what they chose to share (None when they don't).
@@ -552,13 +567,15 @@ class FollowEntry(BaseModel):
     follows_you: bool
 
 
-class FollowLists(BaseModel):
-    """Your friends (people who follow each other with you), followers and following."""
+FollowListKind = Literal["friends", "followers", "following"]
 
-    counts: FollowCounts
-    friends: list[FollowEntry]
-    followers: list[FollowEntry]
-    following: list[FollowEntry]
+
+class FollowPage(BaseModel):
+    """A page of someone's friends, followers or following, newest first. ``you_follow`` and
+    ``follows_you`` are about you, the viewer."""
+
+    items: list[FollowEntry]
+    next_cursor: str | None = None
 
 
 class UsernameRequest(BaseModel):

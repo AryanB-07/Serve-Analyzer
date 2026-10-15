@@ -7,7 +7,9 @@ import { createMemoryRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { FollowEntry, FollowLists, Person, PersonSummary, Profile, User } from "../../api/types";
+import type { FollowCounts, FollowEntry, Person, PersonSummary, Profile, User } from "../../api/types";
+
+type Lists = { counts: FollowCounts; friends: FollowEntry[]; followers: FollowEntry[]; following: FollowEntry[] };
 
 const ALICE: User = { id: "u1", email: "alice@example.com", created_at: "2026-03-02T10:00:00Z", email_verified: true };
 const PROFILE: Profile = {
@@ -24,17 +26,20 @@ const entry = (person: PersonSummary, you_follow: boolean, follows_you: boolean)
   ({ person, since: "2026-10-10T10:00:00Z", you_follow, follows_you });
 const person = (relationship: Person["relationship"], extra: Partial<Person> = {}): Person =>
   ({ ...BOB, relationship, can_follow: relationship === "none" || relationship === "follows_you", counts: COUNTS,
-    bio: null, friends_since: null, stats: null, positions: null, ...extra });
+    can_see_lists: relationship === "friends" || relationship === "self", bio: null, friends_since: null, stats: null,
+    positions: null, ...extra });
 
 const fake = vi.hoisted(() => ({
   profile: null as unknown as Profile,
-  lists: null as unknown as FollowLists,
+  lists: null as unknown as Lists,
+  pageSize: 100,
   person: null as unknown as Person | Error,
   getMe: vi.fn(),
   logOut: vi.fn(),
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
-  listFollows: vi.fn(),
+  getFollowCounts: vi.fn(),
+  listFollowPage: vi.fn(),
   getPerson: vi.fn(),
   follow: vi.fn(),
   unfollow: vi.fn(),
@@ -73,7 +78,15 @@ beforeEach(() => {
   fake.getMe.mockReset().mockResolvedValue(ALICE);
   fake.getProfile.mockReset().mockImplementation(async () => fake.profile);
   fake.updateProfile.mockReset().mockImplementation(async (body: Partial<Profile>) => (fake.profile = { ...fake.profile, ...body }));
-  fake.listFollows.mockReset().mockImplementation(async () => fake.lists);
+  fake.pageSize = 100;
+  fake.getFollowCounts.mockReset().mockImplementation(async () => ({
+    friends: fake.lists.friends.length, followers: fake.lists.followers.length, following: fake.lists.following.length }));
+  fake.listFollowPage.mockReset().mockImplementation(async (_username: string, kind: keyof FollowCounts, cursor?: string) => {
+    const all = fake.lists[kind];
+    const start = cursor ? Number(cursor) : 0;
+    const items = all.slice(start, start + fake.pageSize);
+    return { items, next_cursor: start + fake.pageSize < all.length ? String(start + fake.pageSize) : null };
+  });
   fake.getPerson.mockReset().mockImplementation(async () => {
     if (fake.person instanceof Error) throw fake.person;
     return fake.person;
@@ -130,7 +143,7 @@ describe("the Friends page", () => {
     expect(screen.getByRole("tab", { name: /Followers 2/ })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Following 2/ })).toBeInTheDocument();
     const panel = screen.getByRole("tabpanel");
-    expect(within(panel).getByRole("link", { name: "Bob B" })).toHaveAttribute("href", "/u/bob");
+    expect(await within(panel).findByRole("link", { name: "Bob B" })).toHaveAttribute("href", "/u/bob");
     expect(within(panel).getByText(/Friends since/)).toBeInTheDocument();
   });
 
@@ -138,6 +151,7 @@ describe("the Friends page", () => {
     renderAt("/friends");
     await userEvent.click(await tab(/Followers/));
     const panel = screen.getByRole("tabpanel");
+    await within(panel).findByRole("link", { name: "@carol" });
     expect(within(panel).queryByRole("button", { name: "Follow Bob B back" })).not.toBeInTheDocument(); // already
     await userEvent.click(within(panel).getByRole("button", { name: "Follow @carol back" }));
     expect(fake.follow).toHaveBeenCalledWith("carol");
@@ -255,6 +269,39 @@ describe("someone's page", () => {
     renderAt("/u/alice");
     expect(await screen.findByRole("link", { name: "This is you: open your profile" })).toHaveAttribute("href", "/profile");
     expect(screen.queryByRole("button", { name: /Block/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("lists", () => {
+  it("pages your lists with Load more", async () => {
+    fake.pageSize = 1;
+    renderAt("/friends");
+    await userEvent.click(await tab(/Followers/));
+    const panel = screen.getByRole("tabpanel");
+    expect(await within(panel).findByRole("link", { name: "Bob B" })).toBeInTheDocument();
+    expect(within(panel).queryByRole("link", { name: "@carol" })).not.toBeInTheDocument();
+    await userEvent.click(within(panel).getByRole("button", { name: "Load more" }));
+    expect(await within(panel).findByRole("link", { name: "@carol" })).toBeInTheDocument();
+    expect(within(panel).queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
+    expect(fake.listFollowPage).toHaveBeenLastCalledWith("alice", "followers", "1");
+  });
+
+  it("shows a friend's lists on their page, without actions", async () => {
+    fake.person = person("friends", { friends_since: "2026-09-02T10:00:00Z" });
+    renderAt("/u/bob");
+    const lists = await screen.findByRole("region", { name: "Bob B's friends, followers and following" });
+    expect(within(lists).getByRole("tab", { name: /Friends 2/ })).toBeInTheDocument(); // Bob's counts
+    expect(await within(lists).findByText("Your friend")).toBeInTheDocument();
+    expect(within(lists).queryByRole("button", { name: /Unfriend|Remove|Unfollow/ })).not.toBeInTheDocument();
+    expect(fake.listFollowPage).toHaveBeenCalledWith("bob", "friends", undefined);
+  });
+
+  it("doesn't show the lists of someone who isn't a friend", async () => {
+    fake.person = person("following");
+    renderAt("/u/bob");
+    await screen.findByRole("heading", { level: 1, name: "Bob B" });
+    expect(screen.queryByRole("region", { name: /friends, followers and following/ })).not.toBeInTheDocument();
+    expect(fake.listFollowPage).not.toHaveBeenCalled();
   });
 });
 

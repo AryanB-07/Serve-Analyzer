@@ -2,9 +2,9 @@ import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ApiError } from "../../api/client";
-import { useFollow, useFollows, useLeaderboard, useRemoveFollower, useUnfollow } from "../../api/friends";
+import { useFollow, useFollowCounts, useFollowList, useLeaderboard, useRemoveFollower, useUnfollow } from "../../api/friends";
 import { useProfile } from "../../api/profile";
-import type { FollowEntry, FollowLists, LeaderboardEntry, PersonSummary } from "../../api/types";
+import type { FollowCounts, FollowEntry, LeaderboardEntry, PersonSummary } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
 import { bandOf } from "../../lib/score";
 import { normaliseUsername, usernameProblem } from "../../lib/username";
@@ -153,30 +153,60 @@ function FollowRow({ entry, tab }: { entry: FollowEntry; tab: Tab }) {
   );
 }
 
-function FollowTabs({ lists }: { lists: FollowLists }) {
-  const [tab, setTab] = useState<Tab>(lists.counts.friends > 0 || lists.counts.followers === 0 ? "friends" : "followers");
+/** One of someone's lists, a page at a time. Your own lists have actions; a friend's are links. */
+function FollowListPanel({ username, kind, own, empty }: { username: string; kind: Tab; own: boolean; empty: string }) {
+  const list = useFollowList(username, kind);
+  const items = list.data?.pages.flatMap((p) => p.items) ?? [];
+  if (list.isError) {
+    return (
+      <div role="alert" className="space-y-2 py-4 text-center text-sm">
+        <p>We couldn't load this list.</p>
+        <button type="button" onClick={() => list.refetch()} className="rounded-lg border border-border px-3 py-1.5">Try again</button>
+      </div>
+    );
+  }
+  if (list.isPending) return <p className="py-6 text-center text-sm text-ink-muted">Loading…</p>;
+  if (items.length === 0) return <p className="py-6 text-center text-sm text-ink-muted">{empty}</p>;
+  return (
+    <div className="space-y-3">
+      <ul className="space-y-2">
+        {items.map((e) => own ? (
+          <FollowRow key={`${kind}-${e.person.username}`} entry={e} tab={kind} />
+        ) : (
+          <PersonRow key={`${kind}-${e.person.username}`} person={e.person}
+            detail={e.you_follow && e.follows_you ? "Your friend" : e.follows_you ? "Follows you" : e.you_follow ? "You follow them" : undefined} />
+        ))}
+      </ul>
+      {list.hasNextPage && (
+        <div className="text-center">
+          <button type="button" onClick={() => list.fetchNextPage()} disabled={list.isFetchingNextPage}
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-surface-2 disabled:opacity-50">
+            {list.isFetchingNextPage ? "Loading…" : "Load more"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function FollowTabs({ username, counts, own, name }: { username: string; counts: FollowCounts; own: boolean; name?: string }) {
+  const [tab, setTab] = useState<Tab>(counts.friends > 0 || counts.followers === 0 ? "friends" : "followers");
   const id = useId();
   const current = TABS.find((t) => t.key === tab)!;
-  const items = lists[tab];
+  const empty = own ? current.empty : `${name ?? "They"} ${tab === "friends" ? "has no friends here yet" : tab === "followers" ? "has no followers yet" : "doesn't follow anyone yet"}.`;
   return (
-    <section aria-label="Your friends, followers and following" className="space-y-3">
+    <section aria-label={own ? "Your friends, followers and following" : `${name}'s friends, followers and following`} className="space-y-3">
       <div role="tablist" aria-label="Lists" className="flex gap-1 rounded-xl border border-border bg-surface p-1">
         {TABS.map((t) => (
           <button key={t.key} type="button" role="tab" id={`${id}-${t.key}`} aria-selected={tab === t.key} aria-controls={`${id}-panel`}
             onClick={() => setTab(t.key)}
             className={`flex-1 rounded-lg px-2 py-1.5 text-sm font-medium ${tab === t.key ? "bg-surface-2 text-ink" : "text-ink-muted hover:text-ink"}`}>
-            {t.label} <span className="tabular text-ink-muted">{lists.counts[t.key]}</span>
+            {t.label} <span className="tabular text-ink-muted">{counts[t.key]}</span>
           </button>
         ))}
       </div>
       <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab}`}>
-        {items.length === 0 ? (
-          <p className="py-6 text-center text-sm text-ink-muted">{current.empty}</p>
-        ) : (
-          <ul className="space-y-2">
-            {items.map((e) => <FollowRow key={`${tab}-${e.person.username}`} entry={e} tab={tab} />)}
-          </ul>
-        )}
+        <FollowListPanel key={tab} username={username} kind={tab} own={own} empty={empty} />
       </div>
     </section>
   );
@@ -247,9 +277,9 @@ function LeaderboardSection() {
 }
 
 export function FriendsPage() {
-  const follows = useFollows();
+  const counts = useFollowCounts();
   const profile = useProfile();
-  const data = follows.data;
+  const me = profile.data?.username;
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 py-4">
@@ -271,19 +301,19 @@ export function FriendsPage() {
 
       <FindSomeone />
 
-      {follows.isError ? (
+      {counts.isError ? (
         <div role="alert" className="space-y-2">
           <p>We couldn't load your friends.</p>
-          <button type="button" onClick={() => follows.refetch()} className="rounded-lg border border-border px-4 py-2">Try again</button>
+          <button type="button" onClick={() => counts.refetch()} className="rounded-lg border border-border px-4 py-2">Try again</button>
         </div>
-      ) : !data ? (
+      ) : !counts.data || !profile.data ? (
         <p className="text-ink-muted">Loading…</p>
-      ) : (
+      ) : me ? (
         <>
-          <FollowTabs lists={data} />
-          {data.counts.friends > 0 && <LeaderboardSection />}
+          <FollowTabs username={me} counts={counts.data} own />
+          {counts.data.friends > 0 && <LeaderboardSection />}
         </>
-      )}
+      ) : null}
     </div>
   );
 }

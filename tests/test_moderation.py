@@ -163,7 +163,7 @@ def test_a_suspended_account_disappears_for_everyone_else(app, settings, ann, bo
     ops("suspend", "ann", "--reason", "harassment")
     ops("suspend", "carol", "--reason", "spam")
     assert bob.get("/people/ann").status_code == 404
-    assert bob.get("/follows").json()["counts"] == {"followers": 0, "following": 0, "friends": 0}
+    assert bob.get("/follows").json() == {"followers": 0, "following": 0, "friends": 0}
     assert bob.get("/conversations").json() == [] and bob.get("/conversations/unread").json() == {"unread": 0}
     assert bob.get(f"/analyses/{analysis_id}").status_code == 404
     assert all(e["person"]["username"] != "ann" for e in bob.get("/leaderboard").json()["not_ranked"])

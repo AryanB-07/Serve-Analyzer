@@ -15,8 +15,11 @@ const fake = vi.hoisted(() => ({
   logIn: vi.fn(),
   signUp: vi.fn(),
   logOut: vi.fn(),
+  checkUsernameForSignup: vi.fn(async (username: string) => (username === "taken_name"
+    ? { username, available: false, problem: "That username is taken." }
+    : { username, available: true, problem: null })),
   getProfile: vi.fn(async () => ({
-    username: null, display_name: null, bio: null, avatar_url: null, member_since: "2026-09-27T10:00:00Z",
+    username: "alice", display_name: null, bio: null, avatar_url: null, member_since: "2026-09-27T10:00:00Z",
     stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null },
   })),
 }));
@@ -89,9 +92,14 @@ function renderApp(path: string): { router: ReturnType<typeof createMemoryRouter
 const where = (router: ReturnType<typeof createMemoryRouter>) =>
   router.state.location.pathname + router.state.location.search;
 
-async function fillAndSubmit(email: string, password: string, button: RegExp, acceptTerms = true) {
+async function fillAndSubmit(email: string, password: string, button: RegExp, acceptTerms = true, username = "new_player") {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Email"), email);
+  const usernameBox = screen.queryByLabelText("Username");
+  if (usernameBox) {  // signing up: wait for the username to be confirmed free
+    await user.type(usernameBox, username);
+    await screen.findByText(username === "taken_name" ? "That username is taken." : `@${username} is available.`);
+  }
   await user.type(screen.getByLabelText("Password"), password);
   const consent = screen.queryByRole("checkbox", { name: /agree to the Terms/ });
   if (consent && acceptTerms) await user.click(consent);
@@ -204,7 +212,7 @@ describe("sign up", () => {
     expect(await screen.findByRole("heading", { name: "Upload page" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Your account" }));
     expect(screen.getByText("new@example.com")).toBeInTheDocument();
-    expect(fake.signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "long enough", accept_terms: true });
+    expect(fake.signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "long enough", username: "new_player", accept_terms: true });
   });
 
   it("needs the terms accepted, and links to them", async () => {
@@ -215,6 +223,15 @@ describe("sign up", () => {
     await fillAndSubmit("new@example.com", "long enough", /create account/i, false);
     expect(screen.getByRole("alert")).toHaveTextContent("Accept the Terms of Service and Privacy Policy");
     expect(fake.signUp).not.toHaveBeenCalled();
+  });
+
+  it("needs a username that's free", async () => {
+    renderApp("/signup");
+    await screen.findByRole("heading", { name: /create/i });
+    await fillAndSubmit("new@example.com", "long enough", /create account/i, true, "taken_name");
+    expect(screen.getByRole("alert")).toHaveTextContent("Choose a username that's available.");
+    expect(fake.signUp).not.toHaveBeenCalled();
+    expect(fake.checkUsernameForSignup).toHaveBeenCalledWith("taken_name");
   });
 
   it("says so when the email is taken", async () => {

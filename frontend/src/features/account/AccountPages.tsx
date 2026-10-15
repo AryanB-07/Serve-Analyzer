@@ -14,9 +14,10 @@ import {
 } from "../../api/session";
 import { ApiError } from "../../api/client";
 import { useBlocks, useUnblock } from "../../api/friends";
-import { useChangePassword, useProfile, useUpdateProfile, useUsernameCheck } from "../../api/profile";
+import { useChangePassword, useProfile, useUpdateProfile } from "../../api/profile";
+import { useUsernameStatus } from "../../components/UsernameField";
 import type { ProfileUpdate } from "../../api/types";
-import { normaliseUsername, usernameProblem } from "../../lib/username";
+import { normaliseUsername } from "../../lib/username";
 import { authErrorMessage, MIN_PASSWORD_LENGTH } from "../auth/AuthForm";
 
 const inputClass =
@@ -559,29 +560,6 @@ function settingsErrorMessage(error: unknown): string {
   return authErrorMessage(error);
 }
 
-/** The username as it's typed, checked against the rules here, then (after a pause) with the API. */
-function useUsernameState(value: string, current: string | null) {
-  const name = normaliseUsername(value);
-  const [settled, setSettled] = useState(name);
-  useEffect(() => {
-    const timer = setTimeout(() => setSettled(name), 400);
-    return () => clearTimeout(timer);
-  }, [name]);
-  const local = name ? usernameProblem(name) : null;
-  const ask = !name || local || name === current || settled !== name ? null : name;
-  const check = useUsernameCheck(ask);
-  const answer = check.data && check.data.username === name ? check.data : null;
-  let text: ReactNode = "Letters, numbers and underscores, 3 to 20 of them. People who know it can find you and see your name and picture.";
-  let tone = "text-ink-muted";
-  if (local) [text, tone] = [local, "text-bad"];
-  else if (name && name === current) text = "This is your username.";
-  else if (answer) [text, tone] = answer.available ? [`@${name} is available.`, "text-good"] : [answer.problem, "text-bad"];
-  else if (name) text = "Checking…";
-  // Saving waits for the API's answer, and is refused when the name isn't available.
-  const usable = name === current || (!local && answer?.available === true);
-  return { text, tone, usable };
-}
-
 function ProfileSettings() {
   const id = useId();
   const profile = useProfile();
@@ -594,7 +572,7 @@ function ProfileSettings() {
     if (p && form === null) setForm({ username: p.username ?? "", display_name: p.display_name ?? "", bio: p.bio ?? "" });
   }, [p, form]);
 
-  const username = useUsernameState(form?.username ?? "", p?.username ?? null);
+  const username = useUsernameStatus(form?.username ?? "", p?.username ?? null);
 
   if (profile.isError) return <ErrorText>{settingsErrorMessage(profile.error)}</ErrorText>;
   if (!p || !form) return <p className="text-sm text-ink-muted">Loading your profile…</p>;

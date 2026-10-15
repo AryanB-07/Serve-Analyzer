@@ -19,7 +19,8 @@ status() {  # status <method> <path> [json]: prints the HTTP status, keeping coo
   curl -ks -o /dev/null -w '%{http_code}' -X "$1" "$base/api$2" -H 'Content-Type: application/json' \
     -b "$work/cookies" -c "$work/cookies" ${3:+--data "$3"}
 }
-account() { printf '{"email":"%s","password":"%s","accept_terms":true}' "$1" "$password"; }
+# A username from the email's random part (usernames are lowercase letters, digits and _).
+account() { printf '{"email":"%s","password":"%s","accept_terms":true,"username":"%s"}' "$1" "$password" "$(printf '%s' "$1" | sed 's/^backup-//; s/@.*//' | tr -cd 'a-z0-9' | cut -c1-20)"; }
 login() { printf '{"email":"%s","password":"%s"}' "$1" "$password"; }
 check() { if [ "$2" = "$3" ]; then echo "  ok: $1"; else echo "FAIL: $1 (got $2, expected $3)" >&2; exit 1; fi; }
 

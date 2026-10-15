@@ -43,16 +43,24 @@ export async function subjectsFor(request: APIRequestContext, to: string): Promi
   return messages.map((m) => m.Subject);
 }
 
-/** Sign up through the form and confirm the address from the emailed link. */
-export async function signUpAndVerify(page: Page, email: string): Promise<void> {
+/** A username nobody has yet (3-20 lowercase letters, digits and underscores). */
+export function newUsername(): string {
+  return `e2e_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.slice(0, 20);
+}
+
+/** Sign up through the form and confirm the address from the emailed link. Returns the username. */
+export async function signUpAndVerify(page: Page, email: string, username = newUsername()): Promise<string> {
   await page.goto("/signup");
   await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Username").fill(username);
+  await expect(page.getByText(`@${username} is available.`)).toBeVisible();
   await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Analyze your serve" })).toBeVisible();
   await page.goto(await emailedLink(page.request, email, "/verify-email"));
   await expect(page.getByRole("heading", { name: "Email confirmed" })).toBeVisible();
+  return username;
 }
 
 /** Delete the signed-in account, so test runs leave nothing behind. */

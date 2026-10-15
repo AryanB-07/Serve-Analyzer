@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 
 import { ApiError } from "../../api";
+import { UsernameField, useUsernameStatus } from "../../components/UsernameField";
 import { LEGAL } from "../legal/config";
 
 export const MIN_PASSWORD_LENGTH = 8;
@@ -22,7 +23,8 @@ interface AuthFormProps {
   mode: "login" | "signup";
   pending: boolean;
   error: unknown;
-  onSubmit: (email: string, password: string) => void;
+  /** ``username`` only when signing up. */
+  onSubmit: (email: string, password: string, username: string) => void;
   footer: ReactNode;
 }
 
@@ -33,12 +35,18 @@ export function AuthForm({ title, subtitle, submitLabel, pendingLabel, mode, pen
   const [showPassword, setShowPassword] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [username, setUsername] = useState("");
   const signingUp = mode === "signup";
+  const usernameStatus = useUsernameStatus(username, null, true);
 
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setProblem("Enter a valid email address.");
+      return;
+    }
+    if (signingUp && !usernameStatus.usable) {
+      setProblem(usernameStatus.name ? "Choose a username that's available." : "Choose a username.");
       return;
     }
     if (signingUp && password.length < MIN_PASSWORD_LENGTH) {
@@ -54,7 +62,7 @@ export function AuthForm({ title, subtitle, submitLabel, pendingLabel, mode, pen
       return;
     }
     setProblem(null);
-    onSubmit(email.trim(), password);
+    onSubmit(email.trim(), password, usernameStatus.name);
   }
 
   const message = problem ?? (error ? authErrorMessage(error) : null);
@@ -79,6 +87,9 @@ export function AuthForm({ title, subtitle, submitLabel, pendingLabel, mode, pen
             required
           />
         </div>
+        {signingUp && (
+          <UsernameField id={`${id}-username`} value={username} onChange={setUsername} status={usernameStatus} />
+        )}
         <div className="space-y-1.5">
           <div className="flex items-baseline justify-between">
             <label htmlFor={`${id}-password`} className="text-sm font-medium">Password</label>

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 
-import { useFollows } from "../../api/friends";
+import { useFollowList } from "../../api/friends";
+import { useProfile } from "../../api/profile";
 import { useStartConversation } from "../../api/messages";
 import { api } from "../../api";
 import type { AnalysisSummary } from "../../api/types";
@@ -44,9 +45,10 @@ export function SendToFriend({ summary }: { summary: AnalysisSummary }) {
   const [sentTo, setSentTo] = useState<{ name: string; conversation: string } | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const follows = useFollows();
+  const me = useProfile().data?.username;
+  const follows = useFollowList(open ? me : null, "friends");
   const start = useStartConversation();
-  const friends = follows.data?.friends ?? [];
+  const friends = follows.data?.pages.flatMap((p) => p.items) ?? [];
 
   async function send(username: string, name: string) {
     setError(null);
@@ -77,7 +79,9 @@ export function SendToFriend({ summary }: { summary: AnalysisSummary }) {
       {open && (
         <div className="absolute right-0 top-full z-30 mt-2 w-72 space-y-2 rounded-xl border border-border bg-surface p-3 shadow-xl">
           <p className="text-sm font-semibold">Send this serve to…</p>
-          {friends.length === 0 ? (
+          {follows.isPending ? (
+            <p className="text-sm text-ink-muted">Loading your friends…</p>
+          ) : friends.length === 0 ? (
             <p className="text-sm text-ink-muted">
               No friends yet. <Link to="/friends" className="text-accent underline">Find someone</Link>
             </p>
@@ -94,6 +98,9 @@ export function SendToFriend({ summary }: { summary: AnalysisSummary }) {
                 </li>
               ))}
             </ul>
+          )}
+          {follows.hasNextPage && (
+            <button type="button" onClick={() => follows.fetchNextPage()} className="text-sm text-accent hover:underline">Show more friends</button>
           )}
           <p className="text-xs text-ink-muted">They'll be able to watch it, without your note or filename, until you delete the message.</p>
           {error != null && <p role="alert" className="text-sm text-bad">{friendsErrorMessage(error)}</p>}

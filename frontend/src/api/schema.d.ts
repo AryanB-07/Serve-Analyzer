@@ -24,6 +24,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/username-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check Username
+         * @description Whether a username is free, for the signup form (no account yet, so by IP).
+         */
+        get: operations["check_username_auth_username_check_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -337,10 +357,32 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * My Lists
-         * @description Your friends, followers and following, newest first.
+         * My Counts
+         * @description How many friends, followers and following you have. The lists are paged, from
+         *     /people/{your username}/{friends|followers|following}.
          */
-        get: operations["my_lists_follows_get"];
+        get: operations["my_counts_follows_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/people/{username}/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Page
+         * @description Someone's friends, followers or following, newest first. Only they and their friends
+         *     (people they follow who follow them back) can see these.
+         */
+        get: operations["list_page_people__username___kind__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1256,17 +1298,15 @@ export interface components {
             follows_you: boolean;
         };
         /**
-         * FollowLists
-         * @description Your friends (people who follow each other with you), followers and following.
+         * FollowPage
+         * @description A page of someone's friends, followers or following, newest first. ``you_follow`` and
+         *     ``follows_you`` are about you, the viewer.
          */
-        FollowLists: {
-            counts: components["schemas"]["FollowCounts"];
-            /** Friends */
-            friends: components["schemas"]["FollowEntry"][];
-            /** Followers */
-            followers: components["schemas"]["FollowEntry"][];
-            /** Following */
-            following: components["schemas"]["FollowEntry"][];
+        FollowPage: {
+            /** Items */
+            items: components["schemas"]["FollowEntry"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /** FrameLandmarks */
         FrameLandmarks: {
@@ -1584,6 +1624,11 @@ export interface components {
              */
             can_follow: boolean;
             counts: components["schemas"]["FollowCounts"];
+            /**
+             * Can See Lists
+             * @default false
+             */
+            can_see_lists: boolean;
             /** Bio */
             bio?: string | null;
             /** Friends Since */
@@ -1835,6 +1880,8 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+            /** Username */
+            username: string;
             /** Accept Terms */
             accept_terms: boolean;
         };
@@ -2006,6 +2053,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    check_username_auth_username_check_get: {
+        parameters: {
+            query: {
+                username: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsernameCheck"];
                 };
             };
             /** @description Validation Error */
@@ -2879,7 +2966,7 @@ export interface operations {
             };
         };
     };
-    my_lists_follows_get: {
+    my_counts_follows_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2894,7 +2981,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FollowLists"];
+                    "application/json": components["schemas"]["FollowCounts"];
                 };
             };
             /** @description Unauthorized */
@@ -2908,6 +2995,68 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_page_people__username___kind__get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                username: string;
+                kind: "friends" | "followers" | "following";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowPage"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

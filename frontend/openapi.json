@@ -67,6 +67,59 @@
         }
       }
     },
+    "/auth/username-check": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Check Username",
+        "description": "Whether a username is free, for the signup form (no account yet, so by IP).",
+        "operationId": "check_username_auth_username_check_get",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Username"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsernameCheck"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -1043,16 +1096,16 @@
         "tags": [
           "friends"
         ],
-        "summary": "My Lists",
-        "description": "Your friends, followers and following, newest first.",
-        "operationId": "my_lists_follows_get",
+        "summary": "My Counts",
+        "description": "How many friends, followers and following you have. The lists are paged, from\n/people/{your username}/{friends|followers|following}.",
+        "operationId": "my_counts_follows_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FollowLists"
+                  "$ref": "#/components/schemas/FollowCounts"
                 }
               }
             }
@@ -1076,6 +1129,121 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/people/{username}/{kind}": {
+      "get": {
+        "tags": [
+          "friends"
+        ],
+        "summary": "List Page",
+        "description": "Someone's friends, followers or following, newest first. Only they and their friends\n(people they follow who follow them back) can see these.",
+        "operationId": "list_page_people__username___kind__get",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Username"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "friends",
+                "followers",
+                "following"
+              ],
+              "type": "string",
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 30,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
           }
         }
       }
@@ -4355,42 +4523,33 @@
         ],
         "title": "FollowEntry"
       },
-      "FollowLists": {
+      "FollowPage": {
         "properties": {
-          "counts": {
-            "$ref": "#/components/schemas/FollowCounts"
-          },
-          "friends": {
+          "items": {
             "items": {
               "$ref": "#/components/schemas/FollowEntry"
             },
             "type": "array",
-            "title": "Friends"
+            "title": "Items"
           },
-          "followers": {
-            "items": {
-              "$ref": "#/components/schemas/FollowEntry"
-            },
-            "type": "array",
-            "title": "Followers"
-          },
-          "following": {
-            "items": {
-              "$ref": "#/components/schemas/FollowEntry"
-            },
-            "type": "array",
-            "title": "Following"
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
           }
         },
         "type": "object",
         "required": [
-          "counts",
-          "friends",
-          "followers",
-          "following"
+          "items"
         ],
-        "title": "FollowLists",
-        "description": "Your friends (people who follow each other with you), followers and following."
+        "title": "FollowPage",
+        "description": "A page of someone's friends, followers or following, newest first. ``you_follow`` and\n``follows_you`` are about you, the viewer."
       },
       "FrameLandmarks": {
         "properties": {
@@ -5524,6 +5683,11 @@
           "counts": {
             "$ref": "#/components/schemas/FollowCounts"
           },
+          "can_see_lists": {
+            "type": "boolean",
+            "title": "Can See Lists",
+            "default": false
+          },
           "bio": {
             "anyOf": [
               {
@@ -6426,6 +6590,12 @@
             "minLength": 8,
             "title": "Password"
           },
+          "username": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Username"
+          },
           "accept_terms": {
             "type": "boolean",
             "title": "Accept Terms"
@@ -6435,6 +6605,7 @@
         "required": [
           "email",
           "password",
+          "username",
           "accept_terms"
         ],
         "title": "SignupRequest"

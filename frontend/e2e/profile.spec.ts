@@ -9,16 +9,17 @@ const NEW_PASSWORD = "a fresh end to end passphrase";
 test("filling in a profile, adding a photo and changing the password", async ({ page, browser, baseURL }) => {
   const email = newEmail("profile");
   const username = `e2e_${Date.now().toString(36)}`.slice(0, 20);
-  await signUpAndVerify(page, email);
+  const first = await signUpAndVerify(page, email);  // the username chosen at signup
 
-  // A new account's profile asks to be filled in.
+  // A new account's profile has its username, and asks for the rest.
   await page.getByRole("button", { name: "Your account" }).click();
   await page.getByRole("link", { name: "Profile" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Your profile" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: `@${first}` })).toBeVisible();
+  await expect(page.getByText("No bio yet.")).toBeVisible();
   await expect(page.getByText("Serves analyzed")).toBeVisible();
 
-  // Settings: name, username (checked as it's typed) and bio.
-  await page.getByRole("link", { name: "Choose a username" }).click();
+  // Settings: name, a new username (checked as it's typed) and bio.
+  await page.getByRole("link", { name: "Edit profile" }).click();
   await expect(page).toHaveURL(/\/settings#profile$/);
   const profile = page.getByRole("form", { name: "Profile" });
   await profile.getByLabel("Display name").fill("End To End");

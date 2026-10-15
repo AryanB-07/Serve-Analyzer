@@ -23,7 +23,7 @@ PASSWORD = "correct horse battery"
 def sign_in(client: TestClient, email: str | None = None) -> TestClient:
     """Sign up a new account on ``client`` (which then carries its session cookie)."""
     email = email or f"{uuid.uuid4().hex[:12]}@example.com"
-    res = client.post("/auth/signup", json={"email": email, "password": PASSWORD, "accept_terms": True})
+    res = client.post("/auth/signup", json={"email": email, "password": PASSWORD, "accept_terms": True, "username": "u" + uuid.uuid4().hex[:12]})
     assert res.status_code == 201, res.text
     return client
 

@@ -1,12 +1,16 @@
 import { Navigate, Outlet, useLocation } from "react-router";
 
+import { useProfile } from "../../api/profile";
 import { useSession } from "../../api/session";
 import { nextParam } from "../../lib/safeNext";
 
 /** Layout route: renders its pages only when signed in, otherwise sends the user to sign in. */
+export const CHOOSE_USERNAME = "/choose-username";
+
 export function RequireAuth() {
   const session = useSession();
   const location = useLocation();
+  const profile = useProfile(Boolean(session.data));
 
   if (session.isPending) {
     return <p role="status" className="py-8 text-ink-muted">Loading…</p>;
@@ -27,6 +31,10 @@ export function RequireAuth() {
   }
   if (!session.data) {
     return <Navigate to={`/login${nextParam(location.pathname + location.search)}`} replace />;
+  }
+  // Every account has a username; one from before that was required chooses it first.
+  if (profile.data && !profile.data.username && location.pathname !== CHOOSE_USERNAME) {
+    return <Navigate to={`${CHOOSE_USERNAME}${nextParam(location.pathname + location.search)}`} replace />;
   }
   return <Outlet />;
 }
