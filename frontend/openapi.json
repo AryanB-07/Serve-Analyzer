@@ -694,6 +694,7 @@
       },
       "get": {
         "summary": "List Analyses",
+        "description": "History, newest first, optionally filtered. Score filters only match scored analyses.",
         "operationId": "list_analyses_analyses_get",
         "parameters": [
           {
@@ -722,6 +723,124 @@
                 }
               ],
               "title": "Cursor"
+            }
+          },
+          {
+            "name": "uploaded_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "uploaded at or after",
+              "title": "Uploaded From"
+            },
+            "description": "uploaded at or after"
+          },
+          {
+            "name": "uploaded_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "uploaded before",
+              "title": "Uploaded To"
+            },
+            "description": "uploaded before"
+          },
+          {
+            "name": "min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Score"
+            }
+          },
+          {
+            "name": "max_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Score"
+            }
+          },
+          {
+            "name": "stat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "front_knee_flexion",
+                    "back_knee_flexion",
+                    "trunk_tilt",
+                    "elbow_angle",
+                    "wrist_height"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stat"
+            }
+          },
+          {
+            "name": "stat_band",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "good",
+                    "borderline",
+                    "off"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stat Band"
             }
           }
         ],
@@ -1034,6 +1153,86 @@
               }
             },
             "description": "Too Many Requests"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyses/{analysis_id}/note": {
+      "put": {
+        "summary": "Set Note",
+        "description": "Add, change or (with an empty note) remove your own note on an analysis.",
+        "operationId": "set_note_analyses__analysis_id__note_put",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "422": {
             "description": "Validation Error",
@@ -1586,6 +1785,40 @@
                 "type": "null"
               }
             ]
+          },
+          "overall_score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Score"
+          },
+          "key_scores": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyScores"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
           }
         },
         "type": "object",
@@ -1920,6 +2153,17 @@
             ],
             "title": "Camera View"
           },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
           "original_video_deleted_at": {
             "anyOf": [
               {
@@ -2116,6 +2360,103 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "KeyScore": {
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "trophy",
+              "racket_drop",
+              "contact"
+            ],
+            "title": "Phase"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score"
+          },
+          "band": {
+            "type": "string",
+            "enum": [
+              "good",
+              "borderline",
+              "off"
+            ],
+            "title": "Band"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phase",
+          "value",
+          "score",
+          "band"
+        ],
+        "title": "KeyScore",
+        "description": "One key position's score, for History's cards (serve_analyzer.score)."
+      },
+      "KeyScores": {
+        "properties": {
+          "front_knee_flexion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyScore"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "back_knee_flexion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyScore"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trunk_tilt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyScore"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "elbow_angle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyScore"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wrist_height": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyScore"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "KeyScores"
       },
       "LandmarkTrack": {
         "properties": {
@@ -2700,6 +3041,25 @@
           "wrist_height"
         ],
         "title": "MetricValues"
+      },
+      "NoteRequest": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "NoteRequest",
+        "description": "The person's own note on an analysis; empty or null clears it."
       },
       "PasswordResetConfirm": {
         "properties": {

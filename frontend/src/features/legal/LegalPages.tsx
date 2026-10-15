@@ -56,6 +56,10 @@ export function PrivacyPage() {
             analysis too.
           </li>
           <li>
+            <strong>Notes:</strong> anything you write in a note on a serve in your history, stored with that analysis and
+            shown only to you.
+          </li>
+          <li>
             <strong>Problem reports:</strong> if you tell us a result looks wrong, the reason you chose and any note you
             wrote, stored with that analysis.
           </li>

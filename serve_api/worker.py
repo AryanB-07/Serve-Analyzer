@@ -23,6 +23,7 @@ from datetime import timedelta
 from serve_analyzer.errors import PipelineError
 from serve_analyzer.pipeline import analyze
 from serve_analyzer.pose import extract_pose_in_subprocess
+from serve_analyzer.score import key_scores
 
 from . import keys, migrate
 from .convert import counts_from_labels, public_message
@@ -97,6 +98,7 @@ def process(job: dict, db: Database, storage: Storage, token: str,
                                  camera_view=job.get("camera_view"))
             written = json.loads((work / keys.RESULTS).read_text())
             counts = counts_from_labels(written["labels"], written.get("quality"))
+            scores = written.get("scores") or key_scores(written)
         except PipelineError as exc:
             log.info("analysis %s failed: %s (%s)", analysis_id, exc.code, exc)
             write("failed", error_code=exc.code, error_message=public_message(exc.code, str(exc)))
@@ -109,7 +111,7 @@ def process(job: dict, db: Database, storage: Storage, token: str,
             log.warning("analysis %s: claim lost before publishing; outputs discarded", analysis_id)
             return
         storage.publish(work, keys.output_prefix(analysis_id))
-    if write("succeeded", counts=counts):
+    if write("succeeded", counts=counts, overall_score=scores["overall"], key_scores=scores["key"]):
         log.info("analysis %s succeeded (contact frame %s)", analysis_id, result.phases.contact)
     elif db.get(analysis_id) is None:
         # Deleted while we were publishing: don't leave its files behind.
@@ -138,6 +140,24 @@ def sweep(db: Database, lease: timedelta = LEASE, max_attempts: int = MAX_ATTEMP
         log.warning("failed %d analyses after %d attempts", failed, max_attempts)
 
 
+def backfill_scores(db: Database, storage: Storage, limit: int = 200) -> int:
+    """Give analyses from before History had scores their scores, from their results.json.
+    Returns how many were filled in."""
+    done = 0
+    for analysis_id in db.unscored(limit):
+        try:
+            results = json.loads(storage.read_bytes(keys.output_key(analysis_id, keys.RESULTS)))
+            scores = results.get("scores") or key_scores(results)
+        except Exception:
+            log.exception("analysis %s: couldn't score it from its results", analysis_id)
+            scores = {"overall": None, "key": {}}  # recorded, so it isn't retried every hour
+        db.set_scores(analysis_id, scores["overall"], scores["key"])
+        done += 1
+    if done:
+        log.info("scored %d older analyses", done)
+    return done
+
+
 def housekeeping(db: Database, storage: Storage, upload_retention_days: int = 0) -> None:
     """Delete what nobody will use again: abandoned uploads, dead sessions and links, old
     attempts, and (with ``upload_retention_days``) original videos past their retention
@@ -154,6 +174,7 @@ def housekeeping(db: Database, storage: Storage, upload_retention_days: int = 0)
     for analysis_id in db.delete_abandoned_uploads(now() - ABANDONED_AFTER):
         storage.delete_prefix(keys.upload_prefix(analysis_id))
         log.info("deleted abandoned upload %s", analysis_id)
+    backfill_scores(db, storage)
     sessions, attempts = db.delete_expired(attempts_before=now() - ATTEMPTS_KEPT)
     if sessions or attempts:
         log.info("deleted %d expired sessions and %d old sign-in attempts", sessions, attempts)

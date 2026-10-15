@@ -171,7 +171,7 @@ class Auth:
             report = reports.get(a["id"])
             items.append(ExportedAnalysis(
                 id=a["id"], filename=a["filename"], hand=a["hand"], status=a["status"],
-                created_at=a["created_at"], camera_view=a.get("camera_view"),
+                created_at=a["created_at"], camera_view=a.get("camera_view"), note=a.get("note"),
                 error=ApiError(code=a["error_code"], message=a["error_message"] or "")
                 if a["error_code"] else None,
                 original_video_deleted_at=a["input_deleted_at"], results=results,

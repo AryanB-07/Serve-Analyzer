@@ -1,0 +1,5922 @@
+[
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 11.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 14.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 17.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 20.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 23.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 10
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 26.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 20
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 29.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 30
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 32.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 40
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 35.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 38.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 56
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 41.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 62
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 44.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 68
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 47.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 74
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 50.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 80
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 53.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 84
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 56.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 88
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 59.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 92
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 62.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 65.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 100
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 68.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 71.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 92
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 74.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 88
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 77.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 84
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 80.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 80
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 83.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 74
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 86.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 68
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 89.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 62
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 92.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 56
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 95.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 98.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 40
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 101.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 30
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 104.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 20
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 107.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 10
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 110.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 113.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 116.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "front_knee_flexion",
+  "value": 119.0,
+  "range": {
+   "good": [
+    50,
+    80
+   ],
+   "borderline": [
+    35,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 4.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 7.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 10.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 13.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 17.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 7
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 20.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 18
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 23.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 28
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 26.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 39
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 30.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 33.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 57
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 36.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 63
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 39.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 70
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 43.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 76
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 46.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 81
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 49.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 85
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 52.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 89
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 56.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 93
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 59.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 62.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 100
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 65.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 69.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 93
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 72.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 89
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 75.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 85
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 78.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 81
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 82.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 76
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 85.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 70
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 88.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 63
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 91.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 57
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 95.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 98.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 39
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 101.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 28
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 104.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 18
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 108.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 7
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 111.25,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 114.5,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 117.75,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "back_knee_flexion",
+  "value": 121.0,
+  "range": {
+   "good": [
+    45,
+    80
+   ],
+   "borderline": [
+    30,
+    95
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 35.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 38.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 42.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 46.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 50.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 53.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 13
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 57.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 25
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 61.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 38
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 65.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 68.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 58
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 72.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 65
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 76.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 73
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 80.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 80
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 83.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 84
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 87.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 88
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 91.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 91
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 95.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 95
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 98.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 99
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 102.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 98
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 106.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 94
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 110.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 90
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 113.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 86
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 117.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 83
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 121.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 78
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 125.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 73
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 128.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 67
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 132.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 61
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 136.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 56
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 140.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 143.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 41
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 147.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 31
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 151.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 22
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 155.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 13
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 158.75,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 3
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 162.5,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 166.25,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "elbow_angle",
+  "value": 170.0,
+  "range": {
+   "good": [
+    80,
+    120
+   ],
+   "borderline": [
+    65,
+    140
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": -6.8,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": -4.95,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": -3.1,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": -1.25,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 0.6,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 2.45,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 10
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 4.3,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 24
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 6.15,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 37
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 8.0,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 9.85,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 58
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 11.7,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 66
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 13.55,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 74
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 15.4,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 81
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 17.25,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 85
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 19.1,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 88
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 20.95,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 92
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 22.8,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 24.65,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 99
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 26.5,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 97
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 28.35,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 93
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 30.2,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 90
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 32.05,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 86
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 33.9,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 82
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 35.75,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 78
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 37.6,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 72
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 39.45,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 67
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 41.3,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 61
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 43.15,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 56
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 45.0,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 46.85,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 41
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 48.7,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 31
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 50.55,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 22
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 52.4,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 13
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 54.25,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 4
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 56.1,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 57.95,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "trophy",
+  "metric": "trunk_tilt",
+  "value": 59.8,
+  "range": {
+   "good": [
+    15,
+    35
+   ],
+   "borderline": [
+    8,
+    45
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 5.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 8.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 12.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 16.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 20.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 23.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 13
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 27.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 25
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 31.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 38
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 35.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 38.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 58
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 42.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 65
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 46.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 73
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 50.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 80
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 53.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 84
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 57.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 88
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 61.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 91
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 65.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 95
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 68.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 99
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 72.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 98
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 76.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 94
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 80.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 90
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 83.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 86
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 87.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 83
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 91.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 78
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 95.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 73
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 98.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 67
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 102.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 61
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 106.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 56
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 110.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 113.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 41
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 117.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 31
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 121.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 22
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 125.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 13
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 128.75,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 3
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 132.5,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 136.25,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "elbow_angle",
+  "value": 140.0,
+  "range": {
+   "good": [
+    50,
+    90
+   ],
+   "borderline": [
+    35,
+    110
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": -9.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": -7.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": -5.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": -3.75,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": -2.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": -0.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 1.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 15
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 3.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 33
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 5.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 6.75,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 61
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 8.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 71
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 10.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 81
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 12.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 84
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 13.75,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 88
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 15.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 91
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 17.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 95
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 19.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 98
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 20.75,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 99
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 22.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 95
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 24.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 92
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 26.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 88
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 27.75,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 85
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 29.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 81
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 31.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 76
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 33.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 71
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 34.75,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 66
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 36.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 61
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 38.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 55
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 40.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 41.75,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 41
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 43.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 33
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 45.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 24
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 47.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 15
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 48.75,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 6
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 50.5,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 52.25,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "racket_drop",
+  "metric": "trunk_tilt",
+  "value": 54.0,
+  "range": {
+   "good": [
+    10,
+    30
+   ],
+   "borderline": [
+    5,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 131.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 3
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 132.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 9
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 134.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 15
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 136.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 21
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 138.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 27
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 139.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 33
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 141.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 38
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 143.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 44
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 145.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 146.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 54
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 148.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 57
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 150.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 61
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 152.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 64
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 153.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 68
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 155.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 71
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 157.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 75
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 159.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 78
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 160.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 82
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 162.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 85
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 164.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 89
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 166.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 92
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 167.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 169.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 99
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 171.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 98
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 173.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 94
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 174.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 91
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 176.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 87
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 178.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 84
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 180.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 80
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 181.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 46
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 183.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 41
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 185.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 37
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 187.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 33
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 188.75,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 28
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 190.5,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 24
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 192.25,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 19
+ },
+ {
+  "phase": "contact",
+  "metric": "elbow_angle",
+  "value": 194.0,
+  "range": {
+   "good": [
+    160,
+    180
+   ],
+   "borderline": [
+    145,
+    180
+   ]
+  },
+  "score": 15
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 0.93,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 0.9575,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 0.985,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.0125,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 4
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.04,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 13
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.0675,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 23
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.095,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 32
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.1225,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 41
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.15,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.1775,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 56
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.205,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 61
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.2325,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 66
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.26,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 72
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.2875,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 78
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.315,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 82
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.3425,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 86
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.37,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 89
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.3975,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 93
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.425,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 97
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.4525,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 100
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.48,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.5075,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 92
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.535,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 89
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.5625,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 85
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.59,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 81
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.6175,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 75
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.645,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 67
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.6725,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 58
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.7,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.7275,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 36
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.755,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 22
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.7825,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 9
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.81,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.8375,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.865,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.8925,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "wrist_height",
+  "value": 1.92,
+  "range": {
+   "good": [
+    1.3,
+    1.6
+   ],
+   "borderline": [
+    1.15,
+    1.7
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": -14.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 15
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": -12.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 19
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": -10.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 24
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": -8.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 28
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": -7.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 33
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": -5.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 37
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": -3.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 41
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": -1.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 46
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 0.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 80
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 1.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 84
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 3.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 87
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 5.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 91
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 7.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 94
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 8.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 98
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 10.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 99
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 12.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 14.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 92
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 15.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 89
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 17.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 85
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 19.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 82
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 21.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 78
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 22.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 75
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 24.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 71
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 26.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 68
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 28.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 64
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 29.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 61
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 31.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 57
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 33.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 54
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 35.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 36.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 44
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 38.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 38
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 40.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 33
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 42.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 27
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 43.75,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 21
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 45.5,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 15
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 47.25,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 9
+ },
+ {
+  "phase": "contact",
+  "metric": "front_knee_flexion",
+  "value": 49.0,
+  "range": {
+   "good": [
+    0,
+    20
+   ],
+   "borderline": [
+    0,
+    35
+   ]
+  },
+  "score": 3
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": -16.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": -14.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": -12.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": -10.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": -8.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": -6.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": -4.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 10
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": -2.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 30
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 0.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 2.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 62
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 4.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 74
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 6.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 82
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 8.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 85
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 10.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 88
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 12.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 91
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 14.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 94
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 16.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 98
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 18.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 99
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 20.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 96
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 22.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 93
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 24.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 90
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 26.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 86
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 28.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 83
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 30.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 80
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 32.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 74
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 34.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 68
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 36.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 62
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 38.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 56
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 40.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 50
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 42.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 40
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 44.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 30
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 46.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 20
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 48.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 10
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 50.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 52.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 54.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ },
+ {
+  "phase": "contact",
+  "metric": "trunk_tilt",
+  "value": 56.0,
+  "range": {
+   "good": [
+    5,
+    30
+   ],
+   "borderline": [
+    0,
+    40
+   ]
+  },
+  "score": 0
+ }
+]

@@ -109,6 +109,8 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
       is remembered per browser.
 - [ ] **Validate the reference ranges** before leaning on the scores. They're placeholders
   (`serve_analyzer/data/reference_ranges.json`), and simple mode turns them into grades.
+- [x] History: score cards with upload time, optional notes, key-position details, and
+      server-side filters by time, score and key position.
 
 ## Camera position
 

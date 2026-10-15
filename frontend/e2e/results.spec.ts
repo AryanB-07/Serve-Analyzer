@@ -56,5 +56,34 @@ test("a serve's results show the limits and take a report", async ({ page }) => 
   expect(Object.keys(data.analyses[0].files).sort()).toEqual(
     ["annotated_video", "frames", "original_video", "playback_video", "thumbnail"]);
 
+  // History: the serve's score on its card, its key positions behind a button, and a note.
+  await page.getByRole("link", { name: "History" }).click();
+  const card = page.getByRole("article", { name: "sample_serve.mp4" });
+  const score = Number(await card.getByTestId("history-score").textContent());
+  expect(score).toBe(data.analyses[0].results.scores.overall);
+  await expect(card.locator("time")).toBeVisible();
+  await card.getByRole("button", { name: "Show details" }).click();
+  await expect(card.getByRole("meter", { name: "Front knee bend score" })).toHaveAttribute("aria-valuenow", /\d+/);
+  await card.getByRole("button", { name: "Add a note to sample_serve.mp4" }).click();
+  await card.getByLabel("Note on sample_serve.mp4").fill("e2e: first session");
+  await card.getByRole("button", { name: "Save note" }).click();
+  await expect(card.getByTestId("history-note")).toHaveText("e2e: first session");
+
+  // The filters run on the server: the serve's own band keeps it, another band hides it.
+  const sidebar = page.getByRole("complementary", { name: "Filters" });
+  const band = score >= 80 ? "80–100 · good" : score >= 50 ? "50–79 · borderline" : "0–49 · needs work";
+  const other = score >= 80 ? "0–49 · needs work" : "80–100 · good";
+  if (await sidebar.getByRole("button", { name: /^Filters/ }).isVisible()) await sidebar.getByRole("button", { name: /^Filters/ }).click();
+  await sidebar.getByRole("radio", { name: band }).check();
+  await expect(card).toBeVisible();
+  await sidebar.getByRole("radio", { name: other }).check();
+  await expect(page.getByText("No serves match these filters")).toBeVisible();
+  await page.reload(); // the filters are in the URL
+  await expect(sidebar.getByRole("radio", { name: other })).toBeChecked();
+  await page.getByRole("region", { name: "Your serves" }).getByRole("button", { name: "Clear filters" }).click();
+  await expect(card.getByTestId("history-note")).toHaveText("e2e: first session"); // saved on the server
+  const exported = await (await page.request.get("/api/auth/me/export")).json();
+  expect(exported.analyses[0].note).toBe("e2e: first session");
+
   await deleteAccount(page);
 });

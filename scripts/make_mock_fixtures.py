@@ -55,6 +55,7 @@ def build(analysis_id: str, video: Path, filename: str, created_at: datetime) ->
         "created_at": created_at.isoformat(), "updated_at": created_at.isoformat(),
         "error_code": None, "error_message": None,
         "counts": counts_from_labels(results["labels"], results.get("quality")),
+        "overall_score": results["scores"]["overall"], "key_scores": results["scores"]["key"],
     }
     summary = summary_from_row(row, url_for)
     (dest / "result.json").write_text(result.model_dump_json(indent=2) + "\n")

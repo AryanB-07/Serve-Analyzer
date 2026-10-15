@@ -12,5 +12,29 @@
     "borderline": 2,
     "off": 0,
     "unknown": 5
-  }
+  },
+  "overall_score": 76,
+  "key_scores": {
+    "front_knee_flexion": {
+      "phase": "trophy",
+      "value": 86.209,
+      "score": 68,
+      "band": "borderline"
+    },
+    "back_knee_flexion": null,
+    "trunk_tilt": {
+      "phase": "trophy",
+      "value": 20.208,
+      "score": 90,
+      "band": "good"
+    },
+    "elbow_angle": null,
+    "wrist_height": {
+      "phase": "contact",
+      "value": 1.256,
+      "score": 71,
+      "band": "borderline"
+    }
+  },
+  "note": null
 }

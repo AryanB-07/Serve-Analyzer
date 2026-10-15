@@ -49,7 +49,10 @@ export interface ApiClient {
   startAnalysis(id: string): Promise<AnalysisSummary>;
   retryAnalysis(id: string): Promise<AnalysisSummary>;
   getAnalysis(id: string): Promise<AnalysisSummary>;
-  listAnalyses(cursor?: string): Promise<AnalysisList>;
+  /** History, newest first. ``query`` is History's filters as API parameters (lib/historyFilters). */
+  listAnalyses(cursor?: string, query?: Record<string, string>): Promise<AnalysisList>;
+  /** Add, change or (with an empty note) remove your note on an analysis. */
+  setNote(id: string, note: string): Promise<AnalysisSummary>;
   getResult(id: string): Promise<AnalysisResult>;
   getFrames(id: string): Promise<FramesPayload>;
 }
@@ -175,8 +178,14 @@ export const httpClient: ApiClient = {
   startAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}/start`, { method: "POST" }),
   retryAnalysis: (id) => request(`/analyses/${encodeURIComponent(id)}/retry`, { method: "POST" }),
   getAnalysis: (id) => (isDemoId(id) ? demo(id, "summary.json") : request(`/analyses/${encodeURIComponent(id)}`)),
-  listAnalyses: (cursor) =>
-    request(`/analyses${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`),
+  listAnalyses: (cursor, query) => {
+    const params = new URLSearchParams(query);
+    if (cursor) params.set("cursor", cursor);
+    const qs = params.toString();
+    return request(`/analyses${qs ? `?${qs}` : ""}`);
+  },
+  setNote: (id, note) =>
+    request(`/analyses/${encodeURIComponent(id)}/note`, { method: "PUT", body: JSON.stringify({ note }) }),
   getResult: (id) => (isDemoId(id) ? demo(id, "result.json") : request(`/analyses/${encodeURIComponent(id)}/result`)),
   getFrames: (id) => (isDemoId(id) ? demo(id, "frames.json") : request(`/analyses/${encodeURIComponent(id)}/frames`)),
 };

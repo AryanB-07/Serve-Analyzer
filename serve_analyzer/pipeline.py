@@ -25,6 +25,7 @@ from .preprocessing import clean
 from .reference import RangeTable, assess, load_ranges, ranges_to_dict, to_labels
 from .video import probe_or_convert, validate, write_playback_copy, write_thumbnail
 from .confidence import measurement_confidence
+from .score import key_scores
 from .view import UNREADABLE, hitting_arm_hidden, measurement_quality
 
 __all__ = ["AnalysisError", "SequenceAnalysis", "Stage", "analyze", "analyze_sequence"]
@@ -90,6 +91,7 @@ def analyze_sequence(
         camera_view=camera_view,
         quality=quality,
         confidence=confidence,
+        scores=key_scores({"metrics": metrics, "ranges": range_dict, "quality": quality}),
     )
     return SequenceAnalysis(result, pose, series)
 

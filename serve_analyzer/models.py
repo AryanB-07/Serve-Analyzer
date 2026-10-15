@@ -70,7 +70,7 @@ Metrics = dict[str, dict[str, float | None]]
 Labels = dict[str, dict[str, str]]
 Ranges = dict[str, dict[str, dict[str, list[float]]]]
 
-RESULTS_SCHEMA_VERSION = 4  # 3: camera_view and quality; 4: confidence, plain feedback
+RESULTS_SCHEMA_VERSION = 5  # 3: camera_view, quality; 4: confidence, plain feedback; 5: scores
 
 
 @dataclass
@@ -104,6 +104,8 @@ class AnalysisResult:
     quality: dict[str, dict[str, str]] | None = None
     # How far each measurement can be trusted (serve_analyzer.confidence), for advanced mode.
     confidence: dict[str, dict[str, dict]] | None = None
+    # Simple mode's scores (serve_analyzer.score.key_scores): {"overall", "key": {metric: ...}}.
+    scores: dict | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -122,5 +124,6 @@ class AnalysisResult:
             "camera_view": self.camera_view,
             "quality": self.quality,
             "confidence": self.confidence,
+            "scores": self.scores,
             "outputs": self.outputs,
         }

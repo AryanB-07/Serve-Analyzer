@@ -35,8 +35,11 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
   with a real progress bar, live processing stages, and friendly error screens with retry.
 - **Camera position (optional):** "Where was your camera?" at upload. The results then mark the
   measurements that position can't read or reads only roughly ([docs/view-detection.md](docs/view-detection.md)).
-- **History and compare:** past analyses with summaries; compare two serves with the videos
-  aligned at trophy and contact, a before/after table and overlaid charts.
+- **History and compare:** every serve as a card with its score out of 100 (coloured by band),
+  upload time and an optional note; the five key positions' scores behind "Show details"; a
+  sidebar filtering by upload time, overall score and any key position's band (kept in the URL,
+  run on the server); compare two serves with the videos aligned at trophy and contact, a
+  before/after table and overlaid charts.
 - **Mock mode:** the whole frontend runs on real pipeline output with no backend, for demos
   and development.
 - **Accessibility:** dark and light themes, keyboard navigation, status shown by shape and
@@ -412,7 +415,8 @@ frontend/
 | `POST /analyses/{id}/start` | Queue the analysis after the upload finishes |
 | `GET /analyses/{id}` | Status: `queued → extracting_pose → analyzing → rendering → succeeded / failed` |
 | `POST /analyses/{id}/retry` | Re-queue a failed analysis |
-| `GET /analyses?cursor=` | History, newest first, cursor-paginated |
+| `GET /analyses?cursor=` | History, newest first, cursor-paginated; filters `uploaded_from`, `uploaded_to`, `min_score`, `max_score`, `stat` + `stat_band` |
+| `PUT /analyses/{id}/note` | Set or clear your note on an analysis (up to 1,000 characters) |
 | `GET /analyses/{id}/result` | Metrics, labels, ranges, feedback, warnings and video URLs |
 | `GET /analyses/{id}/frames` | Per-frame landmarks (raw and smoothed) and angle series |
 | `DELETE /analyses/{id}` | Delete an analysis with its video and results |

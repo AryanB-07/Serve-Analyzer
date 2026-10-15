@@ -44,11 +44,14 @@ export function useFrames(id: string, enabled = true) {
   });
 }
 
-/** Paged history, newest first. Refreshes every few seconds while any item is still processing. */
-export function useAnalysesList() {
+/**
+ * Paged history, newest first, optionally filtered (``query``: lib/historyFilters' apiQuery).
+ * Refreshes every few seconds while any item is still processing.
+ */
+export function useAnalysesList(query: Record<string, string> = {}) {
   return useInfiniteQuery({
-    queryKey: queryKeys.analyses,
-    queryFn: ({ pageParam }) => api.listAnalyses(pageParam),
+    queryKey: [...queryKeys.analyses, query] as const,
+    queryFn: ({ pageParam }) => api.listAnalyses(pageParam, query),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.next_cursor ?? undefined,
     refetchInterval: (query) =>
@@ -86,5 +89,17 @@ export function useReportAnalysis(id: string) {
   return useMutation({
     mutationFn: (body: ReportRequest) => api.reportAnalysis(id, body),
     onSuccess: (report) => queryClient.setQueryData(reportKey(id), report),
+  });
+}
+
+/** Save a note on an analysis, then refresh History (every filtered view of it). */
+export function useSetNote(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (note: string) => api.setNote(id, note),
+    onSuccess: (summary) => {
+      queryClient.setQueryData(queryKeys.analysis(id), summary);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.analyses });
+    },
   });
 }

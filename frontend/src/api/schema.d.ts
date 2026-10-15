@@ -233,7 +233,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Analyses */
+        /**
+         * List Analyses
+         * @description History, newest first, optionally filtered. Score filters only match scored analyses.
+         */
         get: operations["list_analyses_analyses_get"];
         put?: never;
         /**
@@ -302,6 +305,26 @@ export interface paths {
         put?: never;
         /** Retry Analysis */
         post: operations["retry_analysis_analyses__analysis_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analyses/{analysis_id}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Note
+         * @description Add, change or (with an empty note) remove your own note on an analysis.
+         */
+        put: operations["set_note_analyses__analysis_id__note_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -449,6 +472,11 @@ export interface components {
             /** Thumbnail Url */
             thumbnail_url?: string | null;
             counts?: components["schemas"]["StatusCounts"] | null;
+            /** Overall Score */
+            overall_score?: number | null;
+            key_scores?: components["schemas"]["KeyScores"] | null;
+            /** Note */
+            note?: string | null;
         };
         /** ApiError */
         ApiError: {
@@ -574,6 +602,8 @@ export interface components {
             error?: components["schemas"]["ApiError"] | null;
             /** Camera View */
             camera_view?: ("side_hitting" | "side_toss" | "behind" | "behind_diagonal_hitting" | "behind_diagonal_toss" | "front" | "front_diagonal_hitting" | "front_diagonal_toss") | null;
+            /** Note */
+            note?: string | null;
             /** Original Video Deleted At */
             original_video_deleted_at?: string | null;
             /** Results */
@@ -625,6 +655,34 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * KeyScore
+         * @description One key position's score, for History's cards (serve_analyzer.score).
+         */
+        KeyScore: {
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "trophy" | "racket_drop" | "contact";
+            /** Value */
+            value: number;
+            /** Score */
+            score: number;
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "good" | "borderline" | "off";
+        };
+        /** KeyScores */
+        KeyScores: {
+            front_knee_flexion?: components["schemas"]["KeyScore"] | null;
+            back_knee_flexion?: components["schemas"]["KeyScore"] | null;
+            trunk_tilt?: components["schemas"]["KeyScore"] | null;
+            elbow_angle?: components["schemas"]["KeyScore"] | null;
+            wrist_height?: components["schemas"]["KeyScore"] | null;
         };
         /**
          * LandmarkTrack
@@ -743,6 +801,14 @@ export interface components {
             trunk_tilt: number | null;
             /** Wrist Height */
             wrist_height: number | null;
+        };
+        /**
+         * NoteRequest
+         * @description The person's own note on an analysis; empty or null clears it.
+         */
+        NoteRequest: {
+            /** Note */
+            note?: string | null;
         };
         /** PasswordResetConfirm */
         PasswordResetConfirm: {
@@ -1497,6 +1563,14 @@ export interface operations {
             query?: {
                 limit?: number;
                 cursor?: string | null;
+                /** @description uploaded at or after */
+                uploaded_from?: string | null;
+                /** @description uploaded before */
+                uploaded_to?: string | null;
+                min_score?: number | null;
+                max_score?: number | null;
+                stat?: ("front_knee_flexion" | "back_knee_flexion" | "trunk_tilt" | "elbow_angle" | "wrist_height") | null;
+                stat_band?: ("good" | "borderline" | "off") | null;
             };
             header?: never;
             path?: never;
@@ -1846,6 +1920,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_note_analyses__analysis_id__note_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisSummary"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

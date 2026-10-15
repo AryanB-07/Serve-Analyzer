@@ -194,6 +194,19 @@ and what would change the decision. Numbers link to the reports and docs they co
 - **Trade-off:** scores against placeholder reference ranges are only as meaningful as the
   ranges. The page says so.
 
+### 16c. History scores worked out once, on the server
+
+- **Chosen:**
+  - the worker saves each serve's overall score and its five key-position scores in their own columns when the analysis finishes;
+  - History's filters (upload time, score band, a key position's band) are query parameters on `GET /analyses`, run in SQL and paged with the same cursor;
+  - older analyses are scored once by the hourly housekeeping job.
+- **Considered:** filtering in the browser, using scores computed from each result. That's simpler, but every card would need its full results file, and filters would only cover the pages already loaded, so "show my good serves" would silently miss older ones.
+- **Why:** filters have to be right across the whole history, not just the first page.
+  - The score mapping is now in Python (`serve_analyzer/score.py`) as well as TypeScript.
+  - Shared test vectors (`frontend/src/test/score_vectors.json`) are checked by both test suites, so the two can't drift apart.
+  - Python rounds half up, as JavaScript's `Math.round` does.
+- **Trade-off:** each score is fixed against the ranges the serve was analyzed with, which are saved in its results. That keeps it matching the serve's own results page, but new reference ranges only apply to new analyses.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

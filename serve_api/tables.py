@@ -68,8 +68,14 @@ analyses = Table(
     Column("attempts", Integer, nullable=False, server_default="0"),
     # When the original upload was deleted under the retention policy (results are kept).
     Column("input_deleted_at", UTCDateTime),
+    # For History: the overall score and the key positions' scores (serve_analyzer.score), copied
+    # from results.json when the analysis succeeds, and the person's own note.
+    Column("overall_score", Integer),
+    Column("key_scores", JSONType),
+    Column("note", Text),
     Index("analyses_status", "status", "updated_at"),
     Index("analyses_user_created", "user_id", "created_at", "id"),  # a user's History page
+    Index("analyses_user_score", "user_id", "overall_score"),       # filtered by score
 )
 
 users = Table(

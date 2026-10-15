@@ -6,6 +6,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
@@ -28,6 +29,34 @@ from sqlalchemy.exc import IntegrityError
 from .tables import analyses, auth_attempts, email_tokens, result_reports, sessions, storage_purges, users
 
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
+KEY_POSITIONS = ("front_knee_flexion", "back_knee_flexion", "trunk_tilt", "elbow_angle", "wrist_height")
+
+
+@dataclass(frozen=True)
+class HistoryFilters:
+    """History's sidebar: upload time, overall score, and one key position's band."""
+
+    uploaded_from: datetime | None = None
+    uploaded_to: datetime | None = None
+    min_score: int | None = None
+    max_score: int | None = None
+    stat: str | None = None       # one of KEY_POSITIONS
+    stat_band: str | None = None  # "good" | "borderline" | "off"
+
+    def conditions(self) -> list:
+        c = analyses.c
+        out = []
+        if self.uploaded_from is not None:
+            out.append(c.created_at >= self.uploaded_from)
+        if self.uploaded_to is not None:
+            out.append(c.created_at < self.uploaded_to)
+        if self.min_score is not None:
+            out.append(c.overall_score >= self.min_score)
+        if self.max_score is not None:
+            out.append(c.overall_score <= self.max_score)
+        if self.stat is not None and self.stat_band is not None:
+            out.append(c.key_scores[self.stat]["band"].as_string() == self.stat_band)
+        return out
 ACTIVE = ("queued", *IN_PROGRESS)
 
 
@@ -124,8 +153,11 @@ class Database:
             "status": "awaiting_upload", "error_code": None, "error_message": None,
             "counts": None, "created_at": ts, "updated_at": ts,
             "claim_token": None, "heartbeat_at": None, "attempts": 0, "input_deleted_at": None,
+            "overall_score": None, "key_scores": None, "note": None,
         }
-        conn.execute(insert(analyses).values(row))
+        # key_scores is left to its column default, a SQL NULL ("not scored yet"): a Python None in
+        # a JSON column would be stored as JSON null, which IS NULL doesn't match.
+        conn.execute(insert(analyses).values({k: v for k, v in row.items() if k != "key_scores"}))
         return row
 
     def get(self, analysis_id: str) -> dict[str, Any] | None:
@@ -142,10 +174,14 @@ class Database:
         return dict(row) if row else None
 
     def list(
-        self, user_id: str, limit: int, before: tuple[datetime, str] | None = None
+        self, user_id: str, limit: int, before: tuple[datetime, str] | None = None,
+        filters: "HistoryFilters | None" = None,
     ) -> list[dict[str, Any]]:
-        """A user's analyses, newest first. ``before`` is a (created_at, id) keyset cursor."""
+        """A user's analyses, newest first. ``before`` is a (created_at, id) keyset cursor.
+        ``filters`` narrows them by upload time, overall score and one key position's band."""
         query = select(analyses).where(analyses.c.user_id == user_id)
+        if filters is not None:
+            query = query.where(*filters.conditions())
         if before:
             query = query.where(tuple_(analyses.c.created_at, analyses.c.id) < tuple_(*before))
         query = query.order_by(analyses.c.created_at.desc(), analyses.c.id.desc()).limit(limit)
@@ -545,6 +581,24 @@ class Database:
     def mark_input_deleted(self, analysis_id: str) -> None:
         with self.engine.begin() as conn:
             conn.execute(update(analyses).where(analyses.c.id == analysis_id).values(input_deleted_at=now()))
+
+    def set_note(self, analysis_id: str, user_id: str, note: str | None) -> bool:
+        """Set (or, with None, clear) the owner's note. False if there's no such analysis of theirs."""
+        with self.engine.begin() as conn:
+            return conn.execute(update(analyses).where(
+                analyses.c.id == analysis_id, analyses.c.user_id == user_id).values(note=note)).rowcount == 1
+
+    def set_scores(self, analysis_id: str, overall: int | None, key: dict) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(update(analyses).where(analyses.c.id == analysis_id)
+                         .values(overall_score=overall, key_scores=key))
+
+    def unscored(self, limit: int) -> list[str]:
+        """Succeeded analyses that don't have their History scores yet (from before they existed)."""
+        query = (select(analyses.c.id).where(analyses.c.status == "succeeded", analyses.c.key_scores.is_(None))
+                 .order_by(analyses.c.created_at).limit(limit))
+        with self.engine.connect() as conn:
+            return list(conn.execute(query).scalars())
 
     def delete_session(self, token_hash: str) -> None:
         with self.engine.begin() as conn:

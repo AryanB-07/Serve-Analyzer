@@ -47,6 +47,9 @@ def summary_from_row(row: dict[str, Any], url_for: UrlFor) -> AnalysisSummary:
         if row["error_code"] else None,
         thumbnail_url=url_for(keys.output_key(row["id"], keys.THUMBNAIL)) if succeeded else None,
         counts=StatusCounts(**row["counts"]) if row["counts"] else None,
+        overall_score=row.get("overall_score"),
+        key_scores=row.get("key_scores") or None,
+        note=row.get("note"),
     )
 
 

@@ -71,3 +71,14 @@ describe("scores", () => {
     expect(overallScore([null, null])).toBeNull();
   });
 });
+
+// The server works the same scores out for History (serve_analyzer/score.py, tests/test_score.py).
+import vectors from "../test/score_vectors.json";
+
+describe("scores match the server's", () => {
+  it("for every shared test case", () => {
+    for (const c of vectors as unknown as { value: number; range: MetricRange; score: number; metric: string }[]) {
+      expect(scoreFor(c.value, c.range), `${c.metric} ${c.value}`).toBe(c.score);
+    }
+  });
+});

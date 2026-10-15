@@ -53,6 +53,30 @@ class StatusCounts(BaseModel):
     unknown: int
 
 
+KeyPosition = Literal["front_knee_flexion", "back_knee_flexion", "trunk_tilt", "elbow_angle", "wrist_height"]
+ScoreBand = Literal["good", "borderline", "off"]
+
+
+class KeyScore(BaseModel):
+    """One key position's score, for History's cards (serve_analyzer.score)."""
+
+    phase: PhaseName
+    value: float
+    score: int = Field(ge=0, le=100)
+    band: ScoreBand
+
+
+KeyScores = _keyed("KeyScores", ["front_knee_flexion", "back_knee_flexion", "trunk_tilt", "elbow_angle", "wrist_height"],
+                   KeyScore | None, None)
+MAX_ANALYSIS_NOTE = 1000
+
+
+class NoteRequest(BaseModel):
+    """The person's own note on an analysis; empty or null clears it."""
+
+    note: str | None = Field(default=None, max_length=MAX_ANALYSIS_NOTE)
+
+
 class AnalysisSummary(BaseModel):
     id: str
     hand: Hand
@@ -63,6 +87,10 @@ class AnalysisSummary(BaseModel):
     error: ApiError | None = None
     thumbnail_url: str | None = None
     counts: StatusCounts | None = None
+    # 0-100, as in simple mode; null until it succeeds (or if nothing could be scored).
+    overall_score: int | None = Field(default=None, ge=0, le=100)
+    key_scores: KeyScores | None = None
+    note: str | None = None
 
 
 class AnalysisList(BaseModel):
@@ -292,6 +320,7 @@ class ExportedAnalysis(BaseModel):
     created_at: datetime
     error: ApiError | None = None
     camera_view: CameraView | None = None
+    note: str | None = None
     original_video_deleted_at: datetime | None = None
     # The pipeline's results.json: phases, angles, labels, ranges, feedback and warnings.
     results: dict[str, Any] | None = None

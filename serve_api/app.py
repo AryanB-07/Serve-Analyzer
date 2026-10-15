@@ -18,7 +18,7 @@ from .error_reporting import init_error_reporting
 from .mailer import Mailer
 from .purge import analysis_prefixes, run_purges
 from .convert import result_from_file, summary_from_row
-from .db import Database, now
+from .db import Database, HistoryFilters, now
 from .schemas import (
     AnalysisList,
     AnalysisResult,
@@ -29,8 +29,11 @@ from .schemas import (
     SUCCEEDED_REASONS,
     ErrorResponse,
     FramesPayload,
+    KeyPosition,
+    NoteRequest,
     Report,
     ReportRequest,
+    ScoreBand,
     UploadTarget,
     User,
 )
@@ -168,9 +171,19 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     @app.get("/analyses", response_model=AnalysisList, responses=UNAUTHORIZED)
     def list_analyses(
         limit: Annotated[int, Query(ge=1, le=100)] = 20, cursor: str | None = None,
+        uploaded_from: Annotated[datetime | None, Query(description="uploaded at or after")] = None,
+        uploaded_to: Annotated[datetime | None, Query(description="uploaded before")] = None,
+        min_score: Annotated[int | None, Query(ge=0, le=100)] = None,
+        max_score: Annotated[int | None, Query(ge=0, le=100)] = None,
+        stat: KeyPosition | None = None,
+        stat_band: ScoreBand | None = None,
         user: User = signed_in,
     ) -> AnalysisList:
-        rows = db.list(user.id, limit + 1, _decode_cursor(cursor) if cursor else None)
+        """History, newest first, optionally filtered. Score filters only match scored analyses."""
+        if (stat is None) != (stat_band is None):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "stat and stat_band go together")
+        filters = HistoryFilters(uploaded_from, uploaded_to, min_score, max_score, stat, stat_band)
+        rows = db.list(user.id, limit + 1, _decode_cursor(cursor) if cursor else None, filters)
         page = rows[:limit]
         return AnalysisList(
             items=[summary_from_row(r, signed_get) for r in page],
@@ -232,6 +245,14 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
         run_purges(db, storage, purge_ids)
         return Response(status_code=204)
+
+    @app.put("/analyses/{analysis_id}/note", response_model=AnalysisSummary, responses=ERRORS)
+    def set_note(analysis_id: str, body: NoteRequest, user: User = signed_in) -> AnalysisSummary:
+        """Add, change or (with an empty note) remove your own note on an analysis."""
+        note = (body.note or "").strip() or None
+        if not db.set_note(analysis_id, user.id, note):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
+        return summary_from_row(get_row(analysis_id, user), signed_get)
 
     @app.put("/analyses/{analysis_id}/report", response_model=Report,
              responses={**ERRORS, 422: {"model": ErrorResponse}})

@@ -66,6 +66,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   let user: User | null = MOCK_USER;
   const deleted = new Set<string>();
   const reports = new Map<string, Report>();
+  const notes = new Map<string, string | null>();
   let pendingEmail: string | null = null;
 
   const delay = () => (latency > 0 ? sleep(latency) : Promise.resolve());
@@ -296,12 +297,36 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return current(entryOrThrow(id));
     },
 
-    async listAnalyses() {
+    async listAnalyses(_cursor, query = {}) {
       await delay();
       const fixtures = await fetchJson<AnalysisList>("/mock/analyses.json");
       const mine = [...created.values()].map(current).reverse();
       const demos = fixtures.items.filter((a) => !deleted.has(a.id));
-      return { items: [...mine, ...demos], next_cursor: null };
+      // The same filters the API applies (serve_api/db.py HistoryFilters), in memory.
+      const keep = (a: AnalysisSummary) => {
+        const t = Date.parse(a.created_at);
+        if (query.uploaded_from && t < Date.parse(query.uploaded_from)) return false;
+        if (query.uploaded_to && t >= Date.parse(query.uploaded_to)) return false;
+        const score = a.overall_score ?? null;
+        if (query.min_score && (score === null || score < Number(query.min_score))) return false;
+        if (query.max_score && (score === null || score > Number(query.max_score))) return false;
+        if (query.stat && query.stat_band) {
+          const key = (a.key_scores as Record<string, { band: string } | null> | null | undefined)?.[query.stat];
+          if (key?.band !== query.stat_band) return false;
+        }
+        return true;
+      };
+      const items = [...mine, ...demos].map((a) => ({ ...a, note: notes.get(a.id) ?? a.note ?? null })).filter(keep);
+      return { items, next_cursor: null };
+    },
+
+    async setNote(id, note) {
+      await delay();
+      const trimmed = note.trim();
+      if (trimmed) notes.set(id, trimmed);
+      else notes.set(id, null);
+      const summary = isDemo(id) ? await fetchJson<AnalysisSummary>(`/mock/${id}/summary.json`) : current(entryOrThrow(id));
+      return { ...summary, note: notes.get(id) ?? null };
     },
 
     async getResult(id) {
