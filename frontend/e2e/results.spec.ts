@@ -44,7 +44,7 @@ test("a serve's results show the limits and take a report", async ({ page }) => 
 
   await page.getByRole("button", { name: "This result looks wrong?" }).click();
   await page.getByLabel("A phase is marked at the wrong moment").check();
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByText(/we've noted that/)).toContainText("a phase is marked at the wrong moment");
 
   // The report and the analysis are in the data download.

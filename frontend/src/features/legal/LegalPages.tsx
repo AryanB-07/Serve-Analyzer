@@ -108,8 +108,15 @@ export function PrivacyPage() {
           <li>
             Friends (people whose request you accepted, or who accepted yours) also see your bio. They see your serve stats
             (how many, average, best, trend), your key-position averages and your place on the friends leaderboard only if
-            you turn each one on in Settings; all are off to start with. Nobody sees your email, notes, videos or individual
-            results, and turning a setting off hides it straight away.
+            you turn each one on in Settings; all are off to start with. Nobody sees your email or notes, and turning a
+            setting off hides it straight away.
+          </li>
+          <li>
+            <strong>A serve you send a friend</strong> in a message lets them watch it and see its results: the video with
+            the skeleton, the phases, measurements, scores and feedback. They don't see your note, the file's name or the
+            original upload, and can't change or delete anything. They can open it until you delete the message, either of
+            you ends the friendship or blocks, or the analysis or an account is deleted. We can't stop someone recording
+            their screen, so only send serves to people you trust with them.
           </li>
           <li>
             You can stop people sending you friend requests, remove a friend, or block someone in Settings or on their page.

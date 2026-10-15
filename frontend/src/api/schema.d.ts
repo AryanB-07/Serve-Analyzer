@@ -860,6 +860,7 @@ export interface components {
             key_scores?: components["schemas"]["KeyScores"] | null;
             /** Note */
             note?: string | null;
+            shared_by?: components["schemas"]["PersonSummary"] | null;
         };
         /** ApiError */
         ApiError: {
@@ -1132,6 +1133,8 @@ export interface components {
             from_you: boolean;
             /** Body */
             body?: string | null;
+            /** Serve */
+            serve?: string | null;
             /**
              * Deleted
              * @default false
@@ -1348,6 +1351,7 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            serve?: components["schemas"]["SharedServe"] | null;
         };
         /** MessagePage */
         MessagePage: {
@@ -1694,10 +1698,15 @@ export interface components {
             /** Incoming */
             incoming: number;
         };
-        /** SendMessage */
+        /**
+         * SendMessage
+         * @description Text, a serve (one of your finished analyses), or both.
+         */
         SendMessage: {
             /** Body */
-            body: string;
+            body?: string | null;
+            /** Analysis Id */
+            analysis_id?: string | null;
         };
         /** SharedPositions */
         SharedPositions: {
@@ -1706,6 +1715,22 @@ export interface components {
             trunk_tilt?: components["schemas"]["PositionAverage"] | null;
             elbow_angle?: components["schemas"]["PositionAverage"] | null;
             wrist_height?: components["schemas"]["PositionAverage"] | null;
+        };
+        /**
+         * SharedServe
+         * @description A serve sent in a message.
+         */
+        SharedServe: {
+            /** Analysis Id */
+            analysis_id?: string | null;
+            /** Available */
+            available: boolean;
+            /** Overall Score */
+            overall_score?: number | null;
+            /** Recorded At */
+            recorded_at?: string | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
         };
         /** SharedStats */
         SharedStats: {

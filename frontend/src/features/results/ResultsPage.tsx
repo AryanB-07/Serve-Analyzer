@@ -19,6 +19,7 @@ import { OverlayToggles } from "./OverlayToggles";
 import { PhaseTimeline } from "./PhaseTimeline";
 import { CurrentPhase, FrameCounter, StatusKey } from "./PlayheadReadout";
 import { ReportProblem } from "./ReportProblem";
+import { SendToFriend, SharedBanner } from "./Sharing";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { VideoStage, type OverlayOptions } from "./VideoStage";
 
@@ -46,21 +47,28 @@ function ResultsView({
   const simple = mode === "simple";
   // Simple mode draws the skeleton without angle numbers, from the smoothed landmarks.
   const shown: OverlayOptions = simple ? { ...options, showLabels: false, source: "smoothed" } : options;
+  // A friend's serve: watch and compare only.
+  const shared = Boolean(summary.shared_by);
+  const owner = !demo && !shared;
   return (
     <PlayheadProvider nFrames={frames.n_frames} fps={frames.fps}>
       <KeyboardShortcuts result={result} />
       <div className="space-y-5">
         <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{summary.filename}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {summary.shared_by ? `${summary.shared_by.display_name ?? `@${summary.shared_by.username}`}'s serve` : summary.filename}
+          </h1>
           <p className="text-sm text-ink-muted">
             {new Date(summary.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })} ·{" "}
             {result.hand === "right" ? "Right" : "Left"}-handed · {result.fps} fps
           </p>
           <div className="ml-auto flex flex-wrap items-center gap-3">
             <ModeToggle mode={mode} onChange={setMode} />
-            {!demo && <DeleteFromHere summary={summary} />}
+            {owner && <SendToFriend summary={summary} />}
+            {owner && <DeleteFromHere summary={summary} />}
           </div>
         </header>
+        {shared && <SharedBanner summary={summary} />}
 
         {/* Phone order is DOM order (video, analysis, charts); on large screens the
             analysis column sits beside both. */}
@@ -92,7 +100,7 @@ function ResultsView({
               </div>
             )}
             <KnownLimits />
-            {!demo && <ReportProblem analysisId={summary.id} outcome="succeeded" />}
+            {owner && <ReportProblem analysisId={summary.id} outcome="succeeded" />}
           </aside>
 
           {!simple && (

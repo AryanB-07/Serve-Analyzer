@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, EmailStr, Field, create_model, field_validator
+from pydantic import BaseModel, EmailStr, Field, create_model, field_validator, model_validator
 
 from serve_analyzer.angles import METRIC_NAMES
 from serve_analyzer.errors import ErrorCode
@@ -92,6 +92,8 @@ class AnalysisSummary(BaseModel):
     overall_score: int | None = Field(default=None, ge=0, le=100)
     key_scores: KeyScores | None = None
     note: str | None = None
+    # Set when a friend sent you this serve: you can view it, read-only. Yours: None.
+    shared_by: PersonSummary | None = None
 
 
 class AnalysisList(BaseModel):
@@ -568,12 +570,23 @@ MAX_MESSAGE = 2000
 ReportReason = Literal["spam", "harassment", "inappropriate", "impersonation", "other"]
 
 
+class SharedServe(BaseModel):
+    """A serve sent in a message."""
+
+    analysis_id: str | None = None
+    available: bool  # false once the analysis is deleted, or you can no longer open it
+    overall_score: int | None = Field(default=None, ge=0, le=100)
+    recorded_at: datetime | None = None
+    thumbnail_url: str | None = None
+
+
 class Message(BaseModel):
     id: str
     from_you: bool
-    body: str | None = None  # None once deleted
+    body: str | None = None  # None once deleted, or when the message is only a serve
     deleted: bool = False
     created_at: datetime
+    serve: SharedServe | None = None
 
 
 class MessagePreview(BaseModel):
@@ -603,17 +616,26 @@ class StartConversation(BaseModel):
 
 
 class SendMessage(BaseModel):
-    body: str = Field(min_length=1, max_length=MAX_MESSAGE * 2)
+    """Text, a serve (one of your finished analyses), or both."""
+
+    body: str | None = Field(default=None, max_length=MAX_MESSAGE * 2)
+    analysis_id: str | None = Field(default=None, max_length=32)
 
     @field_validator("body")
     @classmethod
-    def _body(cls, value: str) -> str:
+    def _body(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         cleaned = "".join(ch for ch in value.replace("\r\n", "\n") if ch not in _CONTROL or ch in "\n\t").strip()
-        if not cleaned:
-            raise ValueError("Write a message first.")
         if len(cleaned) > MAX_MESSAGE:
             raise ValueError(f"Messages are up to {MAX_MESSAGE:,} characters.")
-        return cleaned
+        return cleaned or None
+
+    @model_validator(mode="after")
+    def _something(self) -> SendMessage:
+        if self.body is None and self.analysis_id is None:
+            raise ValueError("Write a message first.")
+        return self
 
 
 class UnreadCount(BaseModel):
@@ -630,6 +652,7 @@ class UserReportRequest(BaseModel):
 class ExportedMessage(BaseModel):
     from_you: bool
     body: str | None = None
+    serve: str | None = None  # the analysis id of a serve sent in it
     deleted: bool = False
     created_at: datetime
 

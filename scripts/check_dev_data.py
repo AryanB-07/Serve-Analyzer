@@ -95,6 +95,12 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
             page = c.get(client, f"/conversations/{chat['id']}/messages", f"{who} messages")
             if page.status_code == 200:
                 c.counts["messages"] += len(page.json()["items"])
+                for m in page.json()["items"]:
+                    serve = m.get("serve")
+                    if serve and serve["available"] and not m["from_you"]:  # a friend's serve: opens read-only
+                        c.counts["serves shared with them"] += 1
+                        for part in ("", "/result", "/frames"):
+                            c.get(client, f"/analyses/{serve['analysis_id']}{part}", f"{who} opens a shared serve{part}")
     board = c.get(client, "/leaderboard", f"{who} leaderboard")
     if board.status_code == 200:
         c.counts["leaderboard places"] += len(board.json()["ranked"]) + len(board.json()["not_ranked"])

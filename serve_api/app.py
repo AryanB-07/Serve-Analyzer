@@ -19,7 +19,7 @@ from .mailer import Mailer
 from .messaging import messaging_router
 from .profile import profile_router
 from .purge import analysis_prefixes, run_purges
-from .convert import result_from_file, summary_from_row
+from .convert import as_shared, person_summary, result_from_file, summary_from_row
 from .db import Database, HistoryFilters, now
 from .schemas import (
     AnalysisList,
@@ -113,11 +113,24 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     def signed_get(key: str) -> str:
         return storage.presign("GET", key)[0]
 
-    def succeeded_row(analysis_id: str, user: User) -> dict:
-        row = get_row(analysis_id, user)
-        if row["status"] != "succeeded":
-            raise HTTPException(status.HTTP_409_CONFLICT, f"Analysis is {row['status']}")
-        return row
+    def readable_row(analysis_id: str, user: User) -> tuple[dict, str | None]:
+        """For reading only (summary, results, frames): your own analysis, or one a friend sent
+        you that you can still open (db.shared_by). Returns the row and who shared it (None if
+        it's yours). Anything else is "not found", as for get_row."""
+        row = db.get_owned(analysis_id, user.id)
+        if row is not None:
+            return row, None
+        sharer = db.shared_by(analysis_id, user.id)
+        row = db.get(analysis_id) if sharer else None
+        if row is None or row["status"] != "succeeded":
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
+        return row, sharer
+
+    def readable_summary(row: dict, sharer: str | None) -> AnalysisSummary:
+        summary = summary_from_row(row, signed_get)
+        if sharer is None:
+            return summary
+        return as_shared(summary, person_summary(db.get_profile(sharer), signed_get))
 
     @app.get("/health", include_in_schema=False)
     def health() -> JSONResponse:
@@ -198,7 +211,7 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
 
     @app.get("/analyses/{analysis_id}", response_model=AnalysisSummary, responses=ERRORS)
     def get_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
-        return summary_from_row(get_row(analysis_id, user), signed_get)
+        return readable_summary(*readable_row(analysis_id, user))
 
     @app.post("/analyses/{analysis_id}/start", status_code=202, response_model=AnalysisSummary,
               responses=LIMITED)
@@ -285,7 +298,9 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
 
     @app.get("/analyses/{analysis_id}/result", response_model=AnalysisResult, responses=ERRORS)
     def get_result(analysis_id: str, user: User = signed_in) -> AnalysisResult:
-        succeeded_row(analysis_id, user)
+        row, sharer = readable_row(analysis_id, user)
+        if sharer is None and row["status"] != "succeeded":
+            raise HTTPException(status.HTTP_409_CONFLICT, f"Analysis is {row['status']}")
         results = json.loads(storage.read_bytes(keys.output_key(analysis_id, keys.RESULTS)))
         return result_from_file(analysis_id, results, signed_get)
 
@@ -297,7 +312,9 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
         Served straight from the pipeline's frames.json (validated against
         FramesPayload in tests) to avoid re-parsing a large payload per request.
         """
-        succeeded_row(analysis_id, user)
+        row, sharer = readable_row(analysis_id, user)
+        if sharer is None and row["status"] != "succeeded":
+            raise HTTPException(status.HTTP_409_CONFLICT, f"Analysis is {row['status']}")
         return Response(
             storage.read_bytes(keys.output_key(analysis_id, keys.FRAMES)),
             media_type="application/json",

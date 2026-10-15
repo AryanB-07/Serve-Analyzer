@@ -9,7 +9,7 @@ from typing import Any, get_args
 from serve_analyzer.errors import ErrorCode
 
 from . import keys
-from .schemas import AnalysisResult, AnalysisSummary, ApiError, StatusCounts
+from .schemas import AnalysisResult, AnalysisSummary, ApiError, PersonSummary, StatusCounts
 
 UrlFor = Callable[[str], str]
 
@@ -88,3 +88,21 @@ def result_from_file(analysis_id: str, results: dict[str, Any], url_for: UrlFor)
         annotated_video_url=url_for(keys.output_key(analysis_id, keys.ANNOTATED)),
         thumbnail_url=url_for(keys.output_key(analysis_id, keys.THUMBNAIL)),
     )
+
+
+def person_summary(profile: dict[str, Any] | None, url_for: UrlFor) -> PersonSummary | None:
+    """What others see of someone: name, username and picture. None if there's no profile."""
+    if not profile:
+        return None
+    avatar = profile.get("avatar_key")
+    return PersonSummary(username=profile.get("username"), display_name=profile.get("display_name"),
+                         avatar_url=url_for(avatar) if avatar else None)
+
+
+SHARED_FILENAME = "Shared serve"
+
+
+def as_shared(summary: AnalysisSummary, sharer: PersonSummary | None) -> AnalysisSummary:
+    """An analysis as the friend it was sent to sees it: no note, and not the original
+    filename (which can say more than the sender meant to)."""
+    return summary.model_copy(update={"note": None, "filename": SHARED_FILENAME, "shared_by": sharer})

@@ -7,6 +7,8 @@ import type { ConversationSummary, Message } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
 import { displayName, friendsErrorMessage } from "../friends/FriendsPage";
 import { ReportForm } from "./ReportForm";
+import { ServeCard } from "./ServeCard";
+import { ServePicker } from "./ServePicker";
 
 const MAX = 2000;
 
@@ -33,8 +35,9 @@ function Bubble({ message, conversationId, other, seen }: {
             : mine ? "bg-accent text-on-accent" : "border border-border bg-surface"}`}
       >
         <span className="sr-only">{mine ? "You" : name}: </span>
-        {message.deleted ? "Message deleted" : message.body}
+        {message.deleted ? "Message deleted" : message.body ?? (message.serve ? "Sent a serve" : "")}
       </div>
+      {message.serve && !message.deleted && <ServeCard serve={message.serve} mine={mine} />}
       <div className="flex items-center gap-3 px-1 text-xs text-ink-muted">
         <time dateTime={message.created_at}>{when(message.created_at)}</time>
         {mine && seen && <span>Seen</span>}
@@ -68,13 +71,26 @@ function Composer({ conversation }: { conversation: ConversationSummary }) {
   const id = useId();
   const send = useSendMessage(conversation.id);
   const [text, setText] = useState("");
+  const [picking, setPicking] = useState(false);
   const tooLong = text.trim().length > MAX;
 
   function submit(event?: FormEvent) {
     event?.preventDefault();
     const body = text.trim();
     if (!body || tooLong || send.isPending) return;
-    send.mutate(body, { onSuccess: () => setText("") });
+    send.mutate({ body }, { onSuccess: () => setText("") });
+  }
+
+  /** Send a serve, with whatever's been typed as its caption. */
+  function sendServe(analysisId: string) {
+    const body = text.trim() || null;
+    if (tooLong) return;
+    send.mutate({ body, analysis_id: analysisId }, {
+      onSuccess: () => {
+        setText("");
+        setPicking(false);
+      },
+    });
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -93,7 +109,23 @@ function Composer({ conversation }: { conversation: ConversationSummary }) {
   }
   return (
     <form onSubmit={submit} aria-label="Send a message" className="space-y-1">
+      {picking && (
+        <ServePicker title="Send one of your serves" onPick={(a) => sendServe(a.id)} onCancel={() => setPicking(false)} />
+      )}
       <div className="flex items-end gap-2">
+        <button
+          type="button"
+          onClick={() => setPicking((v) => !v)}
+          aria-expanded={picking}
+          className="grid size-11 shrink-0 place-items-center rounded-full border border-border text-ink-muted hover:bg-surface-2 hover:text-ink"
+          aria-label="Send a serve"
+          title="Send a serve"
+        >
+          <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m10 9 5 3-5 3z" fill="currentColor" />
+          </svg>
+        </button>
         <label htmlFor={`${id}-text`} className="sr-only">Message</label>
         <textarea
           id={`${id}-text`}

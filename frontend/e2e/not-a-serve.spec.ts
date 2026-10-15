@@ -45,7 +45,7 @@ test("a clip that isn't a serve is rejected with a reason, and can be disputed",
   await failure.getByRole("button", { name: "This was a serve? Tell us" }).click();
   await expect(page.getByLabel("This was a serve")).toBeChecked();
   await page.getByLabel(/Anything to add/).fill("e2e: it really was");
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByText(/we've noted that/)).toContainText("this was a serve");
 
   // The report is stored on the server: it's still there after a reload.

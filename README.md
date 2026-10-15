@@ -50,6 +50,9 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
   messages for everyone, and reporting a person or a message (with the option to block). It
   stays readable but closes when a friendship ends; a block hides it from both. Updates arrive
   by polling (5 s in an open conversation).
+- **Sending serves:** send one of your analyses in a message, or with "Send to a friend" from its
+  results page. The friend opens it read-only (no note, filename or original video) and can
+  compare it with one of their own, until the message is deleted or the friendship ends.
 - **My Serves and compare:** every serve as a card with its score out of 100 (coloured by band),
   upload time and an optional note; the five key positions' scores behind "Show details"; a
   sidebar filtering by upload time, overall score and any key position's band (kept in the URL,
@@ -441,7 +444,7 @@ frontend/
 | `POST /analyses` | Create an analysis (hand, file, optional `camera_view`); returns a signed `PUT` URL for the video |
 | `PUT <signed url>` | Upload the video directly to storage |
 | `POST /analyses/{id}/start` | Queue the analysis after the upload finishes |
-| `GET /analyses/{id}` | Status: `queued → extracting_pose → analyzing → rendering → succeeded / failed` |
+| `GET /analyses/{id}` | Status: `queued → extracting_pose → analyzing → rendering → succeeded / failed`. With `/result` and `/frames`, also open read-only to a friend you sent it to |
 | `POST /analyses/{id}/retry` | Re-queue a failed analysis |
 | `GET /analyses?cursor=` | History, newest first, cursor-paginated; filters `uploaded_from`, `uploaded_to`, `min_score`, `max_score`, `stat` + `stat_band` |
 | `PUT /analyses/{id}/note` | Set or clear your note on an analysis (up to 1,000 characters) |
@@ -464,7 +467,7 @@ frontend/
 | `GET /blocks`, `POST /blocks`, `DELETE /blocks/{username}` | Blocked people |
 | `GET /leaderboard` | You and your friends who joined it, ranked by the average of each one's latest serves |
 | `GET /conversations`, `POST /conversations`, `GET /conversations/unread` | Your conversations; open one with a friend; the unread total |
-| `GET`/`POST /conversations/{id}/messages`, `POST /conversations/{id}/read` | Read (paged, newest first) and send; mark as read |
+| `GET`/`POST /conversations/{id}/messages`, `POST /conversations/{id}/read` | Read (paged, newest first) and send text and/or one of your serves; mark as read |
 | `DELETE /messages/{id}` | Delete your message for everyone |
 | `POST /reports` | Report a person, or one of their messages to you |
 | `DELETE /auth/me` | Delete the account and everything in it (needs the password) |

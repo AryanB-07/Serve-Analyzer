@@ -44,12 +44,15 @@ function alignmentNote(anchors: PhaseAnchor[]): string {
 }
 
 function ClipPanel({ label, clip, children }: { label: string; clip: Clip; children: ReactNode }) {
+  // A serve a friend sent you is named by whose it is, not by a filename you never saw.
+  const by = clip.summary.shared_by;
+  const title = by ? `${by.display_name ?? `@${by.username}`}'s serve` : clip.summary.filename;
   return (
-    <section aria-label={`${label}: ${clip.summary.filename}`} className="min-w-0 space-y-2">
+    <section aria-label={`${label}: ${title}`} className="min-w-0 space-y-2">
       <div className="flex flex-wrap items-baseline gap-x-2">
         <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-sm font-semibold">{label}</span>
         <Link to={`/analyses/${clip.summary.id}`} className="truncate text-sm hover:underline">
-          {clip.summary.filename}
+          {title}
         </Link>
         <span className="text-sm text-ink-muted">{formatDate(clip.summary.created_at)}</span>
       </div>

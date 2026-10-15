@@ -19,6 +19,7 @@ import type {
   ProfileUpdate,
   Report,
   ReportRequest,
+  SendMessage,
   SignupRequest,
   UploadTarget,
   User,
@@ -96,7 +97,8 @@ export interface ApiClient {
   getConversation(id: string): Promise<ConversationSummary>;
   /** Newest first; ``before`` is the previous page's next_cursor. */
   listMessages(id: string, before?: string): Promise<MessagePage>;
-  sendMessage(id: string, body: string): Promise<Message>;
+  /** Text, one of your finished serves, or both. */
+  sendMessage(id: string, message: SendMessage): Promise<Message>;
   markRead(id: string): Promise<void>;
   deleteMessage(messageId: string): Promise<void>;
   /** Report a person, or one of their messages to you. */
@@ -239,8 +241,8 @@ export const httpClient: ApiClient = {
   getConversation: (id) => request(`/conversations/${encodeURIComponent(id)}`),
   listMessages: (id, before) =>
     request(`/conversations/${encodeURIComponent(id)}/messages${before ? `?${new URLSearchParams({ before })}` : ""}`),
-  sendMessage: (id, body) =>
-    request(`/conversations/${encodeURIComponent(id)}/messages`, { method: "POST", body: JSON.stringify({ body }) }),
+  sendMessage: (id, message) =>
+    request(`/conversations/${encodeURIComponent(id)}/messages`, { method: "POST", body: JSON.stringify(message) }),
   markRead: (id) => request(`/conversations/${encodeURIComponent(id)}/read`, { method: "POST" }),
   deleteMessage: (id) => request(`/messages/${encodeURIComponent(id)}`, { method: "DELETE" }),
   report: (body) => request("/reports", { method: "POST", body: JSON.stringify(body) }),

@@ -1,6 +1,8 @@
 """Messages between friends, and reports of people and messages.
 
-Only friends can message each other. When a friendship ends the conversation stays readable,
+Only friends can message each other, and a message can carry one of the sender's serves,
+which the friend can then open read-only for as long as the message exists and they're
+friends (db.shared_by). When a friendship ends the conversation stays readable,
 but nobody can send to it. A block hides the conversation from both people while it lasts, so
 the blocked person still can't tell the blocker exists. Deleting an account deletes the messages
 it sent; the other person keeps their side.
@@ -13,6 +15,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
+from . import keys
 from .auth import Auth, RateLimiter, _too_many
 from .db import Database, now
 from .schemas import (
@@ -23,6 +26,7 @@ from .schemas import (
     MessagePreview,
     PersonSummary,
     SendMessage,
+    SharedServe,
     StartConversation,
     UnreadCount,
     User,
@@ -79,15 +83,34 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         preview = None
         if last:
             text = last["body"]
+            if not text and last.get("analysis_id") and last["deleted_at"] is None:
+                text = "Sent a serve"
             preview = MessagePreview(text=text[:PREVIEW] if text else None, from_you=last["sender_id"] == user.id,
                                      deleted=last["deleted_at"] is not None, at=last["created_at"])
         other = db.profiles_of([other_id]).get(other_id) if other_id else None
         return ConversationSummary(id=conversation_id, person=summary(other) if other_id else None,
                                    last_message=preview, unread=unread, can_send=can_send, why_not=why)
 
-    def as_message(row: dict, user: User) -> Message:
+    def serves_for(rows: list[dict], user: User) -> dict[str, SharedServe]:
+        """The serves sent in these messages, as ``user`` may see them."""
+        sent = [r for r in rows if r.get("analysis_id")]
+        found = db.analyses_by_id([r["analysis_id"] for r in sent])
+        out = {}
+        for r in sent:
+            a = found.get(r["analysis_id"])
+            mine = r["sender_id"] == user.id
+            # The sender can always see their own serve; the friend only while they may open it.
+            ok = a is not None and a["status"] == "succeeded" and (mine or db.shared_by(a["id"], user.id) is not None)
+            out[r["id"]] = SharedServe(
+                analysis_id=a["id"] if ok else None, available=ok,
+                overall_score=a["overall_score"] if ok else None, recorded_at=a["created_at"] if ok else None,
+                thumbnail_url=storage.presign("GET", keys.output_key(a["id"], keys.THUMBNAIL))[0] if ok else None)
+        return out
+
+    def as_message(row: dict, user: User, serves: dict[str, SharedServe] | None = None) -> Message:
         return Message(id=row["id"], from_you=row["sender_id"] == user.id, body=row["body"],
-                       deleted=row["deleted_at"] is not None, created_at=row["created_at"])
+                       deleted=row["deleted_at"] is not None, created_at=row["created_at"],
+                       serve=(serves or {}).get(row["id"]))
 
     def visible_conversations(user: User) -> list[dict]:
         return [c for c in db.conversations_of(user.id)
@@ -128,7 +151,8 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         member = mine(conversation_id, user)
         rows = db.messages_page(conversation_id, limit + 1, _parse_cursor(before) if before else None)
         page = rows[:limit]
-        return MessagePage(items=[as_message(r, user) for r in page],
+        serves = serves_for(page, user)
+        return MessagePage(items=[as_message(r, user, serves) for r in page],
                            next_cursor=_cursor(page[-1]) if len(rows) > limit else None,
                            seen_up_to=member["other_read_at"])
 
@@ -143,7 +167,13 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
             raise _too_many(60)
         if db.messages_sent_since(user.id, t - timedelta(days=1)) >= PER_DAY:
             raise _too_many(3600)
-        return as_message(db.add_message(conversation_id, user.id, body.body), user)
+        if body.analysis_id:
+            # Only your own finished analyses can be sent: not one someone shared with you.
+            analysis = db.get_owned(body.analysis_id, user.id)
+            if analysis is None or analysis["status"] != "succeeded":
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
+        row = db.add_message(conversation_id, user.id, body.body, body.analysis_id)
+        return as_message(row, user, serves_for([row], user))
 
     @router.post("/conversations/{conversation_id}/read", status_code=204, responses=errors)
     def mark_read(conversation_id: str, user: User = signed_in) -> Response:

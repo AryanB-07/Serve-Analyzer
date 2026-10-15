@@ -448,8 +448,11 @@ class Database:
 
     def delete_analysis(self, analysis_id: str, user_id: str, prefixes: list[str]) -> list[int] | None:
         """Delete one of ``user_id``'s analyses and queue its storage ``prefixes`` for removal,
-        in one transaction. Returns the purge ids, or None if there was no such analysis."""
+        in one transaction. Returns the purge ids, or None if there was no such analysis.
+        Messages it was sent in stay, saying the serve isn't available any more."""
         with self.engine.begin() as conn:
+            conn.execute(update(messages).where(messages.c.analysis_id == analysis_id,
+                                                messages.c.sender_id == user_id).values(analysis_id=None))
             conn.execute(delete(result_reports).where(
                 result_reports.c.analysis_id == analysis_id, result_reports.c.user_id == user_id))
             gone = conn.execute(delete(analyses).where(
@@ -806,10 +809,11 @@ class Database:
             row = conn.execute(select(messages).where(messages.c.id == message_id)).mappings().first()
         return dict(row) if row else None
 
-    def add_message(self, conversation_id: str, sender_id: str, body: str) -> dict[str, Any]:
+    def add_message(self, conversation_id: str, sender_id: str, body: str | None,
+                    analysis_id: str | None = None) -> dict[str, Any]:
         ts = now()
         row = {"id": uuid.uuid4().hex, "conversation_id": conversation_id, "sender_id": sender_id,
-               "body": body, "created_at": ts, "deleted_at": None}
+               "body": body, "analysis_id": analysis_id, "created_at": ts, "deleted_at": None}
         with self.engine.begin() as conn:
             conn.execute(insert(messages).values(**row))
             conn.execute(update(conversations).where(conversations.c.id == conversation_id).values(last_message_at=ts))
@@ -828,9 +832,33 @@ class Database:
     def delete_message(self, message_id: str, sender_id: str) -> bool:
         """Delete one of ``sender_id``'s messages for everyone: its text goes, a marker stays."""
         with self.engine.begin() as conn:
+            # The serve goes with it: deleting the message is how you stop sharing it.
             return conn.execute(update(messages).where(
                 messages.c.id == message_id, messages.c.sender_id == sender_id, messages.c.deleted_at.is_(None))
-                .values(body=None, deleted_at=now())).rowcount > 0
+                .values(body=None, analysis_id=None, deleted_at=now())).rowcount > 0
+
+    def shared_by(self, analysis_id: str, viewer_id: str) -> str | None:
+        """Who shared ``analysis_id`` with ``viewer_id``, if anyone still is: its owner sent it in
+        a message (not deleted) in a conversation ``viewer_id`` is in, they're friends now, and
+        there's no block either way. Otherwise None."""
+        with self.engine.connect() as conn:
+            owner = conn.execute(
+                select(analyses.c.user_id)
+                .join(messages, and_(messages.c.analysis_id == analyses.c.id, messages.c.sender_id == analyses.c.user_id))
+                .join(conversation_members, and_(conversation_members.c.conversation_id == messages.c.conversation_id,
+                                                 conversation_members.c.user_id == viewer_id))
+                .where(analyses.c.id == analysis_id, messages.c.deleted_at.is_(None), analyses.c.user_id != viewer_id)
+                .limit(1)).scalar_one_or_none()
+        if owner is None or self.blocked_between(owner, viewer_id):
+            return None
+        conn_row = self.connection_between(owner, viewer_id)
+        return owner if conn_row and conn_row["status"] == "accepted" else None
+
+    def analyses_by_id(self, ids: list[str]) -> dict[str, dict[str, Any]]:
+        if not ids:
+            return {}
+        with self.engine.connect() as conn:
+            return {r["id"]: dict(r) for r in conn.execute(select(analyses).where(analyses.c.id.in_(ids))).mappings()}
 
     def messages_sent_since(self, sender_id: str, since: datetime) -> int:
         with self.engine.connect() as conn:

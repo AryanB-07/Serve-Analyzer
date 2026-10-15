@@ -194,7 +194,7 @@ class Auth:
         name_of = lambda uid: (others.get(uid) or {}).get("username")  # noqa: E731
         conversations = [ExportedConversation(
             with_username=name_of(c["other_id"]) if c["other_id"] else None,
-            messages=[ExportedMessage(from_you=m["sender_id"] == user.id, body=m["body"],
+            messages=[ExportedMessage(from_you=m["sender_id"] == user.id, body=m["body"], serve=m["analysis_id"],
                                       deleted=m["deleted_at"] is not None, created_at=m["created_at"])
                       for m in reversed(self.db.messages_page(c["id"], limit=100_000))],
         ) for c in chats]

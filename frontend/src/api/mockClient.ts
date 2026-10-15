@@ -103,7 +103,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   ]);
   const blocked = new Map<string, string>();
   // Mock conversations, keyed by the other person's username.
-  type MockMessage = { id: string; from_you: boolean; body: string | null; deleted: boolean; created_at: string };
+  type MockMessage = {
+    id: string; from_you: boolean; body: string | null; deleted: boolean; created_at: string;
+    serve?: { analysis_id: string | null; available: boolean; overall_score: number | null; recorded_at: string | null; thumbnail_url: string | null } | null;
+  };
   const chats = new Map<string, { id: string; messages: MockMessage[]; read_at: string | null }>([
     ["ace", {
       id: "conv-ace", read_at: null, messages: [
@@ -467,14 +470,20 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return { items: [...chat.messages].reverse(), next_cursor: null, seen_up_to: chat.messages.at(-1)?.created_at ?? null };
     },
 
-    async sendMessage(id, body) {
+    async sendMessage(id, { body, analysis_id }) {
       await delay();
       const [username, chat] = chatById(id);
       if (!isFriend(username)) throw new ApiError(403, "You can only message friends.");
-      const text = body.trim();
-      if (!text) throw new ApiError(422, "Write a message first.");
-      if (text.length > 2000) throw new ApiError(422, "Messages are up to 2,000 characters.");
-      const message = { id: `m-${now()}-${chat.messages.length}`, from_you: true, body: text, deleted: false, created_at: new Date(now()).toISOString() };
+      const text = body?.trim() || null;
+      if (!text && !analysis_id) throw new ApiError(422, "Write a message first.");
+      if (text && text.length > 2000) throw new ApiError(422, "Messages are up to 2,000 characters.");
+      let serve: MockMessage["serve"] = null;
+      if (analysis_id) {
+        const a = (await this.listAnalyses()).items.find((x) => x.id === analysis_id && x.status === "succeeded");
+        if (!a) throw new ApiError(404, "Analysis not found");
+        serve = { analysis_id, available: true, overall_score: a.overall_score ?? null, recorded_at: a.created_at, thumbnail_url: a.thumbnail_url ?? null };
+      }
+      const message: MockMessage = { id: `m-${now()}-${chat.messages.length}`, from_you: true, body: text, deleted: false, created_at: new Date(now()).toISOString(), serve };
       chat.messages.push(message);
       return message;
     },
@@ -489,7 +498,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       for (const chat of chats.values()) {
         const m = chat.messages.find((x) => x.id === messageId && x.from_you && !x.deleted);
         if (m) {
-          Object.assign(m, { body: null, deleted: true });
+          Object.assign(m, { body: null, deleted: true, serve: null });
           return;
         }
       }

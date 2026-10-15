@@ -3332,6 +3332,16 @@
               }
             ],
             "title": "Note"
+          },
+          "shared_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -4075,6 +4085,17 @@
             ],
             "title": "Body"
           },
+          "serve": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serve"
+          },
           "deleted": {
             "type": "boolean",
             "title": "Deleted",
@@ -4692,6 +4713,16 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "serve": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SharedServe"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -6068,17 +6099,33 @@
       "SendMessage": {
         "properties": {
           "body": {
-            "type": "string",
-            "maxLength": 4000,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Body"
+          },
+          "analysis_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Id"
           }
         },
         "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "SendMessage"
+        "title": "SendMessage",
+        "description": "Text, a serve (one of your finished analyses), or both."
       },
       "SharedPositions": {
         "properties": {
@@ -6135,6 +6182,67 @@
         },
         "type": "object",
         "title": "SharedPositions"
+      },
+      "SharedServe": {
+        "properties": {
+          "analysis_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Id"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "overall_score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Score"
+          },
+          "recorded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available"
+        ],
+        "title": "SharedServe",
+        "description": "A serve sent in a message."
       },
       "SharedStats": {
         "properties": {

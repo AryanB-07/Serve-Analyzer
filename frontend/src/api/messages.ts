@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from ".";
-import type { UserReportRequest } from "./types";
+import type { SendMessage, UserReportRequest } from "./types";
 
 /**
  * Messages arrive by polling: every 5 s in an open conversation, every 15 s for the list and
@@ -57,7 +57,7 @@ function useRefreshAfter<T, R>(run: (arg: T) => Promise<R>, id?: string) {
   });
 }
 
-export const useSendMessage = (id: string) => useRefreshAfter((body: string) => api.sendMessage(id, body), id);
+export const useSendMessage = (id: string) => useRefreshAfter((message: SendMessage) => api.sendMessage(id, message), id);
 export const useDeleteMessage = (id: string) => useRefreshAfter((messageId: string) => api.deleteMessage(messageId), id);
 export const useStartConversation = () => useRefreshAfter((username: string) => api.startConversation(username));
 

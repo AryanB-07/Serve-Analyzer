@@ -31,7 +31,7 @@ test("friends message each other, and it closes when the friendship ends", async
   await box.press("Enter");
   await expect(ann.getByRole("region", { name: "Messages with Bob Msg" })).toContainText("Fancy a hit on Saturday?");
   await box.fill("Bring the camera, I want to film my serve.");
-  await ann.getByRole("button", { name: "Send" }).click();
+  await ann.getByRole("button", { name: "Send", exact: true }).click();
   await expect(box).toHaveValue("");
 
   // Bob sees the unread badge, opens it, and answers. Ann's message is then marked Seen.

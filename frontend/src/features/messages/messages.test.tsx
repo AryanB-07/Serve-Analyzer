@@ -72,7 +72,7 @@ beforeEach(() => {
   fake.listConversations.mockReset().mockImplementation(async () => fake.conversations);
   fake.getConversation.mockReset().mockImplementation(async () => fake.conversation);
   fake.listMessages.mockReset().mockImplementation(async () => ({ items: fake.messages, next_cursor: null, seen_up_to: fake.seen }));
-  fake.sendMessage.mockReset().mockImplementation(async (_id: string, body: string) => {
+  fake.sendMessage.mockReset().mockImplementation(async (_id: string, { body }: { body: string }) => {
     const m = msg(`m${fake.messages.length + 1}`, true, body, "2026-10-14T10:00:00Z");
     fake.messages = [m, ...fake.messages];
     return m;
@@ -164,7 +164,7 @@ describe("a conversation", () => {
     await userEvent.type(box, "Yes!{Shift>}{Enter}{/Shift}10am?");
     expect(box).toHaveValue("Yes!\n10am?");
     await userEvent.type(box, "{Enter}");
-    expect(fake.sendMessage).toHaveBeenCalledWith("c1", "Yes!\n10am?");
+    expect(fake.sendMessage).toHaveBeenCalledWith("c1", { body: "Yes!\n10am?" });
     await vi.waitFor(() => expect(box).toHaveValue(""));
     expect(await screen.findByText(/10am\?/)).toBeInTheDocument();
   });

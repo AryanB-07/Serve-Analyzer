@@ -247,7 +247,7 @@ and what would change the decision. Numbers link to the reports and docs they co
   - a global leaderboard: a stranger-facing ranking is a different privacy promise, and the scores aren't validated;
   - ranking by best serve: easy to game with one lucky clip, while an average of recent serves rewards consistency;
   - storing each person's averages: faster, but a copy to keep in step, and it would outlive turning sharing off.
-- **Deferred to Phase 4:** comparing your serve with a friend's. It needs friends to open one of your analyses, which is what sending a serve builds. Extending the owner check once, for shares, keeps that path in one place.
+- **Comparing with a friend's serve** came with sending serves (16h): it needs a friend to open one of your analyses, so the owner check is extended once, for that.
 
 ### 16g. Messaging: friends only, polling, and reports that outlive deletion
 
@@ -263,6 +263,19 @@ and what would change the decision. Numbers link to the reports and docs they co
   - messaging anyone by username: with a minimum age of 13, friends-only is the safer default.
   - keeping deleted messages' text for moderation: reports keep their own copy, so a deleted message can really be gone.
 - **Trade-off:** polling means up to 5 s before a reply appears, and some traffic even when nothing has changed.
+
+### 16h. Sending a serve: access that lives in the message
+
+- **Chosen:**
+  - a message can carry one of the sender's finished analyses. There's no separate share record: the message is the share. You can read an analysis if you own it, or if its owner sent it to you in a message that still exists, you're friends now, and there's no block (`Database.shared_by`). It's worked out on every request, so deleting the message, unfriending, blocking or deleting either account ends access straight away, with nothing to keep in step.
+  - only the three read endpoints (summary, results, frames) accept that. Notes, retrying, deleting and reports stay behind the owner check, so the friend gets 404s, as for an analysis they can't see. Shared analyses don't appear in the friend's list or data download.
+  - the friend sees the analysis without its note or filename ("Shared serve", shown as "Ann's serve"), and never gets the original upload, only the processed videos the results page plays.
+  - only your own analyses can be sent, so a serve someone sent you can't be forwarded.
+  - comparing with a friend's serve reuses the compare page, which only uses the read endpoints.
+- **Considered:**
+  - a share table with expiry: more control, but a second thing to revoke, and messages already have the lifetime people expect ("unsend").
+  - public links: easy to forward to anyone, which is exactly what a 13+ product with videos of people shouldn't do.
+- **Trade-off:** the access check costs a join per request on shared analyses. That's indexed (`messages_analysis`) and only runs when the viewer isn't the owner. And nothing stops a friend recording their screen, which the Privacy Policy says plainly.
 
 ### 17. Accessibility as a test, not a review
 

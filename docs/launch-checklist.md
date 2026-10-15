@@ -126,6 +126,7 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
       a name and picture, friends also see the bio.
 - [x] Sharing with friends: serve stats, key positions and a friends leaderboard, each opt-in.
 - [x] Messages between friends, with read state, deleting, reporting and blocking.
+- [x] Sending serves to friends (read-only, ends with the message or the friendship), and comparing with a friend's serve.
 - [ ] **After launch, weekly:** review reports of people and messages
   (`docker compose -f deploy/docker-compose.yml exec api python -m serve_api.reports --people`), and act
   on them: there's no in-app moderation tool yet, so suspending an account means deleting it.

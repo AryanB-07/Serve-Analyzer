@@ -159,10 +159,14 @@ messages = Table(
     Column("conversation_id", String(32), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False),
     Column("sender_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("body", Text),  # cleared when the sender deletes the message
+    # A serve sent in the message: one of the sender's analyses, which the other person can
+    # then open read-only (db.can_view). Empty again if the analysis is deleted.
+    Column("analysis_id", String(32), ForeignKey("analyses.id", ondelete="SET NULL")),
     Column("created_at", UTCDateTime, nullable=False),
     Column("deleted_at", UTCDateTime),
     Index("messages_conversation", "conversation_id", "created_at"),
     Index("messages_sender", "sender_id"),
+    Index("messages_analysis", "analysis_id"),
 )
 
 user_reports = Table(
