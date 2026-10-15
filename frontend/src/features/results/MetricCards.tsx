@@ -16,6 +16,13 @@ const STATUS_BORDER: Record<MetricStatus, string> = {
   unknown: "border-l-border",
 };
 
+/** Simple mode's score numbers, coloured by band (all 5:1 or more on the card in both themes). */
+export const SCORE_TEXT: Record<"good" | "borderline" | "off", string> = {
+  good: "text-good",
+  borderline: "text-warn",
+  off: "text-bad",
+};
+
 const BAND_COLOUR: Record<"good" | "borderline" | "off", string> = {
   good: "bg-good/60",
   borderline: "bg-warn/40",
@@ -192,7 +199,7 @@ export function MetricCard({
         ) : (
           <>
             <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="tabular text-3xl font-semibold tracking-tight" data-testid="score">
+              <span className={`tabular text-3xl font-semibold tracking-tight ${SCORE_TEXT[bandOf(score)]}`} data-testid="score" data-band={bandOf(score)}>
                 {approximate && <span aria-hidden>≈</span>}
                 {score}
               </span>
@@ -249,7 +256,7 @@ function OverallScore({ scores }: { scores: (number | null)[] }) {
         </span>
       </div>
       <p className="flex items-baseline gap-1.5">
-        <span className="tabular text-4xl font-semibold tracking-tight" data-testid="overall-score">{overall}</span>
+        <span className={`tabular text-4xl font-semibold tracking-tight ${SCORE_TEXT[bandOf(overall)]}`} data-testid="overall-score" data-band={bandOf(overall)}>{overall}</span>
         <span className="text-sm text-ink-muted">/ 100</span>
       </p>
       <ScoreBar score={overall} label="Serve score" />

@@ -36,12 +36,24 @@ describe("simple mode", () => {
     const card = screen.getByRole("article", { name: "Front knee bend" });
     // 86.2° against a good range of 50-80 and borderline to 95: borderline, a little past the edge.
     expect(within(card).getByTestId("score")).toHaveTextContent("68");
+    expect(within(card).getByTestId("score")).toHaveClass("text-warn"); // borderline: amber
     expect(card).toHaveTextContent("/ 100");
     expect(within(card).getByRole("meter", { name: "Front knee bend score" })).toHaveAttribute("aria-valuenow", "68");
     expect(within(card).getByTestId("metric-status")).toHaveTextContent(/^Borderline$/);
     expect(card).not.toHaveTextContent("86");
     expect(card).not.toHaveTextContent("Good range");
     expect(within(card).queryByTestId("confidence")).not.toBeInTheDocument();
+  });
+
+  it("colours each score by its band", () => {
+    const good = { ...makeResult(), metrics: { ...makeResult().metrics, trophy: { ...makeResult().metrics.trophy, front_knee_flexion: 65 } } } as AnalysisResult;
+    const off = { ...makeResult(), metrics: { ...makeResult().metrics, trophy: { ...makeResult().metrics.trophy, front_knee_flexion: 10 } } } as AnalysisResult;
+    for (const [result, colour, band] of [[good, "text-good", "good"], [off, "text-bad", "off"]] as const) {
+      const { unmount } = renderWithPlayhead(<MetricCard reading={readingFor("front_knee_flexion", result)} phases={result.phases} mode="simple" />);
+      expect(screen.getByTestId("score")).toHaveClass(colour);
+      expect(screen.getByTestId("score")).toHaveAttribute("data-band", band);
+      unmount();
+    }
   });
 
   it("marks a score from an approximate angle as rough", () => {
