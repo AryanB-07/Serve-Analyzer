@@ -1,6 +1,6 @@
 /** Changing your email and downloading your data, against a fake backend. */
 import { QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 // The app's RouterProvider (main.tsx): only this one honours navigate()'s flushSync.
 import { createMemoryRouter } from "react-router";
@@ -15,6 +15,10 @@ const fake = vi.hoisted(() => ({
   requestEmailChange: vi.fn(),
   confirmEmailChange: vi.fn(),
   exportData: vi.fn(),
+  getProfile: vi.fn(async () => ({
+    username: null, display_name: null, bio: null, avatar_url: null, member_since: "2026-09-27T10:00:00Z",
+    stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null },
+  })),
 }));
 
 vi.mock("../../api", async () => {
@@ -52,7 +56,7 @@ afterEach(() => vi.restoreAllMocks());
 function renderAt(path: string) {
   const router = createMemoryRouter(
     [
-      { path: "/account", element: <pages.AccountPage /> },
+      { path: "/settings", element: <pages.SettingsPage /> },
       { path: "/confirm-email", element: <pages.ConfirmEmailChangePage /> },
       { path: "/login", element: <h1>Sign in</h1> },
     ],
@@ -68,11 +72,11 @@ function renderAt(path: string) {
 
 describe("changing your email", () => {
   it("sends a link to the new address and keeps the old one until it's opened", async () => {
-    renderAt("/account");
+    renderAt("/settings");
     await userEvent.click(await screen.findByRole("button", { name: "Change your email" }));
     const form = screen.getByRole("form", { name: "Change your email" });
     await userEvent.type(screen.getByLabelText("New email"), " New@Example.com ");
-    await userEvent.type(screen.getByLabelText("Current password"), "my password");
+    await userEvent.type(within(form).getByLabelText("Current password"), "my password");
     await userEvent.click(screen.getByRole("button", { name: "Send confirmation link" }));
     expect(fake.requestEmailChange).toHaveBeenCalledWith("New@Example.com", "my password");
     const status = await screen.findByRole("status");
@@ -82,7 +86,7 @@ describe("changing your email", () => {
   });
 
   it("checks the address and password before sending", async () => {
-    renderAt("/account");
+    renderAt("/settings");
     await userEvent.click(await screen.findByRole("button", { name: "Change your email" }));
     const send = screen.getByRole("button", { name: "Send confirmation link" });
     await userEvent.type(screen.getByLabelText("New email"), "nope");
@@ -101,10 +105,11 @@ describe("changing your email", () => {
 
   it("shows the server's reason, such as a wrong password or a taken address", async () => {
     fake.requestEmailChange.mockRejectedValue(new ApiError(409, "An account with this email already exists."));
-    renderAt("/account");
+    renderAt("/settings");
     await userEvent.click(await screen.findByRole("button", { name: "Change your email" }));
-    await userEvent.type(screen.getByLabelText("New email"), "taken@example.com");
-    await userEvent.type(screen.getByLabelText("Current password"), "pw");
+    const form = screen.getByRole("form", { name: "Change your email" });
+    await userEvent.type(within(form).getByLabelText("New email"), "taken@example.com");
+    await userEvent.type(within(form).getByLabelText("Current password"), "pw");
     await userEvent.click(screen.getByRole("button", { name: "Send confirmation link" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("An account with this email already exists.");
   });
@@ -147,7 +152,7 @@ describe("downloading your data", () => {
       expect(this.download).toBe("serve-analyzer-data-2026-10-12.json");
       expect(this.href).toBe("blob:export");
     });
-    renderAt("/account");
+    renderAt("/settings");
     await userEvent.click(await screen.findByRole("button", { name: "Download my data" }));
     expect(await screen.findByRole("status")).toHaveTextContent("Downloaded 2 analyses.");
     expect(click).toHaveBeenCalledTimes(1);
@@ -158,7 +163,7 @@ describe("downloading your data", () => {
 
   it("shows why an export failed", async () => {
     fake.exportData.mockRejectedValue(new ApiError(429, "Too many attempts. Try again later."));
-    renderAt("/account");
+    renderAt("/settings");
     await userEvent.click(await screen.findByRole("button", { name: "Download my data" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Try again later.");
   });

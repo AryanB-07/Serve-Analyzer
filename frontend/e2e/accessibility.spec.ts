@@ -68,19 +68,25 @@ test("signed-in pages: upload, results, failure, history, account", async ({ pag
   await expect(page.getByRole("heading", { name: "This doesn't look like a serve" })).toBeVisible({ timeout: 4 * 60_000 });
   await expectAccessible(page, "the \"not a serve\" failure");
 
-  await page.goto("/history");
+  await page.goto("/serves");
   const card = page.getByRole("article", { name: "sample_serve.mp4" });
   await expect(card).toBeVisible();
   await expectAccessible(page, "history");
   await card.getByRole("button", { name: "Show details" }).click();
   await card.getByRole("button", { name: "Add a note to sample_serve.mp4" }).click();
   await expectAccessible(page, "history with a card's details and note editor open");
-  await page.goto("/history?time=custom&from=2020-01-01&to=2020-01-31&stat=trunk_tilt&band=off");
+  await page.goto("/serves?time=custom&from=2020-01-01&to=2020-01-31&stat=trunk_tilt&band=off");
   await expect(page.getByText("No serves match these filters")).toBeVisible();
   await expectAccessible(page, "history with every kind of filter on");
 
-  await page.goto("/account");
+  await page.goto("/settings");
   await page.getByRole("button", { name: "Change your email" }).click();
-  await expectAccessible(page, "account page with the email form open");
+  await expectAccessible(page, "Settings with the email form open");
+  await page.getByRole("button", { name: "Your account" }).click();
+  await expectAccessible(page, "the account menu open");
+  await page.keyboard.press("Escape");
+  await page.goto("/profile");
+  await expect(page.getByRole("heading", { name: "Your serves" })).toBeVisible();
+  await expectAccessible(page, "profile");
   await deleteAccount(page);
 });

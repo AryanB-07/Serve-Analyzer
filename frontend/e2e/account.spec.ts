@@ -3,17 +3,18 @@ import { readFile } from "node:fs/promises";
 
 import { expect, test } from "./fixtures";
 
-import { deleteAccount, emailedLink, newEmail, PASSWORD, signUpAndVerify, subjectsFor } from "./helpers";
+import { deleteAccount, emailedLink, newEmail, PASSWORD, signOut, signUpAndVerify, subjectsFor } from "./helpers";
 
 test("changing your email takes the link sent to the new address", async ({ page }) => {
   const oldEmail = newEmail("old");
   const nextEmail = newEmail("new");
   await signUpAndVerify(page, oldEmail);
 
-  await page.goto("/account");
+  await page.goto("/settings");
   await page.getByRole("button", { name: "Change your email" }).click();
-  await page.getByLabel("New email").fill(nextEmail);
-  await page.getByLabel("Current password").fill(PASSWORD);
+  const emailForm = page.getByRole("form", { name: "Change your email" });
+  await emailForm.getByLabel("New email").fill(nextEmail);
+  await emailForm.getByLabel("Current password").fill(PASSWORD);
   await page.getByRole("button", { name: "Send confirmation link" }).click();
   await expect(page.getByRole("status")).toContainText(`We sent a link to ${nextEmail}`);
 
@@ -27,8 +28,7 @@ test("changing your email takes the link sent to the new address", async ({ page
   await expect.poll(() => subjectsFor(page.request, oldEmail)).toContain("Your Serve Analyzer email was changed");
 
   // Signing in now takes the new address.
-  await page.getByRole("button", { name: "Sign out" }).click();
-  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await signOut(page);
   await page.getByLabel("Email").fill(oldEmail);
   await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -43,7 +43,7 @@ test("changing your email takes the link sent to the new address", async ({ page
 test("download my data saves a JSON file of the account", async ({ page }) => {
   const email = newEmail("export");
   await signUpAndVerify(page, email);
-  await page.goto("/account");
+  await page.goto("/settings");
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download my data" }).click();
   const file = await download;
@@ -58,7 +58,7 @@ test("download my data saves a JSON file of the account", async ({ page }) => {
 test("asking for a password reset confirms it was sent, and the link sets a new password", async ({ page }) => {
   const email = newEmail("reset");
   await signUpAndVerify(page, email);
-  await page.getByRole("button", { name: "Sign out" }).click();
+  await signOut(page);
   await page.getByRole("link", { name: "Forgot your password?" }).click();
   await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
   await page.getByLabel("Email").fill(email);

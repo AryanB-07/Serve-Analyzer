@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router";
 import { HelpDialog } from "./HelpDialog";
 import { findTopic, HELP_TOPICS, type HelpTopic } from "./topics";
 
-/** The search parameter holding the open topic: /history?help=filming opens the filming guide. */
+/** The search parameter holding the open topic: /serves?help=filming opens the filming guide. */
 export const HELP_PARAM = "help";
 
 interface HelpContextValue {

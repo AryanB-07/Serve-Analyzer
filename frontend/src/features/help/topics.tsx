@@ -21,7 +21,7 @@ function GettingStarted() {
     <div className="space-y-4">
       <GettingStartedSteps />
       <p className="text-sm text-ink-muted">
-        Every analysis is kept in <strong className="text-ink">History</strong>, where you can open, compare or delete
+        Every analysis is kept in <strong className="text-ink">My Serves</strong>, where you can open, compare or delete
         it.
       </p>
     </div>

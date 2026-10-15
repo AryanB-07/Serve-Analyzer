@@ -30,6 +30,8 @@ from .convert import api_error
 from .db import Database, now
 from .purge import analysis_prefixes, run_purges
 from .schemas import (
+    ChangePasswordRequest,
+    ExportedProfile,
     ChangeEmailRequest,
     ConfirmEmailChangeRequest,
     DataExport,
@@ -177,12 +179,16 @@ class Auth:
                 report=Report(**{k: report[k] for k in ("reason", "note", "created_at")}) if report else None,
                 files=files,
             ))
+        profile = self.db.get_profile(user.id)
         return DataExport(
             exported_at=now(),
             links_expire_at=now() + timedelta(seconds=self.settings.download_url_ttl_s),
             account=ExportedAccount(
                 email=user.email, email_verified=user.email_verified, created_at=user.created_at,
                 terms_version=row.get("terms_version"), terms_accepted_at=row.get("terms_accepted_at")),
+            profile=ExportedProfile(
+                username=profile["username"], display_name=profile["display_name"], bio=profile["bio"],
+                avatar=url_for(profile["avatar_key"]) if profile["avatar_key"] else None) if profile else None,
             analyses=items,
         )
 
@@ -329,6 +335,19 @@ class Auth:
             self._clear_cookie(response)
             return response
 
+        @router.post("/password-change", status_code=204,
+                     responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse},
+                                429: {"model": ErrorResponse}})
+        def change_password(body: ChangePasswordRequest, request: Request, tasks: BackgroundTasks,
+                            user: User = signed_in) -> Response:
+            """Change the password from Settings. This device stays signed in; every other one is
+            signed out, and any reset link stops working."""
+            self._check_password(user, body.current_password)
+            token = request.cookies.get(SESSION_COOKIE, "")
+            self.db.change_password(user.id, _hasher.hash(body.new_password), keep_session=hash_token(token))
+            self._send(tasks, m.password_changed_email(user.email, self.settings.app_url, this_device_kept=True))
+            return Response(status_code=204)
+
         @router.post("/email-change", status_code=202,
                      responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse},
                                 403: {"model": ErrorResponse}, 409: {"model": ErrorResponse},
@@ -388,7 +407,7 @@ class Auth:
                            user: User = signed_in) -> Response:
             """Permanently delete the account and every video and analysis in it."""
             self._check_password(user, body.password)
-            purge_ids = self.db.delete_user(user.id, analysis_prefixes)
+            purge_ids = self.db.delete_user(user.id, analysis_prefixes, [keys.avatar_prefix(user.id)])
             run_purges(self.db, self.storage, purge_ids)
             self._send(tasks, m.account_deleted_email(user.email))
             response = Response(status_code=204)

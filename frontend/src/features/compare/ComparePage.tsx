@@ -271,8 +271,8 @@ function Message({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto max-w-xl space-y-3 rounded-2xl border border-border bg-surface p-8 text-center">
       {children}
-      <Link to="/history" className="inline-block rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent">
-        Choose from history
+      <Link to="/serves" className="inline-block rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent">
+        Choose from My Serves
       </Link>
     </div>
   );

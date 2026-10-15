@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any, Literal
 
@@ -335,4 +336,115 @@ class DataExport(BaseModel):
     exported_at: datetime
     links_expire_at: datetime
     account: ExportedAccount
+    profile: ExportedProfile | None = None
     analyses: list[ExportedAnalysis]
+
+
+# --- profiles ---------------------------------------------------------------------------------
+
+USERNAME_PATTERN = r"^[a-z0-9_]{3,20}$"
+MAX_DISPLAY_NAME = 50
+MAX_BIO = 300
+# Names that would look official, or clash with pages, once usernames are public.
+RESERVED_USERNAMES = frozenset({
+    "admin", "administrator", "api", "app", "help", "me", "mod", "moderator", "null", "privacy",
+    "profile", "root", "serve", "serveanalyzer", "serve_analyzer", "settings", "staff", "support",
+    "system", "terms", "undefined", "user", "users",
+})
+_CONTROL = {chr(c) for c in range(32)} | {chr(127)}
+
+
+def normalise_username(value: str) -> str:
+    return value.strip().lstrip("@").lower()
+
+
+def username_problem(username: str) -> str | None:
+    """Why ``username`` (already normalised) can't be used, or None."""
+    if not 3 <= len(username) <= 20:
+        return "Usernames are 3 to 20 characters."
+    if not re.fullmatch(USERNAME_PATTERN, username):
+        return "Use only letters, numbers and underscores."
+    if username in RESERVED_USERNAMES:
+        return "That username is reserved."
+    return None
+
+
+def _clean_text(value: str | None, keep_newlines: bool) -> str | None:
+    """Trimmed, without control characters (newlines kept in a bio); empty means none."""
+    if value is None:
+        return None
+    allowed = {"\n"} if keep_newlines else set()
+    cleaned = "".join(ch for ch in value.replace("\r\n", "\n") if ch not in _CONTROL or ch in allowed)
+    if not keep_newlines:
+        cleaned = " ".join(cleaned.split())
+    cleaned = cleaned.strip()
+    return cleaned or None
+
+
+class ProfileStats(BaseModel):
+    serves: int  # finished analyses
+    average_score: int | None = None  # of the latest `averaged_over` scored serves
+    averaged_over: int = 0
+    best_score: int | None = None
+
+
+class Profile(BaseModel):
+    username: str | None = None
+    display_name: str | None = None
+    bio: str | None = None
+    avatar_url: str | None = None
+    member_since: datetime
+    stats: ProfileStats
+
+
+class ProfileUpdate(BaseModel):
+    """Only the fields sent are changed. An empty display name or bio removes it; a username,
+    once chosen, can be changed but not removed."""
+
+    username: str | None = Field(default=None, max_length=40)
+    display_name: str | None = Field(default=None, max_length=200)
+    bio: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("username")
+    @classmethod
+    def _username(cls, value: str | None) -> str | None:
+        if value is None:
+            raise ValueError("A username can be changed but not removed.")
+        username = normalise_username(value)
+        if problem := username_problem(username):
+            raise ValueError(problem)
+        return username
+
+    @field_validator("display_name")
+    @classmethod
+    def _display_name(cls, value: str | None) -> str | None:
+        cleaned = _clean_text(value, keep_newlines=False)
+        if cleaned and len(cleaned) > MAX_DISPLAY_NAME:
+            raise ValueError(f"Names are up to {MAX_DISPLAY_NAME} characters.")
+        return cleaned
+
+    @field_validator("bio")
+    @classmethod
+    def _bio(cls, value: str | None) -> str | None:
+        cleaned = _clean_text(value, keep_newlines=True)
+        if cleaned and len(cleaned) > MAX_BIO:
+            raise ValueError(f"Bios are up to {MAX_BIO} characters.")
+        return cleaned
+
+
+class UsernameCheck(BaseModel):
+    username: str  # as it would be saved
+    available: bool
+    problem: str | None = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=256)
+
+
+class ExportedProfile(BaseModel):
+    username: str | None = None
+    display_name: str | None = None
+    bio: str | None = None
+    avatar: str | None = None  # a download link, like the videos

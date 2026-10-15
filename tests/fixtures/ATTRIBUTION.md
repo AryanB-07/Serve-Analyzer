@@ -24,3 +24,6 @@ screen. Rebuild it with:
     ffmpeg -i sample_serve.mp4 -vf "select=eq(n\,0),loop=loop=74:size=1:start=0,setpts=N/25/TB" \
       -r 25 -frames:v 75 -an -c:v libx264 -preset veryslow -crf 28 -pix_fmt yuv420p \
       -movflags +faststart standing_still.mp4
+
+`profile_photo.png` is generated (a tennis ball on green, drawn with OpenCV), 1200x800. It's a
+PNG on purpose: the browser has to crop it square and turn it into a JPEG before upload.

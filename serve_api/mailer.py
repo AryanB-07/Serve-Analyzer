@@ -142,13 +142,16 @@ def password_reset_email(to: str, url: str) -> Email:
     )
 
 
-def password_changed_email(to: str, app_url: str) -> Email:
+def password_changed_email(to: str, app_url: str, this_device_kept: bool = False) -> Email:
+    """After a reset (every device signed out) or a change from Settings (the device that made it
+    stays signed in)."""
+    signed_out = "every other device was signed out" if this_device_kept else "every device was signed out"
     return Email(
         to=to,
         subject=f"Your {APP_NAME} password was changed",
-        text=(f"The password for this account was just changed, and every device was signed out.\n\n"
+        text=(f"The password for this account was just changed, and {signed_out}.\n\n"
               f"If that wasn't you, reset your password now: {app_url}/forgot-password"),
-        html=_html(["The password for this account was just changed, and every device was signed out.",
+        html=_html([f"The password for this account was just changed, and {signed_out}.",
                     f'If that wasn\'t you, <a href="{escape(app_url)}/forgot-password">reset your '
                     "password now</a>."]),
     )

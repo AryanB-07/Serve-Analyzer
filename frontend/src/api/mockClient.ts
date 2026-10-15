@@ -1,4 +1,5 @@
 import { ApiError, UploadAbortedError, type ApiClient } from "./client";
+import { normaliseUsername, usernameProblem } from "../lib/username";
 import { DEMO_IDS } from "./demo";
 import type {
   AnalysisList,
@@ -68,6 +69,11 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   const reports = new Map<string, Report>();
   const notes = new Map<string, string | null>();
   let pendingEmail: string | null = null;
+  let profile: { username: string | null; display_name: string | null; bio: string | null; avatar_url: string | null } = {
+    username: null, display_name: null, bio: null, avatar_url: null,
+  };
+  // Pretend someone else has these, so "taken" can be tried in mock mode.
+  const takenUsernames = new Set(["taken", "ace", "serve_queen"]);
 
   const delay = () => (latency > 0 ? sleep(latency) : Promise.resolve());
 
@@ -209,6 +215,68 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           files: {},
         })),
       };
+    },
+
+    async getProfile() {
+      await delay();
+      if (!user) throw new ApiError(401, "Sign in to continue.");
+      const { items } = await this.listAnalyses();
+      const done = items.filter((a) => a.status === "succeeded");
+      const latest = done.map((a) => a.overall_score).filter((s): s is number => s != null).slice(0, 10);
+      const best = done.reduce<number | null>((m, a) => (a.overall_score != null && (m == null || a.overall_score > m) ? a.overall_score : m), null);
+      return {
+        ...profile,
+        member_since: user.created_at,
+        stats: {
+          serves: done.length,
+          average_score: latest.length ? Math.round(latest.reduce((a, b) => a + b, 0) / latest.length) : null,
+          averaged_over: latest.length,
+          best_score: best,
+        },
+      };
+    },
+
+    async updateProfile(body) {
+      await delay();
+      if (!user) throw new ApiError(401, "Sign in to continue.");
+      const next = { ...profile };
+      if ("username" in body) {
+        const name = normaliseUsername(body.username ?? "");
+        const problem = body.username == null ? "A username can be changed but not removed." : usernameProblem(name);
+        if (problem) throw new ApiError(422, problem);
+        if (takenUsernames.has(name)) throw new ApiError(409, "That username is taken.");
+        next.username = name;
+      }
+      if ("display_name" in body) next.display_name = body.display_name?.trim().replace(/\s+/g, " ") || null;
+      if ("bio" in body) next.bio = body.bio?.trim() || null;
+      profile = next;
+      return this.getProfile();
+    },
+
+    async checkUsername(username) {
+      await delay();
+      const name = normaliseUsername(username);
+      const problem = usernameProblem(name) ?? (takenUsernames.has(name) && name !== profile.username ? "That username is taken." : null);
+      return { username: name, available: !problem, problem };
+    },
+
+    async setAvatar(jpeg) {
+      await delay();
+      if (profile.avatar_url) URL.revokeObjectURL(profile.avatar_url);
+      profile = { ...profile, avatar_url: URL.createObjectURL(jpeg) };
+      return this.getProfile();
+    },
+
+    async removeAvatar() {
+      await delay();
+      if (profile.avatar_url) URL.revokeObjectURL(profile.avatar_url);
+      profile = { ...profile, avatar_url: null };
+      return this.getProfile();
+    },
+
+    async changePassword(currentPassword) {
+      await delay();
+      if (!currentPassword) throw new ApiError(403, "Incorrect password.");
     },
 
     async getReport(id) {

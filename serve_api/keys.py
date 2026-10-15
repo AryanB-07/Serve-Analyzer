@@ -32,3 +32,16 @@ FRAMES = outputs.FRAMES_FILE
 PLAYBACK = outputs.PLAYBACK_FILE
 ANNOTATED = outputs.ANNOTATED_FILE
 THUMBNAIL = outputs.THUMBNAIL_FILE
+
+
+def avatar_prefix(user_id: str) -> str:
+    """Everything stored for an account's profile picture."""
+    return f"avatars/{user_id}"
+
+
+def avatar_key(user_id: str, version: str) -> str:
+    """A new key per picture, so a replaced one is never served from a cache."""
+    return f"{avatar_prefix(user_id)}/{version}/{AVATAR}"
+
+
+AVATAR = "avatar.jpg"

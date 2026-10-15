@@ -26,7 +26,16 @@ from sqlalchemy import (
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 
-from .tables import analyses, auth_attempts, email_tokens, result_reports, sessions, storage_purges, users
+from .tables import (
+    analyses,
+    auth_attempts,
+    email_tokens,
+    profiles,
+    result_reports,
+    sessions,
+    storage_purges,
+    users,
+)
 
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
 KEY_POSITIONS = ("front_knee_flexion", "back_knee_flexion", "trunk_tilt", "elbow_angle", "wrist_height")
@@ -423,6 +432,11 @@ class Database:
         return [conn.execute(insert(storage_purges).values(prefix=p, created_at=ts)).inserted_primary_key[0]
                 for p in prefixes]
 
+    def queue_purges(self, prefixes: list[str]) -> list[int]:
+        """Queue storage prefixes for deletion (see storage_purges); run them with purge.run_purges."""
+        with self.engine.begin() as conn:
+            return self._queue_purges(conn, prefixes)
+
     def delete_analysis(self, analysis_id: str, user_id: str, prefixes: list[str]) -> list[int] | None:
         """Delete one of ``user_id``'s analyses and queue its storage ``prefixes`` for removal,
         in one transaction. Returns the purge ids, or None if there was no such analysis."""
@@ -433,14 +447,15 @@ class Database:
                 analyses.c.id == analysis_id, analyses.c.user_id == user_id)).rowcount
             return self._queue_purges(conn, prefixes) if gone else None
 
-    def delete_user(self, user_id: str, prefixes_for: Any) -> list[int]:
-        """Delete an account with its sessions, tokens and analyses, queueing every analysis's
-        storage (``prefixes_for(analysis_id)``) for removal. Returns the purge ids."""
+    def delete_user(self, user_id: str, prefixes_for: Any, account_prefixes: list[str] | None = None) -> list[int]:
+        """Delete an account with its sessions, tokens, profile and analyses, queueing every
+        analysis's storage (``prefixes_for(analysis_id)``) and ``account_prefixes`` (its profile
+        picture) for removal. Returns the purge ids."""
         with self.engine.begin() as conn:
             ids = list(conn.execute(select(analyses.c.id).where(analyses.c.user_id == user_id)).scalars())
-            purge_ids = self._queue_purges(conn, [p for i in ids for p in prefixes_for(i)])
+            purge_ids = self._queue_purges(conn, [p for i in ids for p in prefixes_for(i)] + (account_prefixes or []))
             # Explicit deletes rather than relying on ON DELETE CASCADE alone.
-            for table in (result_reports, analyses, sessions, email_tokens):
+            for table in (result_reports, analyses, sessions, email_tokens, profiles):
                 conn.execute(delete(table).where(table.c.user_id == user_id))
             conn.execute(delete(users).where(users.c.id == user_id))
         return purge_ids
@@ -499,6 +514,54 @@ class Database:
     def finish_purge(self, purge_id: int) -> None:
         with self.engine.begin() as conn:
             conn.execute(delete(storage_purges).where(storage_purges.c.id == purge_id))
+
+    def change_password(self, user_id: str, password_hash: str, keep_session: str) -> None:
+        """A new password from the signed-in Settings page: every other session is signed out
+        (the one with token hash ``keep_session`` stays), and outstanding reset links stop working."""
+        with self.engine.begin() as conn:
+            conn.execute(update(users).where(users.c.id == user_id).values(password_hash=password_hash))
+            conn.execute(delete(sessions).where(sessions.c.user_id == user_id, sessions.c.token_hash != keep_session))
+            conn.execute(delete(email_tokens).where(email_tokens.c.user_id == user_id,
+                                                    email_tokens.c.purpose == "reset"))
+
+    # --- profiles --------------------------------------------------------------
+
+    def get_profile(self, user_id: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(profiles).where(profiles.c.user_id == user_id)).mappings().first()
+        return dict(row) if row else None
+
+    def username_owner(self, username: str) -> str | None:
+        with self.engine.connect() as conn:
+            return conn.execute(select(profiles.c.user_id).where(profiles.c.username == username)).scalar_one_or_none()
+
+    def save_profile(self, user_id: str, **fields: Any) -> dict[str, Any] | Literal["username_taken"]:
+        """Set some of a profile's fields, creating the row the first time. "username_taken" if
+        someone else has the username (checked by the unique index, so two people can't race to it)."""
+        fields["updated_at"] = now()
+        try:
+            with self.engine.begin() as conn:
+                done = conn.execute(update(profiles).where(profiles.c.user_id == user_id).values(**fields)).rowcount
+                if not done:
+                    conn.execute(insert(profiles).values(user_id=user_id, **fields))
+        except IntegrityError:
+            if "username" in fields and self.username_owner(fields["username"]) not in (None, user_id):
+                return "username_taken"
+            # Two first saves at once: the other one made the row, so this one is an update.
+            with self.engine.begin() as conn:
+                conn.execute(update(profiles).where(profiles.c.user_id == user_id).values(**fields))
+        return self.get_profile(user_id) or {}
+
+    def profile_stats(self, user_id: str, recent: int = 10) -> dict[str, Any]:
+        """Finished serves, and the average of the latest ``recent`` scored ones, for the profile."""
+        mine = (analyses.c.user_id == user_id, analyses.c.status == "succeeded")
+        with self.engine.connect() as conn:
+            serves, best = conn.execute(select(func.count(), func.max(analyses.c.overall_score)).where(*mine)).one()
+            latest = list(conn.execute(
+                select(analyses.c.overall_score).where(*mine, analyses.c.overall_score.is_not(None))
+                .order_by(analyses.c.created_at.desc(), analyses.c.id.desc()).limit(recent)).scalars())
+        return {"serves": serves, "best_score": best, "averaged_over": len(latest),
+                "average_score": int(sum(latest) / len(latest) + 0.5) if latest else None}  # half up, like scores
 
     def set_password_hash(self, user_id: str, password_hash: str) -> None:
         with self.engine.begin() as conn:

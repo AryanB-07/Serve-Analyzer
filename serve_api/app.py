@@ -16,6 +16,7 @@ from . import keys, migrate
 from .auth import Auth, origin_guard
 from .error_reporting import init_error_reporting
 from .mailer import Mailer
+from .profile import profile_router
 from .purge import analysis_prefixes, run_purges
 from .convert import result_from_file, summary_from_row
 from .db import Database, HistoryFilters, now
@@ -59,7 +60,7 @@ def _decode_cursor(cursor: str) -> tuple[datetime, str]:
 
 
 VERIFY_FIRST = ("Confirm your email address to analyze serves. Check your inbox for the link, "
-                "or send a new one from your account page.")
+                "or send a new one from Settings.")
 
 
 def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -> FastAPI:
@@ -80,6 +81,7 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.middleware("http")(origin_guard(settings))
     app.include_router(auth.router())
+    app.include_router(profile_router(db, storage, auth))
     app.state.auth = auth
     signed_in = Depends(auth.current_user)
 

@@ -35,7 +35,12 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
   with a real progress bar, live processing stages, and friendly error screens with retry.
 - **Camera position (optional):** "Where was your camera?" at upload. The results then mark the
   measurements that position can't read or reads only roughly ([docs/view-detection.md](docs/view-detection.md)).
-- **History and compare:** every serve as a card with its score out of 100 (coloured by band),
+- **Profile and Settings:** a username (checked as you type), display name, bio and profile
+  picture. The browser crops the photo square, shrinks it and re-encodes it, which drops the GPS
+  position phones store; the API checks the JPEG and strips any metadata left without decoding it. The profile shows your serve stats. Settings changes the profile,
+  email and password (keeping this device signed in and signing out the rest), downloads your
+  data and deletes the account.
+- **My Serves and compare:** every serve as a card with its score out of 100 (coloured by band),
   upload time and an optional note; the five key positions' scores behind "Show details"; a
   sidebar filtering by upload time, overall score and any key position's band (kept in the URL,
   run on the server); compare two serves with the videos aligned at trophy and contact, a
@@ -174,7 +179,7 @@ footage, use `tests/fixtures/sample_serve.mp4` with **Right-handed**. Accounts, 
 results are stored in `var/`; delete that folder to reset.
 
 To try History, filters and compare without uploading dozens of clips, add the seed accounts.
-They hold 60 analyses spread over four months, plus the awkward rows real data builds up:
+They hold 60 analyses spread over four months, two profiles (one with a picture), plus the awkward rows real data builds up:
 old-format results, failures, unfinished uploads, and long or HTML-looking notes.
 
 ```bash
@@ -438,7 +443,11 @@ frontend/
 | `POST /auth/verify-email`, `/auth/verify-email/resend` | Confirm the email address from the emailed link |
 | `POST /auth/password-reset`, `/auth/password-reset/confirm` | Email a reset link; set a new password from it (signs out every device) |
 | `POST /auth/email-change`, `/auth/email-change/confirm` | Email a link to a new address; switch to it from the link |
+| `POST /auth/password-change` | Change the password; signs out every other session |
 | `GET /auth/me/export` | Download everything stored about the account as JSON |
+| `GET /profile`, `PATCH /profile` | Your username, display name, bio, picture and serve stats |
+| `GET /profile/username-check?username=` | Whether a username is valid and free |
+| `PUT /profile/avatar`, `DELETE` | Set (a square JPEG up to 1 MB) or remove the profile picture |
 | `DELETE /auth/me` | Delete the account and everything in it (needs the password) |
 
 Interactive docs are at http://localhost:8000/docs while the API is running. Failures carry

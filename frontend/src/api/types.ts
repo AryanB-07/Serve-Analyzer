@@ -22,6 +22,9 @@ export type Report = Schemas["Report"];
 export type ReportReason = Report["reason"];
 export type ReportRequest = Schemas["ReportRequest"];
 export type DataExport = Schemas["DataExport"];
+export type Profile = Schemas["Profile"];
+export type ProfileUpdate = Schemas["ProfileUpdate"];
+export type UsernameCheck = Schemas["UsernameCheck"];
 
 export type PhaseName = keyof Schemas["PhaseMetrics"];
 export type MetricName = keyof Schemas["MetricValues"];

@@ -112,7 +112,7 @@ function DeleteFromHere({ summary, className }: { summary: AnalysisSummary; clas
     <DeleteAnalysisButton
       id={summary.id}
       filename={summary.filename}
-      onDeleted={() => navigate("/history", { replace: true })}
+      onDeleted={() => navigate("/serves", { replace: true })}
       className={className}
     />
   );
@@ -176,7 +176,7 @@ export function ResultsPage({ demoId }: { demoId?: string } = {}) {
               Try again
             </button>
           )}
-          <Link to="/history" className="rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent">Go to history</Link>
+          <Link to="/serves" className="rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent">Go to My Serves</Link>
         </div>
       </CenteredMessage>
     );

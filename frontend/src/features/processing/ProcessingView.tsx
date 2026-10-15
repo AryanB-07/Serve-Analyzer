@@ -80,7 +80,7 @@ function Stages({ summary, since }: { summary: AnalysisSummary; since: number })
         ))}
       </ol>
       <p className="text-sm text-ink-muted">
-        You can leave this page; the result will be in your <Link to="/history" className="text-accent underline">history</Link>.
+        You can leave this page; the result will be in <Link to="/serves" className="text-accent underline">My Serves</Link>.
       </p>
     </div>
   );

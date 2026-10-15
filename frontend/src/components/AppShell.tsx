@@ -1,51 +1,98 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router";
+import { useEffect, useId, useRef, useState } from "react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 
 import { USE_MOCKS } from "../api";
+import { useProfile } from "../api/profile";
 import { useLogOut, useSession } from "../api/session";
 import { SIGNING_OUT } from "../features/auth/AuthPages";
 import { HelpButton, HelpProvider } from "../features/help/HelpProvider";
+import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 
 function navClass({ isActive }: { isActive: boolean }) {
-  return `rounded-md px-3 py-1.5 text-sm font-medium ${
+  return `whitespace-nowrap rounded-md px-2 py-1.5 text-sm font-medium sm:px-3 ${
     isActive ? "bg-surface-2 text-ink" : "text-ink-muted hover:text-ink"
   }`;
 }
 
-function AccountControls() {
+/**
+ * Your picture, opening a small panel with Profile, Settings and Sign out. A disclosure (a
+ * button that shows a list of links), so it works like any other link list for keyboards and
+ * screen readers. Closes on Escape, a click outside, or choosing something.
+ */
+function AccountMenu() {
   const session = useSession();
+  const profile = useProfile(Boolean(session.data));
   const navigate = useNavigate();
+  const location = useLocation();
   const logOut = useLogOut(() => navigate("/login", { replace: true, flushSync: true, state: SIGNING_OUT }));
+  const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const id = useId();
+
+  useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        button.current?.focus();
+      }
+    }
+    function onPointer(event: PointerEvent) {
+      const target = event.target as Node;
+      if (!panel.current?.contains(target) && !button.current?.contains(target)) setOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [open]);
+
   const user = session.data;
   if (!user) return null;
+  const p = profile.data;
+  const name = p?.display_name ?? (p?.username ? `@${p.username}` : null);
+  const item = "block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-surface-2";
   return (
-    <>
-      <Link
-        to="/account"
-        className="max-w-48 truncate rounded-md px-1.5 py-1.5 text-sm text-ink-muted hover:text-ink sm:px-2"
-        title={`Account: ${user.email}`}
-      >
-        <span className="hidden md:inline">{user.email}</span>
-        <span className="hidden sm:inline md:hidden">Account</span>
-        {/* Phones: an icon, so the header fits a 360px screen. */}
-        <svg viewBox="0 0 24 24" className="size-5 sm:hidden" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
-        </svg>
-        <span className="sr-only sm:hidden">Account</span>
-      </Link>
+    <div className="relative">
       <button
+        ref={button}
         type="button"
-        onClick={() => logOut.mutate()}
-        disabled={logOut.isPending}
-        className="whitespace-nowrap rounded-md px-1.5 py-1.5 text-sm font-medium text-ink-muted hover:text-ink disabled:opacity-50 sm:px-3"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={id}
+        aria-label="Your account"
+        title={user.email}
+        className="flex items-center rounded-full p-0.5 ring-accent/50 hover:ring-2 focus-visible:ring-2"
       >
-        <svg viewBox="0 0 24 24" className="size-5 sm:hidden" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-          <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M15 17l5-5-5-5M20 12H9" />
-        </svg>
-        <span className="sr-only sm:not-sr-only">Sign out</span>
+        <Avatar url={p?.avatar_url} name={p?.display_name ?? p?.username} size="sm" />
       </button>
-    </>
+      {open && (
+        <div
+          ref={panel}
+          id={id}
+          className="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
+        >
+          <div className="border-b border-border px-3 pb-2 pt-1.5">
+            <p className="truncate text-sm font-medium">{name ?? "Your account"}</p>
+            <p className="truncate text-xs text-ink-muted">{user.email}</p>
+          </div>
+          <ul className="pt-1.5">
+            <li><Link to="/profile" className={item}>Profile</Link></li>
+            <li><Link to="/settings" className={item}>Settings</Link></li>
+            <li>
+              <button type="button" onClick={() => logOut.mutate()} disabled={logOut.isPending} className={`${item} disabled:opacity-50`}>
+                Sign out
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -85,8 +132,8 @@ function Shell() {
               <NavLink to="/" end className={navClass}>
                 Analyze
               </NavLink>
-              <NavLink to="/history" className={navClass}>
-                History
+              <NavLink to="/serves" className={navClass}>
+                My Serves
               </NavLink>
             </nav>
           )}
@@ -98,7 +145,7 @@ function Shell() {
             )}
             <HelpButton />
             <ThemeToggle />
-            <AccountControls />
+            <AccountMenu />
           </div>
         </div>
       </header>

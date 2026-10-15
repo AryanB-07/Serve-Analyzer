@@ -12,6 +12,10 @@ import {
   useSession,
   useVerifyEmail,
 } from "../../api/session";
+import { ApiError } from "../../api/client";
+import { useChangePassword, useProfile, useUpdateProfile, useUsernameCheck } from "../../api/profile";
+import type { ProfileUpdate } from "../../api/types";
+import { normaliseUsername, usernameProblem } from "../../lib/username";
 import { authErrorMessage, MIN_PASSWORD_LENGTH } from "../auth/AuthForm";
 
 const inputClass =
@@ -244,12 +248,12 @@ export function VerifyEmailPage() {
         <Notice>
           <p>{verify.error ? authErrorMessage(verify.error) : "This link is incomplete. Open it from the email again."}</p>
           {session.data && !session.data.email_verified && (
-            <p className="mt-3 text-sm text-ink-muted">You can send a new link from your account page.</p>
+            <p className="mt-3 text-sm text-ink-muted">You can send a new link from Settings.</p>
           )}
         </Notice>
         <p className="mt-4 text-center text-sm">
-          <Link to={session.data ? "/account" : "/login"} className="font-medium text-accent underline">
-            {session.data ? "Go to your account" : "Sign in"}
+          <Link to={session.data ? "/settings" : "/login"} className="font-medium text-accent underline">
+            {session.data ? "Go to Settings" : "Sign in"}
           </Link>
         </p>
       </Page>
@@ -324,7 +328,7 @@ function DeleteAccount() {
     <section aria-labelledby={`${id}-title`} className="space-y-3 rounded-xl border border-bad/40 bg-surface p-5">
       <h2 id={`${id}-title`} className="font-semibold">Delete account</h2>
       <p className="text-sm text-ink-muted">
-        Permanently deletes your account and every video and analysis in it. This can't be undone.
+        Permanently deletes your account, your profile and every video and analysis in it. This can't be undone.
       </p>
       {!open ? (
         <button
@@ -473,9 +477,9 @@ function DownloadData() {
     <section aria-labelledby={`${id}-title`} className="space-y-3 rounded-xl border border-border bg-surface p-5">
       <h2 id={`${id}-title`} className="font-semibold">Your data</h2>
       <p className="text-sm text-ink-muted">
-        Download everything we store about you as one JSON file: your account details, and every analysis with its
-        results, feedback and any problem you reported. It also has links to download your videos, which work for 6
-        hours.
+        Download everything we store about you as one JSON file: your account details, your profile, and every analysis
+        with its results, feedback, note and any problem you reported. It also has links to download your videos and
+        profile picture, which work for 6 hours.
       </p>
       <button type="button" onClick={() => download.mutate()} disabled={download.isPending} className={secondaryButton}>
         {download.isPending ? "Preparing…" : "Download my data"}
@@ -511,8 +515,8 @@ export function ConfirmEmailChangePage() {
           <p className="mt-3 text-sm text-ink-muted">Your account still uses its previous email address.</p>
         </Notice>
         <p className="mt-4 text-center text-sm">
-          <Link to={session.data ? "/account" : "/login"} className="font-medium text-accent underline">
-            {session.data ? "Go to your account" : "Sign in"}
+          <Link to={session.data ? "/settings" : "/login"} className="font-medium text-accent underline">
+            {session.data ? "Go to Settings" : "Sign in"}
           </Link>
         </p>
       </Page>
@@ -531,8 +535,8 @@ export function ConfirmEmailChangePage() {
             )}
           </p>
         </Notice>
-        <Link to={session.data ? "/account" : "/login"} className={`${primaryButton} mt-4 block text-center`}>
-          {session.data ? "Go to your account" : "Sign in"}
+        <Link to={session.data ? "/settings" : "/login"} className={`${primaryButton} mt-4 block text-center`}>
+          {session.data ? "Go to Settings" : "Sign in"}
         </Link>
       </Page>
     );
@@ -545,14 +549,205 @@ export function ConfirmEmailChangePage() {
   );
 }
 
-export function AccountPage() {
+const MAX_DISPLAY_NAME = 50;
+const MAX_BIO = 300;
+
+/** A message for a failed profile or password change: the API's own words when it gives any. */
+function settingsErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.status > 0 && error.status < 500) return error.message;
+  return authErrorMessage(error);
+}
+
+/** The username as it's typed, checked against the rules here, then (after a pause) with the API. */
+function useUsernameState(value: string, current: string | null) {
+  const name = normaliseUsername(value);
+  const [settled, setSettled] = useState(name);
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(name), 400);
+    return () => clearTimeout(timer);
+  }, [name]);
+  const local = name ? usernameProblem(name) : null;
+  const ask = !name || local || name === current || settled !== name ? null : name;
+  const check = useUsernameCheck(ask);
+  const answer = check.data && check.data.username === name ? check.data : null;
+  let text: ReactNode = "Letters, numbers and underscores, 3 to 20 of them.";
+  let tone = "text-ink-muted";
+  if (local) [text, tone] = [local, "text-bad"];
+  else if (name && name === current) text = "This is your username.";
+  else if (answer) [text, tone] = answer.available ? [`@${name} is available.`, "text-good"] : [answer.problem, "text-bad"];
+  else if (name) text = "Checking…";
+  // Saving waits for the API's answer, and is refused when the name isn't available.
+  const usable = name === current || (!local && answer?.available === true);
+  return { text, tone, usable };
+}
+
+function ProfileSettings() {
+  const id = useId();
+  const profile = useProfile();
+  const save = useUpdateProfile();
+  const [form, setForm] = useState<{ username: string; display_name: string; bio: string } | null>(null);
+  const [saved, setSaved] = useState(false);
+  const p = profile.data;
+
+  useEffect(() => {
+    if (p && form === null) setForm({ username: p.username ?? "", display_name: p.display_name ?? "", bio: p.bio ?? "" });
+  }, [p, form]);
+
+  const username = useUsernameState(form?.username ?? "", p?.username ?? null);
+
+  if (profile.isError) return <ErrorText>{settingsErrorMessage(profile.error)}</ErrorText>;
+  if (!p || !form) return <p className="text-sm text-ink-muted">Loading your profile…</p>;
+
+  const changes: ProfileUpdate = {};
+  if (normaliseUsername(form.username) !== (p.username ?? "") && form.username.trim()) changes.username = form.username;
+  if (form.display_name.trim() !== (p.display_name ?? "")) changes.display_name = form.display_name;
+  if (form.bio.trim() !== (p.bio ?? "")) changes.bio = form.bio;
+  const blocked = (changes.username !== undefined && !username.usable) || (p.username !== null && !form.username.trim());
+
+  function set(field: keyof NonNullable<typeof form>, value: string) {
+    setSaved(false);
+    save.reset();
+    setForm((f) => (f ? { ...f, [field]: value } : f));
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (blocked || Object.keys(changes).length === 0) return;
+    save.mutate(changes, {
+      onSuccess: (next) => {
+        setForm({ username: next.username ?? "", display_name: next.display_name ?? "", bio: next.bio ?? "" });
+        setSaved(true);
+      },
+    });
+  }
+
+  return (
+    <section id="profile" aria-labelledby={`${id}-title`} className="scroll-mt-20 space-y-4 rounded-xl border border-border bg-surface p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 id={`${id}-title`} className="font-semibold">Profile</h2>
+          <p className="text-sm text-ink-muted">Only you can see your profile for now.</p>
+        </div>
+        <Link to="/profile" className="shrink-0 text-sm font-medium text-accent hover:underline">View profile</Link>
+      </div>
+      <form noValidate onSubmit={submit} className="space-y-4" aria-label="Profile">
+        <div className="space-y-1.5">
+          <label htmlFor={`${id}-name`} className="text-sm font-medium">Display name</label>
+          <input
+            id={`${id}-name`}
+            value={form.display_name}
+            onChange={(e) => set("display_name", e.target.value)}
+            maxLength={MAX_DISPLAY_NAME}
+            autoComplete="name"
+            placeholder="How your name appears"
+            className={inputClass}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor={`${id}-username`} className="text-sm font-medium">Username</label>
+          <div className="flex items-center rounded-lg border border-border bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/40">
+            <span className="pl-3 text-ink-muted" aria-hidden>@</span>
+            <input
+              id={`${id}-username`}
+              value={form.username}
+              onChange={(e) => set("username", e.target.value)}
+              maxLength={21}
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              aria-describedby={`${id}-username-status`}
+              aria-invalid={blocked && changes.username !== undefined}
+              placeholder={p.username ? undefined : "choose_one"}
+              className="w-full rounded-lg bg-transparent py-2 pl-1 pr-3 text-ink placeholder:text-ink-muted focus:outline-none"
+            />
+          </div>
+          {p.username !== null && !form.username.trim() ? (
+            <p id={`${id}-username-status`} className="text-xs text-bad">You can change your username, but not remove it.</p>
+          ) : (
+            <p id={`${id}-username-status`} aria-live="polite" className={`text-xs ${username.tone}`}>{username.text}</p>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-baseline justify-between">
+            <label htmlFor={`${id}-bio`} className="text-sm font-medium">Bio</label>
+            <span className="text-xs tabular text-ink-muted" aria-hidden>{form.bio.length}/{MAX_BIO}</span>
+          </div>
+          <textarea
+            id={`${id}-bio`}
+            value={form.bio}
+            onChange={(e) => set("bio", e.target.value)}
+            maxLength={MAX_BIO}
+            rows={3}
+            placeholder="A line or two about your game: how long you've played, what you're working on…"
+            className={inputClass}
+          />
+        </div>
+        {save.error && <ErrorText>{settingsErrorMessage(save.error)}</ErrorText>}
+        {saved && <p role="status" className="text-sm text-good">Profile saved.</p>}
+        <button
+          type="submit"
+          disabled={blocked || Object.keys(changes).length === 0 || save.isPending}
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {save.isPending ? "Saving…" : "Save profile"}
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function ChangePassword() {
+  const id = useId();
+  const change = useChangePassword();
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!current) return setProblem("Enter your current password.");
+    if (next.length < MIN_PASSWORD_LENGTH) return setProblem(`Use at least ${MIN_PASSWORD_LENGTH} characters for the new password.`);
+    if (next === current) return setProblem("That's your current password. Choose a different one.");
+    setProblem(null);
+    change.mutate({ current, next }, {
+      onSuccess: () => {
+        setCurrent("");
+        setNext("");
+      },
+    });
+  }
+
+  return (
+    <section aria-labelledby={`${id}-title`} className="space-y-3 rounded-xl border border-border bg-surface p-5">
+      <h2 id={`${id}-title`} className="font-semibold">Password</h2>
+      <form noValidate onSubmit={submit} className="space-y-4" aria-label="Change your password">
+        <PasswordInput id={`${id}-current`} label="Current password" value={current} onChange={(v) => { setCurrent(v); change.reset(); }} autoComplete="current-password" />
+        <PasswordInput id={`${id}-new`} label="New password" value={next} onChange={(v) => { setNext(v); change.reset(); }} autoComplete="new-password" />
+        <p className="text-xs text-ink-muted">At least {MIN_PASSWORD_LENGTH} characters. A few unrelated words make a strong one.</p>
+        {(problem || change.error) && <ErrorText>{problem ?? settingsErrorMessage(change.error)}</ErrorText>}
+        {change.isSuccess && (
+          <p role="status" className="text-sm text-good">Password changed. Every other device has been signed out.</p>
+        )}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <button type="submit" disabled={change.isPending} className={secondaryButton}>
+            {change.isPending ? "Changing…" : "Change password"}
+          </button>
+          <Link to="/forgot-password" className="text-sm text-ink-muted underline hover:text-ink">Forgot your current password?</Link>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+export function SettingsPage() {
   const session = useSession();
   const user = session.data;
   if (!user) return null;
   return (
     <div className="mx-auto w-full max-w-xl space-y-6 py-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Account</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
       <VerifyEmailBanner />
+      <ProfileSettings />
       <section className="space-y-2 rounded-xl border border-border bg-surface p-5">
         <h2 className="font-semibold">Sign-in details</h2>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
@@ -563,14 +758,11 @@ export function AccountPage() {
           <dt className="text-ink-muted">Member since</dt>
           <dd>{new Date(user.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })}</dd>
         </dl>
-        <div className="space-y-2 pt-2 text-sm">
+        <div className="pt-2 text-sm">
           <ChangeEmail current={user.email} />
-          <p>
-            <Link to="/forgot-password" className="font-medium text-accent underline">Change your password</Link>
-            <span className="text-ink-muted"> (we'll email you a link)</span>
-          </p>
         </div>
       </section>
+      <ChangePassword />
       <DownloadData />
       <DeleteAccount />
     </div>

@@ -57,7 +57,7 @@ test("a serve's results show the limits and take a report", async ({ page }) => 
     ["annotated_video", "frames", "original_video", "playback_video", "thumbnail"]);
 
   // History: the serve's score on its card, its key positions behind a button, and a note.
-  await page.getByRole("link", { name: "History" }).click();
+  await page.getByRole("link", { name: "My Serves" }).click();
   const card = page.getByRole("article", { name: "sample_serve.mp4" });
   const score = Number(await card.getByTestId("history-score").textContent());
   expect(score).toBe(data.analyses[0].results.scores.overall);

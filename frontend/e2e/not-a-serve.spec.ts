@@ -53,7 +53,7 @@ test("a clip that isn't a serve is rejected with a reason, and can be disputed",
   await expect(page.getByText(/we've noted that/)).toContainText("this was a serve");
 
   // And it shows up in history as failed.
-  await page.getByRole("link", { name: "History" }).click();
+  await page.getByRole("link", { name: "My Serves" }).click();
   await expect(page.getByText("standing_still.mp4")).toBeVisible();
 
   await deleteAccount(page);

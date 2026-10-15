@@ -7,7 +7,7 @@ migrations as the API would at startup, and gives analyses from before History's
 scores (the worker's housekeeping step). Then, signed in as each account (a short-lived session
 made directly, so no passwords are needed, and removed afterwards):
 
-- /auth/me and the data download;
+- /auth/me, the profile (and its picture) and the data download;
 - History, every page, with each kind of filter;
 - each analysis's summary, report, and for finished ones the result, the frames, and the
   thumbnail and video files the result links to;
@@ -74,6 +74,13 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
     me = c.get(client, "/auth/me", who)
     c.expect(me.status_code == 200 and me.json()["id"] == user["id"], f"{who}: /auth/me is someone else")
     c.get(client, "/auth/me/export", f"{who} data download")
+    profile = c.get(client, "/profile", f"{who} profile")
+    if profile.status_code == 200 and (url := profile.json()["avatar_url"]):
+        parts = urlsplit(url)
+        if parts.netloc in ("", "testserver"):
+            path = parts.path.removeprefix(settings.public_base.rstrip("/"))
+            c.get(client, f"{path}?{parts.query}", f"{who} profile picture")
+        c.counts["profile pictures"] += 1
 
     # History, every page.
     items, cursor = [], None

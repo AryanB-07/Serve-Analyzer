@@ -22,7 +22,9 @@ Deliberately awkward rows, the kind real data accumulates:
 - an upload that never finished, and original videos past the 30-day retention;
 - long, multi-line, emoji and HTML-looking notes and filenames;
 - a "this result looks wrong" report; an unverified account from before the Terms were
-  recorded; an account with nothing in it.
+  recorded; an account with nothing in it;
+- profiles: one with a name, bio and picture, one without a picture, and two accounts that
+  have never set one (like every account from before profiles existed).
 """
 
 from __future__ import annotations
@@ -33,10 +35,13 @@ import random
 import shutil
 import sys
 import tempfile
+import uuid
 from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
 
+import cv2
+import numpy as np
 from argon2 import PasswordHasher
 from sqlalchemy import select, update
 
@@ -50,6 +55,7 @@ from serve_analyzer.reference import assess, load_ranges, to_labels  # noqa: E40
 from serve_analyzer.score import KEY_POSITIONS, key_scores  # noqa: E402
 from serve_analyzer.view import UNREADABLE  # noqa: E402
 from serve_api import keys, migrate  # noqa: E402
+from serve_api.avatars import clean  # noqa: E402
 from serve_api.convert import counts_from_labels, public_message  # noqa: E402
 from serve_api.db import Database, now  # noqa: E402
 from serve_api.purge import analysis_prefixes  # noqa: E402
@@ -172,7 +178,7 @@ class Seeder:
     def remove(self) -> int:
         ids = self.seed_user_ids()
         for user_id in ids:
-            self.db.delete_user(user_id, analysis_prefixes)
+            self.db.delete_user(user_id, analysis_prefixes, [keys.avatar_prefix(user_id)])
         for purge_id, prefix in self.db.pending_purges():
             self.storage.delete_prefix(prefix)
             self.db.finish_purge(purge_id)
@@ -188,6 +194,24 @@ class Seeder:
             conn.execute(update(users).where(users.c.id == row["id"]).values(
                 created_at=now() - timedelta(days=age_days)))
         return row["id"]
+
+    def profile(self, user_id: str, *, username: str, display_name: str | None = None, bio: str | None = None,
+                photo_colour: tuple[int, int, int] | None = None) -> None:
+        """A profile, with a generated picture (initials on a colour) when ``photo_colour`` is given."""
+        fields: dict = {"username": username, "display_name": display_name, "bio": bio}
+        if photo_colour:
+            image = np.zeros((512, 512, 3), np.uint8)
+            image[:] = photo_colour
+            initials = "".join(w[0] for w in (display_name or username).split()[:2]).upper()
+            size = cv2.getTextSize(initials, cv2.FONT_HERSHEY_SIMPLEX, 6, 14)[0]
+            cv2.putText(image, initials, ((512 - size[0]) // 2, (512 + size[1]) // 2), cv2.FONT_HERSHEY_SIMPLEX,
+                        6, (255, 255, 255), 14, cv2.LINE_AA)
+            key = keys.avatar_key(user_id, uuid.uuid4().hex)
+            with tempfile.TemporaryDirectory() as tmp:
+                (Path(tmp) / keys.AVATAR).write_bytes(clean(cv2.imencode(".jpg", image)[1].tobytes()))
+                self.storage.publish(Path(tmp), key.rsplit("/", 1)[0])
+            fields["avatar_key"] = key
+        assert self.db.save_profile(user_id, **fields) != "username_taken", f"{username} is taken"
 
     def analysis(self, user_id: str, *, filename: str, age_days: float, hand: str = "right",
                  camera_view: str | None = None, status: str = "succeeded", files: Path | None = None,
@@ -226,6 +250,8 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
 
     # A regular player: four months of practice, improving over time.
     player = seeder.user("player")
+    seeder.profile(player, username="seed_player", display_name="Sam Seedling", photo_colour=(160, 90, 40),
+                   bio="Club player, four months into rebuilding my serve.\nWorking on the toss and the knee bend.")
     n = 0
     for i in range(46):
         age = 120 - i * 2.6 + rnd.uniform(-0.8, 0.8)
@@ -259,6 +285,7 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
 
     # A left-handed player with a handful of serves.
     lefty = seeder.user("lefty", age_days=40)
+    seeder.profile(lefty, username="seed_lefty", display_name="Lee Lefty")  # no picture
     for i in range(5):
         seeder.analysis(lefty, filename=f"lefty_{i}.mp4", hand="left", age_days=30 - i * 6,
                         camera_view="side_hitting", files=outputs["side_hitting"],

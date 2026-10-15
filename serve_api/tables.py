@@ -92,6 +92,21 @@ users = Table(
     Column("terms_accepted_at", UTCDateTime),
 )
 
+profiles = Table(
+    "profiles",
+    metadata,
+    # The public side of an account (shown to other people once social features exist). A row
+    # appears the first time someone sets anything; until then the account has the defaults.
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    # Stored lower-cased, so the unique index is case-insensitive on every backend.
+    Column("username", String(20), unique=True),
+    Column("display_name", String(50)),
+    Column("bio", String(300)),
+    # Storage key of the current profile picture (keys.avatar_key), or none.
+    Column("avatar_key", String(255)),
+    Column("updated_at", UTCDateTime, nullable=False),
+)
+
 email_tokens = Table(
     "email_tokens",
     metadata,

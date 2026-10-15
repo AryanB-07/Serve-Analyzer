@@ -386,7 +386,7 @@ export function HistoryPage() {
     <div className="space-y-6 pb-20">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">History</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">My Serves</h1>
           <p className="text-ink-muted">Every serve you've analyzed. Pick two to compare them side by side, aligned by phase.</p>
         </div>
         <Link to="/" className="rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent hover:bg-accent-strong">

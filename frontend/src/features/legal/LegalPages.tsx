@@ -56,7 +56,12 @@ export function PrivacyPage() {
             analysis too.
           </li>
           <li>
-            <strong>Notes:</strong> anything you write in a note on a serve in your history, stored with that analysis and
+            <strong>Your profile,</strong> if you fill it in: a username, a display name, a short bio and a profile picture.
+            Pictures are cropped and re-saved before they're stored, which removes the location and other details phones
+            put in photos. Only you can see your profile for now; we'll ask before anyone else can.
+          </li>
+          <li>
+            <strong>Notes:</strong> anything you write in a note on a serve in My Serves, stored with that analysis and
             shown only to you.
           </li>
           <li>
@@ -73,7 +78,8 @@ export function PrivacyPage() {
             log of every request or of visitors' IP addresses.
           </li>
           <li>
-            <strong>On your device:</strong> your light or dark theme choice, saved in your browser's local storage.
+            <strong>On your device:</strong> your light or dark theme, whether you see results in simple or advanced
+            view, and whether you've closed the welcome card, saved in your browser's local storage.
           </li>
         </ul>
       </Section>
@@ -167,19 +173,20 @@ export function PrivacyPage() {
       <Section title="Your choices and rights">
         <ul className={list}>
           <li>
-            <strong>Delete an analysis</strong> from your history or its results page. This deletes the video and results
+            <strong>Delete an analysis</strong> from My Serves or its results page. This deletes the video and results
             right away.
           </li>
           <li>
-            <strong>Delete your account</strong> from your <Link to="/account" className="text-accent underline">account
-            page</Link>. This deletes your account and every video and analysis in it right away.
+            <strong>Delete your account</strong> from <Link to="/settings" className="text-accent underline">Settings</Link>.
+            This deletes your account, your profile and every video and analysis in it right away.
           </li>
           <li>
-            <strong>Download a copy of your data</strong> from your account page: one file with your account details, every
-            analysis and its results, and links to download your videos.
+            <strong>Download a copy of your data</strong> from Settings: one file with your account details, your profile,
+            every analysis and its results, and links to download your videos and profile picture.
           </li>
           <li>
-            <strong>Change your email address</strong> from your account page, or reset your password from the sign-in page.
+            <strong>Change your profile, email address or password</strong> from Settings, or reset your password from the
+            sign-in page.
           </li>
           <li>
             <strong>Correct or ask about your data</strong> by emailing {contact}. We'll respond within 30 days.

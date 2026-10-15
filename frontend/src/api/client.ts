@@ -7,11 +7,14 @@ import type {
   Credentials,
   DataExport,
   FramesPayload,
+  Profile,
+  ProfileUpdate,
   Report,
   ReportRequest,
   SignupRequest,
   UploadTarget,
   User,
+  UsernameCheck,
 } from "./types";
 import { demoFile, isDemoId } from "./demo";
 
@@ -55,6 +58,15 @@ export interface ApiClient {
   setNote(id: string, note: string): Promise<AnalysisSummary>;
   getResult(id: string): Promise<AnalysisResult>;
   getFrames(id: string): Promise<FramesPayload>;
+  getProfile(): Promise<Profile>;
+  /** Change only the fields given; an empty display name or bio removes it. */
+  updateProfile(body: ProfileUpdate): Promise<Profile>;
+  checkUsername(username: string): Promise<UsernameCheck>;
+  /** A new profile picture, already cropped and shrunk to a JPEG (lib/avatar). */
+  setAvatar(jpeg: Blob): Promise<Profile>;
+  removeAvatar(): Promise<Profile>;
+  /** Keeps this device signed in and signs out every other one. */
+  changePassword(currentPassword: string, newPassword: string): Promise<void>;
 }
 
 export class ApiError extends Error {
@@ -98,6 +110,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const body = (await res.json()) as { detail?: unknown };
       if (typeof body.detail === "string") detail = body.detail;
+      // A validation error (422) lists what's wrong: show the first problem, in plain words.
+      const first = Array.isArray(body.detail) ? (body.detail[0] as { msg?: unknown } | undefined) : undefined;
+      if (typeof first?.msg === "string") detail = first.msg.replace(/^Value error, /, "");
     } catch {
       // Non-JSON error body: keep the status text.
     }
@@ -169,6 +184,16 @@ export const httpClient: ApiClient = {
   confirmEmailChange: (token) =>
     request("/auth/email-change/confirm", { method: "POST", body: JSON.stringify({ token }) }),
   exportData: () => request("/auth/me/export"),
+  getProfile: () => request("/profile"),
+  updateProfile: (body) => request("/profile", { method: "PATCH", body: JSON.stringify(body) }),
+  checkUsername: (username) => request(`/profile/username-check?${new URLSearchParams({ username })}`),
+  setAvatar: (jpeg) => request("/profile/avatar", { method: "PUT", body: jpeg, headers: { "Content-Type": "image/jpeg" } }),
+  removeAvatar: () => request("/profile/avatar", { method: "DELETE" }),
+  changePassword: (currentPassword, newPassword) =>
+    request("/auth/password-change", {
+      method: "POST",
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    }),
   getReport: (id) => (isDemoId(id) ? Promise.resolve(null) : request(`/analyses/${encodeURIComponent(id)}/report`)),
   reportAnalysis: (id, body) =>
     request(`/analyses/${encodeURIComponent(id)}/report`, { method: "PUT", body: JSON.stringify(body) }),

@@ -207,6 +207,22 @@ and what would change the decision. Numbers link to the reports and docs they co
   - Python rounds half up, as JavaScript's `Math.round` does.
 - **Trade-off:** each score is fixed against the ranges the serve was analyzed with, which are saved in its results. That keeps it matching the serve's own results page, but new reference ranges only apply to new analyses.
 
+### 16d. Profiles in their own table, and pictures prepared in the browser
+
+- **Chosen:**
+  - a `profiles` table keyed by the user, holding the public side of an account: username, display name, bio and picture. `users` keeps only sign-in details. A row appears the first time someone saves anything, so the many accounts from before profiles need no migration of their data.
+  - usernames are 3–20 lowercase letters, digits and underscores, stored lower-cased under a unique index, with a reserved list (admin, support, settings…). Uniqueness is decided by the index, not a check-then-insert, so two people can't race to the same name.
+  - the browser decodes the photo, crops it to a centred square, shrinks it to 512 px and re-encodes it as a JPEG. Re-encoding drops every bit of metadata, including the GPS position phones write into photos.
+  - the API decodes nothing. It checks the JPEG's structure: square, 64–1024 px from the frame header, complete, and at most 1 MB (the proxy's limit for everything but videos). It removes any metadata segments (EXIF, XMP, ICC, comments) in plain Python, for clients that skip the browser. It's served as image/jpeg with nosniff.
+  - changing the password in Settings keeps the current device signed in and signs out every other one.
+- **Considered:**
+  - columns on `users`: simpler today, but social features will add privacy settings, links to UTR, and so on, and those belong with the public profile, not the password hash;
+  - uploading the original photo straight to storage, as videos are: it would mean storing photos with their location in them, plus a worker step to clean them up;
+  - re-encoding on the server with OpenCV or Pillow, both already installed. Either adds 30–40 MB to the API process while handling a photo (measured), and the API is kept free of the image and video stack to fit a small server (`tests/test_footprint.py`). It would also mean decoding untrusted images on the server.
+- **Why:** the profile is what other people will see once social features arrive, so it's kept apart from private data from the start. A picture never reaches storage with metadata in it, whichever client sent it.
+- **Trade-off (pictures):** the server doesn't prove the image data decodes, only that the file is a well-formed, square, metadata-free JPEG. A broken one would just fail to show, and only its uploader could send it.
+- **Trade-off:** a username someone gives up is free for anyone straight away. Once profiles are public, that allows impersonation; a cool-off period would fix it.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

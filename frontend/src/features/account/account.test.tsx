@@ -21,6 +21,11 @@ const fake = vi.hoisted(() => ({
   resetPassword: vi.fn(),
   deleteAccount: vi.fn(),
   deleteAnalysis: vi.fn(),
+  getProfile: vi.fn(async () => ({
+    username: null, display_name: null, bio: null, avatar_url: null, member_since: "2026-09-27T10:00:00Z",
+    stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null },
+  })),
+  changePassword: vi.fn(),
 }));
 
 vi.mock("../../api", async () => {
@@ -71,7 +76,7 @@ function renderApp(path: string) {
             element: <RequireAuth />,
             children: [
               { path: "/", element: <><pages.VerifyEmailBanner /><h1>Upload page</h1></> },
-              { path: "/account", element: <pages.AccountPage /> },
+              { path: "/settings", element: <pages.SettingsPage /> },
               {
                 path: "/history",
                 element: <DeleteAnalysisButton id="a1" filename="serve.mp4" onDeleted={() => router.navigate("/")} />,
@@ -185,7 +190,7 @@ describe("email verification", () => {
 describe("deleting the account", () => {
   it("needs the password and DELETE typed out, then signs out", async () => {
     fake.user = ALICE;
-    const router = renderApp("/account");
+    const router = renderApp("/settings");
     const visited: string[] = [];
     router.subscribe((state) => visited.push(state.location.pathname + state.location.search));
     await userEvent.click(await screen.findByRole("button", { name: "Delete my account…" }));
@@ -199,26 +204,27 @@ describe("deleting the account", () => {
     expect(router.state.location.pathname).toBe("/account-deleted");
     expect(visited.filter((path) => path.startsWith("/login"))).toEqual([]);
     expect(fake.deleteAccount).toHaveBeenCalledWith("secret password");
-    expect(screen.queryByRole("button", { name: "Sign out" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Your account" })).not.toBeInTheDocument();
   });
 
   it("shows a wrong password and stays signed in", async () => {
     fake.user = ALICE;
     fake.deleteAccount.mockRejectedValue(new ApiError(403, "Incorrect password."));
-    renderApp("/account");
+    renderApp("/settings");
     await userEvent.click(await screen.findByRole("button", { name: "Delete my account…" }));
     await userEvent.type(screen.getByLabelText("Your password"), "wrong");
     await userEvent.type(screen.getByLabelText(/to confirm/), "DELETE");
     await userEvent.click(screen.getByRole("button", { name: "Permanently delete account" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Incorrect password.");
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Your account" })).toBeInTheDocument();
   });
 
   it("is reachable from the header", async () => {
     fake.user = ALICE;
     const router = renderApp("/");
-    await userEvent.click(await screen.findByRole("link", { name: /alice@example.com/ }));
-    expect(router.state.location.pathname).toBe("/account");
+    await userEvent.click(await screen.findByRole("button", { name: "Your account" }));
+    await userEvent.click(screen.getByRole("link", { name: "Settings" }));
+    expect(router.state.location.pathname).toBe("/settings");
     expect(await screen.findByText(/confirmed/)).toBeInTheDocument();
   });
 });

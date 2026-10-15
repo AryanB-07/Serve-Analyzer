@@ -59,3 +59,10 @@ export async function deleteAccount(page: Page): Promise<void> {
   const res = await page.request.delete("/api/auth/me", { data: { password: PASSWORD } });
   expect(res.status()).toBe(204);
 }
+
+/** Sign out from the account menu in the header. */
+export async function signOut(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Your account" }).click();
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+}

@@ -1,10 +1,10 @@
-import { createBrowserRouter, Link } from "react-router";
+import { createBrowserRouter, Link, Navigate, useLocation } from "react-router";
 
 import { AppShell } from "./components/AppShell";
 import { PageError } from "./components/PageError";
 import {
   AccountDeletedPage,
-  AccountPage,
+  SettingsPage,
   ConfirmEmailChangePage,
   ForgotPasswordPage,
   ResetPasswordPage,
@@ -16,8 +16,15 @@ import { ComparePage } from "./features/compare/ComparePage";
 import { DemoPage } from "./features/demo/DemoPage";
 import { HistoryPage } from "./features/history/HistoryPage";
 import { PrivacyPage, TermsPage } from "./features/legal/LegalPages";
+import { ProfilePage } from "./features/profile/ProfilePage";
 import { ResultsPage } from "./features/results/ResultsPage";
 import { UploadPage } from "./features/upload/UploadPage";
+
+/** An old address (a bookmark, an emailed link) kept working, with its query string. */
+function Moved({ to }: { to: string }) {
+  const { search, hash } = useLocation();
+  return <Navigate to={`${to}${search}${hash}`} replace />;
+}
 
 function NotFound() {
   return (
@@ -52,9 +59,12 @@ export const routes = [
             children: [
               { path: "/", element: <UploadPage /> },
               { path: "/analyses/:id", element: <ResultsPage /> },
-              { path: "/history", element: <HistoryPage /> },
+              { path: "/serves", element: <HistoryPage /> },
+              { path: "/history", element: <Moved to="/serves" /> },
               { path: "/compare", element: <ComparePage /> },
-              { path: "/account", element: <AccountPage /> },
+              { path: "/profile", element: <ProfilePage /> },
+              { path: "/settings", element: <SettingsPage /> },
+              { path: "/account", element: <Moved to="/settings" /> },
             ],
           },
           { path: "*", element: <NotFound /> },

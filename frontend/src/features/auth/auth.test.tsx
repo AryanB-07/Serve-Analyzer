@@ -15,6 +15,10 @@ const fake = vi.hoisted(() => ({
   logIn: vi.fn(),
   signUp: vi.fn(),
   logOut: vi.fn(),
+  getProfile: vi.fn(async () => ({
+    username: null, display_name: null, bio: null, avatar_url: null, member_since: "2026-09-27T10:00:00Z",
+    stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null },
+  })),
 }));
 
 vi.mock("../../api", async () => {
@@ -27,6 +31,13 @@ const { createQueryClient, sessionKey } = await import("../../api/session");
 const { AppShell } = await import("../../components/AppShell");
 const { LoginPage, SignupPage } = await import("./AuthPages");
 const { RequireAuth } = await import("./RequireAuth");
+
+/** Sign out from the account menu in the header. */
+async function signOut() {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Your account" }));
+  await user.click(screen.getByRole("button", { name: "Sign out" }));
+}
 
 const ALICE: User = { id: "u1", email: "alice@example.com", created_at: "2026-09-27T10:00:00Z", email_verified: true };
 
@@ -100,6 +111,7 @@ describe("route guard", () => {
     renderApp("/history");
     expect(await screen.findByRole("heading", { name: "History page" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Your account" }));
     expect(screen.getByText("alice@example.com")).toBeInTheDocument();
   });
 
@@ -190,6 +202,7 @@ describe("sign up", () => {
     await screen.findByRole("heading", { name: "Create your account" });
     await fillAndSubmit("new@example.com", "long enough", /create account/i);
     expect(await screen.findByRole("heading", { name: "Upload page" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Your account" }));
     expect(screen.getByText("new@example.com")).toBeInTheDocument();
     expect(fake.signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "long enough", accept_terms: true });
   });
@@ -231,7 +244,7 @@ describe("sign out and switching users", () => {
     queryClient.setQueryData(["analyses"], { pages: [{ items: [{ id: "alices-serve" }] }] });
     const visited: string[] = [];
     const unsubscribe = router.subscribe((state) => visited.push(state.location.pathname + state.location.search));
-    await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
+    await signOut();
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
     unsubscribe();
     expect(fake.logOut).toHaveBeenCalled();
@@ -248,7 +261,7 @@ describe("sign out and switching users", () => {
     fake.logOut.mockRejectedValue(new TypeError("Failed to fetch"));
     renderApp("/");
     await screen.findByRole("heading", { name: "Upload page" });
-    await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
+    await signOut();
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
   });
 
@@ -256,7 +269,7 @@ describe("sign out and switching users", () => {
     fake.user = ALICE;
     const { router } = renderApp("/history");
     await screen.findByRole("heading", { name: "History page" });
-    await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }));
+    await signOut();
     await screen.findByRole("heading", { name: "Sign in" });
     await fillAndSubmit("alice@example.com", "correct horse", /sign in/i);
     expect(await screen.findByRole("heading", { name: "Upload page" })).toBeInTheDocument();
