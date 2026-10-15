@@ -1,6 +1,7 @@
 import { createBrowserRouter, Link } from "react-router";
 
 import { AppShell } from "./components/AppShell";
+import { PageError } from "./components/PageError";
 import {
   AccountDeletedPage,
   AccountPage,
@@ -30,28 +31,35 @@ function NotFound() {
 export const routes = [
   {
     element: <AppShell />,
+    errorElement: <PageError />, // the shell itself failed
     children: [
-      { path: "/login", element: <LoginPage /> },
-      { path: "/signup", element: <SignupPage /> },
-      { path: "/forgot-password", element: <ForgotPasswordPage /> },
-      { path: "/reset-password", element: <ResetPasswordPage /> },
-      { path: "/verify-email", element: <VerifyEmailPage /> },
-      { path: "/confirm-email", element: <ConfirmEmailChangePage /> },
-      { path: "/account-deleted", element: <AccountDeletedPage /> },
-      { path: "/privacy", element: <PrivacyPage /> },
-      { path: "/terms", element: <TermsPage /> },
-      { path: "/demo", element: <DemoPage /> },
       {
-        element: <RequireAuth />,
+        // A page that crashes shows PageError inside the shell.
+        errorElement: <PageError />,
         children: [
-          { path: "/", element: <UploadPage /> },
-          { path: "/analyses/:id", element: <ResultsPage /> },
-          { path: "/history", element: <HistoryPage /> },
-          { path: "/compare", element: <ComparePage /> },
-          { path: "/account", element: <AccountPage /> },
+          { path: "/login", element: <LoginPage /> },
+          { path: "/signup", element: <SignupPage /> },
+          { path: "/forgot-password", element: <ForgotPasswordPage /> },
+          { path: "/reset-password", element: <ResetPasswordPage /> },
+          { path: "/verify-email", element: <VerifyEmailPage /> },
+          { path: "/confirm-email", element: <ConfirmEmailChangePage /> },
+          { path: "/account-deleted", element: <AccountDeletedPage /> },
+          { path: "/privacy", element: <PrivacyPage /> },
+          { path: "/terms", element: <TermsPage /> },
+          { path: "/demo", element: <DemoPage /> },
+          {
+            element: <RequireAuth />,
+            children: [
+              { path: "/", element: <UploadPage /> },
+              { path: "/analyses/:id", element: <ResultsPage /> },
+              { path: "/history", element: <HistoryPage /> },
+              { path: "/compare", element: <ComparePage /> },
+              { path: "/account", element: <AccountPage /> },
+            ],
+          },
+          { path: "*", element: <NotFound /> },
         ],
       },
-      { path: "*", element: <NotFound /> },
     ],
   },
 ];

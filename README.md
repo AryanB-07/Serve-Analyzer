@@ -173,6 +173,19 @@ characters). Then choose your serving hand and upload a clip. To try it without 
 footage, use `tests/fixtures/sample_serve.mp4` with **Right-handed**. Accounts, uploads and
 results are stored in `var/`; delete that folder to reset.
 
+To try History, filters and compare without uploading dozens of clips, add the seed accounts.
+They hold 60 analyses spread over four months, plus the awkward rows real data builds up:
+old-format results, failures, unfinished uploads, and long or HTML-looking notes.
+
+```bash
+uv run python scripts/seed_dev_data.py           # sign in as seed-player@example.com / seed-password
+uv run python scripts/check_dev_data.py          # load every account and analysis through the API
+uv run python scripts/seed_dev_data.py --remove  # take the seed accounts out again
+```
+
+`check_dev_data.py` works on any database, so it's also a check before deploying a migration:
+run it against a copy of production data.
+
 | Problem | Fix |
 |---|---|
 | Upload finishes but stays on "Queued" | The worker (terminal 2) isn't running. |

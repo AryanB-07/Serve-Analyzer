@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Callable
-from typing import Any
+from typing import Any, get_args
+
+from serve_analyzer.errors import ErrorCode
 
 from . import keys
 from .schemas import AnalysisResult, AnalysisSummary, ApiError, StatusCounts
@@ -21,6 +23,17 @@ PUBLIC_MESSAGES = {
 def public_message(code: str, detail: str) -> str:
     """Pipeline messages for these codes can contain server paths, so replace them."""
     return PUBLIC_MESSAGES.get(code, detail)
+
+
+def api_error(code: str | None, message: str | None) -> ApiError | None:
+    """A stored failure as the API's error. A code this version doesn't know (renamed since, or
+    written by a newer worker mid-deploy) is reported as INTERNAL with the generic message,
+    rather than failing every response the row appears in."""
+    if not code:
+        return None
+    if code not in get_args(ErrorCode):
+        return ApiError(code="INTERNAL", message=PUBLIC_MESSAGES["INTERNAL"])
+    return ApiError(code=code, message=message or "")
 
 
 def counts_from_labels(labels: dict[str, dict[str, str]],
@@ -43,8 +56,7 @@ def summary_from_row(row: dict[str, Any], url_for: UrlFor) -> AnalysisSummary:
         filename=row["filename"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
-        error=ApiError(code=row["error_code"], message=row["error_message"] or "")
-        if row["error_code"] else None,
+        error=api_error(row["error_code"], row["error_message"]),
         thumbnail_url=url_for(keys.output_key(row["id"], keys.THUMBNAIL)) if succeeded else None,
         counts=StatusCounts(**row["counts"]) if row["counts"] else None,
         overall_score=row.get("overall_score"),

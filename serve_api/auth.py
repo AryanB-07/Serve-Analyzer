@@ -26,10 +26,10 @@ from fastapi.responses import JSONResponse
 
 from . import keys
 from . import mailer as m
+from .convert import api_error
 from .db import Database, now
 from .purge import analysis_prefixes, run_purges
 from .schemas import (
-    ApiError,
     ChangeEmailRequest,
     ConfirmEmailChangeRequest,
     DataExport,
@@ -172,8 +172,7 @@ class Auth:
             items.append(ExportedAnalysis(
                 id=a["id"], filename=a["filename"], hand=a["hand"], status=a["status"],
                 created_at=a["created_at"], camera_view=a.get("camera_view"), note=a.get("note"),
-                error=ApiError(code=a["error_code"], message=a["error_message"] or "")
-                if a["error_code"] else None,
+                error=api_error(a["error_code"], a["error_message"]),
                 original_video_deleted_at=a["input_deleted_at"], results=results,
                 report=Report(**{k: report[k] for k in ("reason", "note", "created_at")}) if report else None,
                 files=files,

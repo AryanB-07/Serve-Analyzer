@@ -87,6 +87,17 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
       Fixed the low contrast of button text and the phase timeline's labels in the dark theme.
 - [x] One-command server setup (`scripts/server_setup.sh`), tested in a fresh Ubuntu container
 - [x] Backup and restore scripts, with a restore tested on every push
+- [x] Existing data checked: seed accounts with awkward rows (`scripts/seed_dev_data.py`), and a
+      checker that loads every account and analysis in a database through the API
+      (`scripts/check_dev_data.py`). Fixed along the way:
+  - an unknown error code on one failed analysis made the whole History list fail;
+  - the header scrolled sideways on phones;
+  - a page that crashed showed React Router's developer screen; it now shows a friendly error
+    page inside the app.
+- [ ] **Before each deploy with a migration:** load the latest backup into a scratch Postgres
+  (`gunzip -c db-….sql.gz | psql <scratch url>`) and run `scripts/check_dev_data.py` with
+  `SERVE_API_DATABASE_URL` pointing at it. It migrates the copy, and only the copy is written to.
+  Not `scripts/restore_db.sh`, which restores over the live database.
 
 ## Portfolio and operations
 

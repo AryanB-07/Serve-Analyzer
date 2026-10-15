@@ -22,19 +22,28 @@ function AccountControls() {
     <>
       <Link
         to="/account"
-        className="max-w-48 truncate rounded-md px-2 py-1.5 text-sm text-ink-muted hover:text-ink"
+        className="max-w-48 truncate rounded-md px-1.5 py-1.5 text-sm text-ink-muted hover:text-ink sm:px-2"
         title={`Account: ${user.email}`}
       >
         <span className="hidden md:inline">{user.email}</span>
-        <span className="md:hidden">Account</span>
+        <span className="hidden sm:inline md:hidden">Account</span>
+        {/* Phones: an icon, so the header fits a 360px screen. */}
+        <svg viewBox="0 0 24 24" className="size-5 sm:hidden" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+        </svg>
+        <span className="sr-only sm:hidden">Account</span>
       </Link>
       <button
         type="button"
         onClick={() => logOut.mutate()}
         disabled={logOut.isPending}
-        className="rounded-md px-3 py-1.5 text-sm font-medium text-ink-muted hover:text-ink disabled:opacity-50"
+        className="whitespace-nowrap rounded-md px-1.5 py-1.5 text-sm font-medium text-ink-muted hover:text-ink disabled:opacity-50 sm:px-3"
       >
-        Sign out
+        <svg viewBox="0 0 24 24" className="size-5 sm:hidden" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+          <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M15 17l5-5-5-5M20 12H9" />
+        </svg>
+        <span className="sr-only sm:not-sr-only">Sign out</span>
       </button>
     </>
   );
@@ -59,7 +68,7 @@ function Shell() {
         Skip to content
       </a>
       <header className="sticky top-0 z-40 border-b border-border bg-bg/85 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:gap-4">
           <NavLink
             to="/"
             aria-label="Serve Analyzer home"
@@ -81,7 +90,7 @@ function Shell() {
               </NavLink>
             </nav>
           )}
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-1 sm:gap-3">
             {USE_MOCKS && (
               <span className="whitespace-nowrap rounded-full border border-warn/40 px-2 py-0.5 text-xs font-medium text-warn">
                 Mock data
