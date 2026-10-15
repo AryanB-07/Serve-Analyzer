@@ -30,6 +30,7 @@ from .schemas import (
 from .storage import Storage
 
 TAKEN = "That username is taken."
+SHARING = ("share_stats", "share_positions", "on_leaderboard")
 
 
 def profile_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
@@ -47,6 +48,7 @@ def profile_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
             avatar_url=storage.presign("GET", avatar)[0] if avatar else None,
             member_since=user.created_at, stats=ProfileStats(**db.profile_stats(user.id)),
             accept_requests=row.get("accept_requests", True),
+            **{k: bool(row.get(k, False)) for k in SHARING},
         )
 
     def limited(limiter: RateLimiter, user: User) -> None:

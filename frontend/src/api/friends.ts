@@ -7,6 +7,7 @@ export const friendsKeys = {
   count: ["connections", "count"] as const,
   person: (username: string) => ["person", username.toLowerCase()] as const,
   blocks: ["blocks"] as const,
+  leaderboard: ["leaderboard"] as const,
 };
 
 export function useConnections() {
@@ -27,6 +28,10 @@ export function usePerson(username: string) {
   });
 }
 
+export function useLeaderboard() {
+  return useQuery({ queryKey: friendsKeys.leaderboard, queryFn: () => api.getLeaderboard() });
+}
+
 export function useBlocks() {
   return useQuery({ queryKey: friendsKeys.blocks, queryFn: () => api.listBlocks() });
 }
@@ -41,6 +46,7 @@ function useFriendsMutation<T>(run: (arg: T) => Promise<unknown>) {
         queryClient.invalidateQueries({ queryKey: friendsKeys.connections }),
         queryClient.invalidateQueries({ queryKey: ["person"] }),
         queryClient.invalidateQueries({ queryKey: friendsKeys.blocks }),
+        queryClient.invalidateQueries({ queryKey: friendsKeys.leaderboard }),
       ]),
   });
 }

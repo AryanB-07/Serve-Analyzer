@@ -13,6 +13,7 @@ const ALICE: User = { id: "u1", email: "alice@example.com", created_at: "2026-03
 const PROFILE: Profile = {
   username: "alice", display_name: "Alice", bio: null, avatar_url: null, member_since: ALICE.created_at,
   stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null }, accept_requests: true,
+  share_stats: false, share_positions: false, on_leaderboard: false,
 };
 const BOB = { username: "bob", display_name: "Bob B", avatar_url: null };
 const CAROL = { username: "carol", display_name: null, avatar_url: null };

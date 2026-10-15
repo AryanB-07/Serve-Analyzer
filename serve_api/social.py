@@ -13,15 +13,18 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from .auth import Auth, RateLimiter, _too_many
-from .db import Database
+from .db import Database, now
 from .schemas import (
     BlockedPerson,
     Connection,
     ConnectionList,
     ErrorResponse,
+    Leaderboard,
+    LeaderboardEntry,
     Person,
     PersonSummary,
     RequestCount,
+    SharedStats,
     User,
     UsernameRequest,
     normalise_username,
@@ -29,6 +32,11 @@ from .schemas import (
 from .storage import Storage
 
 NOT_FOUND = "No one has that username."
+# The leaderboard: the average of each person's latest serves within the window, ranked once
+# they have enough of them.
+LEADERBOARD_DAYS = 90
+LEADERBOARD_MIN = 5
+LEADERBOARD_AVERAGED = 10
 NEED_USERNAME = "Choose a username first, so people know who's asking. You can set one in Settings."
 
 
@@ -69,12 +77,16 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         else:
             relationship = "requested" if conn["requester_id"] == user.id else "incoming"
         friends = relationship == "friends"
+        shared = db.serve_summary(person["user_id"]) if friends and (person["share_stats"] or person["share_positions"]) else None
         return Person(
             **summary(person).model_dump(), relationship=relationship,
             connection_id=conn["id"] if conn else None,
             can_request=relationship == "none" and bool(person["accept_requests"]),
             bio=person["bio"] if friends else None,
             friends_since=conn["accepted_at"] if friends else None,
+            # Read when asked, so turning a setting off hides it at once.
+            stats=SharedStats(**shared) if shared and person["share_stats"] else None,
+            positions=shared["positions"] if shared and person["share_positions"] else None,
         )
 
     def limited(limiter: RateLimiter, user: User) -> None:
@@ -149,6 +161,31 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         if not db.delete_connection(connection_id, user.id):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
         return Response(status_code=204)
+
+    @router.get("/leaderboard", response_model=Leaderboard, responses=errors)
+    def leaderboard(user: User = signed_in) -> Leaderboard:
+        """You and your friends who chose to be on it, ranked by the average of each one's latest
+        serves in the window. Too few serves in the window means not ranked yet."""
+        me = db.get_profile(user.id) or {}
+        people = [uid for uid, p in db.profiles_of(db.friend_ids(user.id)).items() if p["on_leaderboard"]]
+        if me.get("on_leaderboard"):
+            people.append(user.id)
+        profiles = {**db.profiles_of(people), **({user.id: me} if me else {})}
+        numbers = db.leaderboard_numbers(people, now() - timedelta(days=LEADERBOARD_DAYS), LEADERBOARD_AVERAGED)
+        entries = [LeaderboardEntry(
+            person=summary(profiles.get(uid)), is_you=uid == user.id, average_score=n["average"],
+            scored_serves=n["scored"], needed=max(0, LEADERBOARD_MIN - n["scored"]),
+        ) for uid, n in numbers.items()]
+        ranked = sorted((e for e in entries if e.needed == 0),
+                        key=lambda e: (-(e.average_score or 0), -e.scored_serves, e.person.username or ""))
+        for i, entry in enumerate(ranked):  # ties share a rank: 1, 1, 3
+            same = i > 0 and entry.average_score == ranked[i - 1].average_score
+            entry.rank = ranked[i - 1].rank if same else i + 1
+        not_ranked = sorted((e for e in entries if e.needed), key=lambda e: (e.needed, e.person.username or ""))
+        for entry in not_ranked:
+            entry.average_score = None  # an average of one or two serves would mislead
+        return Leaderboard(window_days=LEADERBOARD_DAYS, min_serves=LEADERBOARD_MIN, averaged_over=LEADERBOARD_AVERAGED,
+                           you_are_on_it=bool(me.get("on_leaderboard")), ranked=ranked, not_ranked=not_ranked)
 
     @router.get("/blocks", response_model=list[BlockedPerson], responses=errors)
     def list_blocks(user: User = signed_in) -> list[BlockedPerson]:

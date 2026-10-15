@@ -31,6 +31,10 @@ export type Relationship = Person["relationship"];
 export type Connection = Schemas["Connection"];
 export type ConnectionList = Schemas["ConnectionList"];
 export type BlockedPerson = Schemas["BlockedPerson"];
+export type SharedStats = Schemas["SharedStats"];
+export type SharedPositions = Schemas["SharedPositions"];
+export type Leaderboard = Schemas["Leaderboard"];
+export type LeaderboardEntry = Schemas["LeaderboardEntry"];
 
 export type PhaseName = keyof Schemas["PhaseMetrics"];
 export type MetricName = keyof Schemas["MetricValues"];

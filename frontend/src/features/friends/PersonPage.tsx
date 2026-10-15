@@ -5,6 +5,11 @@ import { ApiError } from "../../api/client";
 import { useAcceptRequest, useBlock, usePerson, useRemoveConnection, useSendRequest } from "../../api/friends";
 import type { Person } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
+import { Sparkline } from "../../components/Sparkline";
+import { KEY_POSITIONS } from "../../lib/historyFilters";
+import { METRIC_INFO } from "../../lib/metricInfo";
+import { bandOf } from "../../lib/score";
+import { ScoreBar, SCORE_TEXT } from "../results/MetricCards";
 import { displayName, friendsErrorMessage } from "./FriendsPage";
 
 const primary = "rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-50";
@@ -71,6 +76,97 @@ function Actions({ person }: { person: Person }) {
       <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">{actions}</div>
       {error && <p role="alert" className="text-sm text-bad">{friendsErrorMessage(error)}</p>}
     </div>
+  );
+}
+
+function StatCard({ label, score, hint }: { label: string; score: number | null | undefined; hint?: string }) {
+  return (
+    <div className="space-y-1.5 rounded-xl border border-border bg-surface p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{label}</p>
+      {score == null ? (
+        <p className="text-3xl font-semibold text-ink-muted">–</p>
+      ) : (
+        <>
+          <p className="flex items-baseline gap-1">
+            <span className={`tabular text-3xl font-semibold tracking-tight ${SCORE_TEXT[bandOf(score)]}`}>{score}</span>
+            <span className="text-sm text-ink-muted">/ 100</span>
+          </p>
+          <ScoreBar score={score} label={label} />
+        </>
+      )}
+      {hint && <p className="text-xs text-ink-muted">{hint}</p>}
+    </div>
+  );
+}
+
+/** What a friend chose to share of their serves. */
+function FriendServes({ person }: { person: Person }) {
+  const id = useId();
+  const { stats, positions } = person;
+  const name = displayName(person);
+  if (person.relationship !== "friends") return null;
+  if (!stats && !positions) {
+    return <p className="text-sm text-ink-muted">{name} isn't sharing serve stats with friends.</p>;
+  }
+  const trend = stats?.trend.map((t) => t.score) ?? [];
+  return (
+    <section aria-labelledby={id} className="space-y-3">
+      <h2 id={id} className="text-lg font-semibold">{name}'s serves</h2>
+      {stats && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5 rounded-xl border border-border bg-surface p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Serves analyzed</p>
+              <p className="tabular text-3xl font-semibold tracking-tight">{stats.serves}</p>
+            </div>
+            <StatCard
+              label="Average score"
+              score={stats.average_score}
+              hint={stats.averaged_over ? `Their latest ${stats.averaged_over === 1 ? "serve" : `${stats.averaged_over} scored serves`}.` : "No scored serves yet."}
+            />
+            <StatCard label="Best score" score={stats.best_score} />
+          </div>
+          {trend.length >= 2 && (
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-surface p-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Trend</p>
+                <Sparkline scores={trend} label={`Scores of ${name}'s latest ${trend.length} serves, from ${trend[0]} to ${trend[trend.length - 1]}`} />
+              </div>
+              {stats.change != null && (
+                <p className="text-sm">
+                  <span className={`tabular font-semibold ${stats.change > 0 ? "text-good" : stats.change < 0 ? "text-bad" : ""}`}>
+                    {stats.change > 0 ? "+" : ""}{stats.change}
+                  </span>{" "}
+                  <span className="text-ink-muted">over their latest 5 serves</span>
+                </p>
+              )}
+            </div>
+          )}
+        </>
+      )}
+      {positions && (
+        <div className="space-y-3 rounded-xl border border-border bg-surface p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Key positions</p>
+          <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            {KEY_POSITIONS.map((m) => {
+              const p = positions[m];
+              return (
+                <li key={m} className="space-y-1">
+                  <div className="flex items-baseline justify-between gap-2 text-sm">
+                    <span>{METRIC_INFO[m].title}</span>
+                    {p ? <span className={`tabular font-semibold ${SCORE_TEXT[bandOf(p.score)]}`}>{p.score}</span> : <span className="text-xs text-ink-muted">Not measured</span>}
+                  </div>
+                  {p && <ScoreBar score={p.score} label={`${METRIC_INFO[m].title} average`} />}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      <p className="text-xs text-ink-muted">
+        Scores compare angles with reference ranges that haven't been validated yet, so treat them as a guide.
+      </p>
+    </section>
   );
 }
 
@@ -149,6 +245,7 @@ export function PersonPage() {
           </div>
         </div>
       </section>
+      <FriendServes person={p} />
       {p.relationship !== "self" && <BlockControl person={p} onBlocked={setBlocked} />}
     </div>
   );

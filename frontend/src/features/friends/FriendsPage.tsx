@@ -2,12 +2,14 @@ import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ApiError } from "../../api/client";
-import { useAcceptRequest, useConnections, useRemoveConnection } from "../../api/friends";
+import { useAcceptRequest, useConnections, useLeaderboard, useRemoveConnection } from "../../api/friends";
 import { useProfile } from "../../api/profile";
-import type { Connection, PersonSummary } from "../../api/types";
+import type { Connection, LeaderboardEntry, PersonSummary } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
+import { bandOf } from "../../lib/score";
 import { normaliseUsername, usernameProblem } from "../../lib/username";
 import { authErrorMessage } from "../auth/AuthForm";
+import { SCORE_TEXT } from "../results/MetricCards";
 
 export function friendsErrorMessage(error: unknown): string {
   if (error instanceof ApiError && error.status > 0 && error.status < 500) return error.message;
@@ -132,6 +134,70 @@ function Section({ title, count, children, empty }: { title: string; count: numb
   );
 }
 
+function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
+  const name = entry.is_you ? `${displayName(entry.person)} (you)` : displayName(entry.person);
+  const score = entry.average_score;
+  return (
+    <li
+      className={`flex items-center gap-3 rounded-xl border p-3 ${entry.is_you ? "border-accent bg-accent/10" : "border-border bg-surface"}`}
+      aria-current={entry.is_you ? "true" : undefined}
+    >
+      <span className="tabular w-7 shrink-0 text-center text-lg font-semibold text-ink-muted" aria-label={entry.rank ? `Rank ${entry.rank}` : "Not ranked"}>
+        {entry.rank ?? "–"}
+      </span>
+      <Avatar url={entry.person.avatar_url} name={entry.person.display_name ?? entry.person.username} size="sm" />
+      <div className="min-w-0 flex-1">
+        {entry.person.username && !entry.is_you ? (
+          <Link to={`/u/${entry.person.username}`} className="block truncate font-medium hover:underline">{name}</Link>
+        ) : (
+          <p className="truncate font-medium">{name}</p>
+        )}
+        <p className="text-xs text-ink-muted">
+          {entry.needed
+            ? `${entry.needed} more ${entry.needed === 1 ? "serve" : "serves"} to be ranked`
+            : `${entry.scored_serves} scored ${entry.scored_serves === 1 ? "serve" : "serves"}`}
+        </p>
+      </div>
+      {score != null && (
+        <span className={`tabular shrink-0 text-xl font-semibold ${SCORE_TEXT[bandOf(score)]}`}>{score}</span>
+      )}
+    </li>
+  );
+}
+
+function LeaderboardSection() {
+  const id = useId();
+  const board = useLeaderboard();
+  const data = board.data;
+  if (!data) return null;
+  const empty = data.ranked.length === 0 && data.not_ranked.length === 0;
+  return (
+    <section aria-labelledby={id} className="space-y-2">
+      <h2 id={id} className="text-lg font-semibold">Leaderboard</h2>
+      <p className="text-sm text-ink-muted">
+        The average of each person's latest {data.averaged_over} scored serves from the last {data.window_days} days.
+        You need {data.min_serves} serves in that time to be ranked.
+      </p>
+      {empty ? (
+        <p className="text-sm text-ink-muted">Nobody's on it yet. People join from Settings.</p>
+      ) : (
+        <ol className="space-y-2">
+          {[...data.ranked, ...data.not_ranked].map((e) => (
+            <LeaderboardRow key={`${e.person.username}-${e.is_you}`} entry={e} />
+          ))}
+        </ol>
+      )}
+      {!data.you_are_on_it && (
+        <p className="text-sm">
+          <span className="text-ink-muted">You're not on it. </span>
+          <Link to="/settings#sharing" className="font-medium text-accent hover:underline">Join from Settings</Link>
+        </p>
+      )}
+      <p className="text-xs text-ink-muted">Scores use reference ranges that haven't been validated yet, so treat ranks as a guide.</p>
+    </section>
+  );
+}
+
 export function FriendsPage() {
   const list = useConnections();
   const profile = useProfile();
@@ -141,7 +207,7 @@ export function FriendsPage() {
     <div className="mx-auto w-full max-w-2xl space-y-6 py-4">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Friends</h1>
-        <p className="text-ink-muted">Connect with people you play with. Friends see your bio; nobody sees your serves yet.</p>
+        <p className="text-ink-muted">Connect with people you play with. Friends see your bio, and whatever you choose to share in Settings.</p>
       </header>
 
       {profile.data && !profile.data.username && (
@@ -173,6 +239,7 @@ export function FriendsPage() {
               <PersonRow key={c.id} person={c.person} detail={c.accepted_at ? `Friends since ${when(c.accepted_at)}` : undefined} />
             ))}
           </Section>
+          {data.friends.length > 0 && <LeaderboardSection />}
           {data.outgoing.length > 0 && (
             <Section title="Sent" count={data.outgoing.length}>
               {data.outgoing.map((c) => <Outgoing key={c.id} item={c} />)}

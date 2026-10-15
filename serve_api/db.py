@@ -570,6 +570,54 @@ class Database:
         return {"serves": serves, "best_score": best, "averaged_over": len(latest),
                 "average_score": int(sum(latest) / len(latest) + 0.5) if latest else None}  # half up, like scores
 
+    def serve_summary(self, user_id: str, recent: int = 10, trend: int = 20) -> dict[str, Any]:
+        """What a friend may be shown of ``user_id``'s serves: the profile's stats, plus the latest
+        ``trend`` scores (oldest first), the change between the latest five and the five before,
+        and each key position's average over the latest ``recent`` serves it was measured in."""
+        mine = (analyses.c.user_id == user_id, analyses.c.status == "succeeded")
+        with self.engine.connect() as conn:
+            serves, best = conn.execute(select(func.count(), func.max(analyses.c.overall_score)).where(*mine)).one()
+            rows = conn.execute(
+                select(analyses.c.overall_score, analyses.c.key_scores, analyses.c.created_at)
+                .where(*mine, analyses.c.overall_score.is_not(None))
+                .order_by(analyses.c.created_at.desc(), analyses.c.id.desc()).limit(max(recent, trend))).all()
+        mean = lambda xs: int(sum(xs) / len(xs) + 0.5) if xs else None  # noqa: E731  (half up, like scores)
+        latest = rows[:recent]
+        scores = [r.overall_score for r in rows]
+        positions = {}
+        for metric in KEY_POSITIONS:
+            measured = [r.key_scores[metric]["score"] for r in latest
+                        if isinstance(r.key_scores, dict) and isinstance(r.key_scores.get(metric), dict)]
+            positions[metric] = {"score": mean(measured), "measured": len(measured)} if measured else None
+        return {
+            "serves": serves, "best_score": best, "averaged_over": len(latest),
+            "average_score": mean([r.overall_score for r in latest]),
+            "trend": [{"at": r.created_at, "score": r.overall_score} for r in reversed(rows[:trend])],
+            "change": mean(scores[:5]) - mean(scores[5:10]) if len(scores) >= 10 else None,
+            "positions": positions,
+        }
+
+    def leaderboard_numbers(self, user_ids: list[str], since: datetime, recent: int = 10) -> dict[str, dict[str, Any]]:
+        """For each person: how many scored serves they have since ``since``, and the average of
+        the latest ``recent`` of them."""
+        out: dict[str, dict[str, Any]] = {uid: {"scored": 0, "average": None} for uid in user_ids}
+        if not user_ids:
+            return out
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                select(analyses.c.user_id, analyses.c.overall_score)
+                .where(analyses.c.user_id.in_(user_ids), analyses.c.status == "succeeded",
+                       analyses.c.overall_score.is_not(None), analyses.c.created_at >= since)
+                .order_by(analyses.c.user_id, analyses.c.created_at.desc(), analyses.c.id.desc())).all()
+        latest: dict[str, list[int]] = {}
+        for r in rows:
+            out[r.user_id]["scored"] += 1
+            if len(latest.setdefault(r.user_id, [])) < recent:
+                latest[r.user_id].append(r.overall_score)
+        for uid, xs in latest.items():
+            out[uid]["average"] = int(sum(xs) / len(xs) + 0.5)
+        return out
+
     # --- friends ---------------------------------------------------------------
 
     @staticmethod

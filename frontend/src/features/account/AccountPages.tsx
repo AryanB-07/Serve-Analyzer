@@ -701,19 +701,78 @@ function ProfileSettings() {
   );
 }
 
-function FriendRequestsSetting() {
-  const id = useId();
+const SHARING: { key: "share_stats" | "share_positions" | "on_leaderboard"; label: string; hint: string }[] = [
+  { key: "share_stats", label: "My serve stats", hint: "How many serves you've analyzed, your average and best score, and your trend." },
+  { key: "share_positions", label: "My key positions", hint: "Your average score for each key position, like knee bend and contact height." },
+  { key: "on_leaderboard", label: "Put me on the leaderboard", hint: "Your friends see your rank and average among the friends who joined." },
+];
+
+type Switch = "accept_requests" | "share_stats" | "share_positions" | "on_leaderboard";
+
+/**
+ * A setting switched on the server. The new value shows from the click itself (a mutation's
+ * pending state only arrives a render later, so the box would flick back first), and goes back
+ * if the save fails.
+ */
+function useSwitches() {
   const profile = useProfile();
   const save = useUpdateProfile();
-  const on = profile.data?.accept_requests ?? true;
+  const [saving, setSaving] = useState<Partial<Record<Switch, boolean>>>({});
+  const value = (key: Switch, fallback: boolean) => saving[key] ?? profile.data?.[key] ?? fallback;
+  function set(key: Switch, next: boolean) {
+    setSaving((s) => ({ ...s, [key]: next }));
+    // A promise per call: mutate()'s own callbacks only run for the latest call, so flipping two
+    // switches quickly would leave the first one stuck.
+    save.mutateAsync({ [key]: next })
+      .catch(() => {}) // shown from save.error
+      .finally(() => setSaving(({ [key]: _done, ...rest }) => rest));
+  }
+  return { value, set, ready: Boolean(profile.data), error: save.error };
+}
+
+/** What friends may see of your serves. Off until turned on; nobody else ever sees them. */
+function SharingSettings() {
+  const id = useId();
+  const switches = useSwitches();
+  return (
+    <fieldset id="sharing" className="scroll-mt-20 space-y-3" aria-describedby={`${id}-hint`}>
+      <legend className="text-sm font-semibold">What friends see</legend>
+      <p id={`${id}-hint`} className="text-sm text-ink-muted">
+        Friends always see your name, picture and bio. Choose what else they see. Nobody who isn't your friend sees
+        any of it, and your notes and videos are never shared.
+      </p>
+      {SHARING.map(({ key, label, hint }) => (
+        <label key={key} className="flex cursor-pointer items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={switches.value(key, false)}
+            disabled={!switches.ready}
+            onChange={(e) => switches.set(key, e.target.checked)}
+            className="mt-0.5 size-4 accent-[var(--accent)]"
+          />
+          <span>
+            <span className="font-medium">{label}</span>
+            <span className="block text-ink-muted">{hint}</span>
+          </span>
+        </label>
+      ))}
+      {switches.error && <ErrorText>{settingsErrorMessage(switches.error)}</ErrorText>}
+    </fieldset>
+  );
+}
+
+function FriendRequestsSetting() {
+  const id = useId();
+  const switches = useSwitches();
+  const on = switches.value("accept_requests", true);
   return (
     <div className="space-y-1">
       <label className="flex cursor-pointer items-start gap-3 text-sm">
         <input
           type="checkbox"
           checked={on}
-          disabled={!profile.data || save.isPending}
-          onChange={(e) => save.mutate({ accept_requests: e.target.checked })}
+          disabled={!switches.ready}
+          onChange={(e) => switches.set("accept_requests", e.target.checked)}
           aria-describedby={`${id}-hint`}
           className="mt-0.5 size-4 accent-[var(--accent)]"
         />
@@ -724,7 +783,7 @@ function FriendRequestsSetting() {
           </span>
         </span>
       </label>
-      {save.error && <ErrorText>{settingsErrorMessage(save.error)}</ErrorText>}
+      {switches.error && <ErrorText>{settingsErrorMessage(switches.error)}</ErrorText>}
     </div>
   );
 }
@@ -772,6 +831,7 @@ function FriendsSettings() {
     <section aria-labelledby={`${id}-title`} className="space-y-4 rounded-xl border border-border bg-surface p-5">
       <h2 id={`${id}-title`} className="font-semibold">Friends and privacy</h2>
       <FriendRequestsSetting />
+      <SharingSettings />
       <BlockedPeople />
     </section>
   );

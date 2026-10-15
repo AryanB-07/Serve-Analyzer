@@ -410,6 +410,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Leaderboard
+         * @description You and your friends who chose to be on it, ranked by the average of each one's latest
+         *     serves in the window. Too few serves in the window means not ranked yet.
+         */
+        get: operations["leaderboard_leaderboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/blocks": {
         parameters: {
             query?: never;
@@ -934,6 +955,26 @@ export interface components {
         };
         /** ExportedProfile */
         ExportedProfile: {
+            /**
+             * Share Stats
+             * @default false
+             */
+            share_stats: boolean;
+            /**
+             * Share Positions
+             * @default false
+             */
+            share_positions: boolean;
+            /**
+             * On Leaderboard
+             * @default false
+             */
+            on_leaderboard: boolean;
+            /**
+             * Accept Requests
+             * @default true
+             */
+            accept_requests: boolean;
             /** Username */
             username?: string | null;
             /** Display Name */
@@ -1017,6 +1058,41 @@ export interface components {
             x: (number | null)[];
             /** Y */
             y: (number | null)[];
+        };
+        /** Leaderboard */
+        Leaderboard: {
+            /** Window Days */
+            window_days: number;
+            /** Min Serves */
+            min_serves: number;
+            /** Averaged Over */
+            averaged_over: number;
+            /** You Are On It */
+            you_are_on_it: boolean;
+            /** Ranked */
+            ranked: components["schemas"]["LeaderboardEntry"][];
+            /** Not Ranked */
+            not_ranked: components["schemas"]["LeaderboardEntry"][];
+        };
+        /** LeaderboardEntry */
+        LeaderboardEntry: {
+            /** Rank */
+            rank?: number | null;
+            person: components["schemas"]["PersonSummary"];
+            /**
+             * Is You
+             * @default false
+             */
+            is_you: boolean;
+            /** Average Score */
+            average_score?: number | null;
+            /** Scored Serves */
+            scored_serves: number;
+            /**
+             * Needed
+             * @default 0
+             */
+            needed: number;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -1176,6 +1252,8 @@ export interface components {
             bio?: string | null;
             /** Friends Since */
             friends_since?: string | null;
+            stats?: components["schemas"]["SharedStats"] | null;
+            positions?: components["schemas"]["SharedPositions"] | null;
         };
         /**
          * PersonSummary
@@ -1228,8 +1306,30 @@ export interface components {
             racket_drop: components["schemas"]["MetricRanges"];
             contact: components["schemas"]["MetricRanges"];
         };
+        /** PositionAverage */
+        PositionAverage: {
+            /** Score */
+            score: number;
+            /** Measured */
+            measured: number;
+        };
         /** Profile */
         Profile: {
+            /**
+             * Share Stats
+             * @default false
+             */
+            share_stats: boolean;
+            /**
+             * Share Positions
+             * @default false
+             */
+            share_positions: boolean;
+            /**
+             * On Leaderboard
+             * @default false
+             */
+            on_leaderboard: boolean;
             /** Username */
             username?: string | null;
             /** Display Name */
@@ -1278,6 +1378,12 @@ export interface components {
             bio?: string | null;
             /** Accept Requests */
             accept_requests?: boolean | null;
+            /** Share Stats */
+            share_stats?: boolean | null;
+            /** Share Positions */
+            share_positions?: boolean | null;
+            /** On Leaderboard */
+            on_leaderboard?: boolean | null;
         };
         /** RawLandmarkTrack */
         RawLandmarkTrack: {
@@ -1334,6 +1440,35 @@ export interface components {
             /** Incoming */
             incoming: number;
         };
+        /** SharedPositions */
+        SharedPositions: {
+            front_knee_flexion?: components["schemas"]["PositionAverage"] | null;
+            back_knee_flexion?: components["schemas"]["PositionAverage"] | null;
+            trunk_tilt?: components["schemas"]["PositionAverage"] | null;
+            elbow_angle?: components["schemas"]["PositionAverage"] | null;
+            wrist_height?: components["schemas"]["PositionAverage"] | null;
+        };
+        /** SharedStats */
+        SharedStats: {
+            /** Serves */
+            serves: number;
+            /** Average Score */
+            average_score?: number | null;
+            /**
+             * Averaged Over
+             * @default 0
+             */
+            averaged_over: number;
+            /** Best Score */
+            best_score?: number | null;
+            /**
+             * Trend
+             * @default []
+             */
+            trend: components["schemas"]["TrendPoint"][];
+            /** Change */
+            change?: number | null;
+        };
         /** SignupRequest */
         SignupRequest: {
             /**
@@ -1372,6 +1507,16 @@ export interface components {
             off: number;
             /** Unknown */
             unknown: number;
+        };
+        /** TrendPoint */
+        TrendPoint: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Score */
+            score: number;
         };
         /** UploadTarget */
         UploadTarget: {
@@ -2608,6 +2753,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    leaderboard_leaderboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Leaderboard"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

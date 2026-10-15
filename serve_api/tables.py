@@ -18,7 +18,7 @@ from sqlalchemy import (
     Table,
     Text,
 )
-from sqlalchemy import true
+from sqlalchemy import false, true
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import TypeDecorator
 
@@ -109,6 +109,10 @@ profiles = Table(
     Column("updated_at", UTCDateTime, nullable=False),
     # Privacy: whether anyone who knows your username can send you a friend request.
     Column("accept_requests", Boolean, nullable=False, server_default=true()),
+    # What friends may see of your serves; all off until you turn them on.
+    Column("share_stats", Boolean, nullable=False, server_default=false()),
+    Column("share_positions", Boolean, nullable=False, server_default=false()),
+    Column("on_leaderboard", Boolean, nullable=False, server_default=false()),
 )
 
 connections = Table(

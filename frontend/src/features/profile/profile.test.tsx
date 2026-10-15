@@ -14,6 +14,7 @@ const EMPTY: Profile = {
   username: null, display_name: null, bio: null, avatar_url: null, member_since: ALICE.created_at,
   stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null },
   accept_requests: true,
+  share_stats: false, share_positions: false, on_leaderboard: false,
 };
 
 const fake = vi.hoisted(() => ({

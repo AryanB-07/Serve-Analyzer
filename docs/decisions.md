@@ -236,6 +236,19 @@ and what would change the decision. Numbers link to the reports and docs they co
 - **Considered:** search by display name (useful, but it lets strangers browse); "decline" remembered forever (stops repeat requests, but adds state; the hourly rate limit and blocking cover it for now).
 - **Trade-off:** someone who declines a request can be asked again later. Blocking is the answer if that's unwanted.
 
+### 16f. Sharing serve stats with friends: opt-in, worked out when asked
+
+- **Chosen:**
+  - three separate switches: serve stats, key-position averages, and a place on the leaderboard. All are off to start with; friends see a line saying you don't share rather than zeros.
+  - the numbers come from the stored score columns each time a friend asks, never from a cache or a copy, so turning a switch off hides them straight away.
+  - the leaderboard is friends only. Each person is ranked by the average of their latest 10 scored serves in the last 90 days, and needs 5 serves in that time to be ranked. Ties share a rank (1, 1, 3). Someone with too few serves is listed without an average, since the average of one or two serves would mislead.
+  - every score shown to someone else carries the note that the reference ranges aren't validated yet.
+- **Considered:**
+  - a global leaderboard: a stranger-facing ranking is a different privacy promise, and the scores aren't validated;
+  - ranking by best serve: easy to game with one lucky clip, while an average of recent serves rewards consistency;
+  - storing each person's averages: faster, but a copy to keep in step, and it would outlive turning sharing off.
+- **Deferred to Phase 4:** comparing your serve with a friend's. It needs friends to open one of your analyses, which is what sending a serve builds. Extending the owner check once, for shares, keeps that path in one place.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

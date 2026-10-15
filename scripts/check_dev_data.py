@@ -85,6 +85,9 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
     links = c.get(client, "/connections", f"{who} friends")
     c.get(client, "/connections/count", f"{who} request count")
     c.get(client, "/blocks", f"{who} blocked people")
+    board = c.get(client, "/leaderboard", f"{who} leaderboard")
+    if board.status_code == 200:
+        c.counts["leaderboard places"] += len(board.json()["ranked"]) + len(board.json()["not_ranked"])
     if links.status_code == 200:
         for group, items in links.json().items():
             for item in items:

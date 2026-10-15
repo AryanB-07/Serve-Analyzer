@@ -42,6 +42,20 @@ test("a friend request, accepted, then a block that hides each from the other", 
   await expect(ann.getByText("Bob E2E's bio")).toBeVisible();
   await expect(ann.getByText(/^Friends since/)).toBeVisible();
 
+  // Nothing about his serves until he chooses to share; then his stats and a leaderboard place.
+  await expect(ann.getByText("Bob E2E isn't sharing serve stats with friends.")).toBeVisible();
+  await bob.goto("/settings#sharing");
+  await bob.getByRole("checkbox", { name: /My serve stats/ }).check();
+  await bob.getByRole("checkbox", { name: /Put me on the leaderboard/ }).check();
+  await expect(bob.getByRole("checkbox", { name: /Put me on the leaderboard/ })).toBeChecked();
+  await ann.reload();
+  await expect(ann.getByRole("region", { name: "Bob E2E's serves" })).toContainText("Serves analyzed");
+  await ann.goto("/friends");
+  await expect(ann.getByRole("region", { name: "Leaderboard" })).toContainText("5 more serves to be ranked");
+  await expect(ann.getByRole("link", { name: "Join from Settings" })).toBeVisible();
+  await ann.goto(`/u/${bobName}`);
+  await expect(ann.getByRole("region", { name: "Bob E2E's serves" })).toBeVisible();
+
   // Bob blocks Ann: the friendship ends, and to Ann he doesn't exist.
   await bob.goto(`/u/${annName}`);
   await bob.getByRole("button", { name: "Block Ann E2E…" }).click();

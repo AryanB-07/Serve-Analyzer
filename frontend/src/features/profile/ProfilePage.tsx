@@ -150,7 +150,7 @@ export function ProfilePage() {
         </div>
         <p className="mt-6 border-t border-border pt-4 text-xs text-ink-muted">
           {p.username
-            ? "People who know your username see your name and picture. Friends also see your bio. Nobody sees your serves."
+            ? "People who know your username see your name and picture. Friends also see your bio, and only the serve stats you share."
             : "Nobody can find you until you choose a username."}
         </p>
       </section>
@@ -174,6 +174,12 @@ export function ProfilePage() {
             <ScoreStat score={stats.best_score} />
           </Stat>
         </div>
+        <p className="text-sm text-ink-muted">
+          {p.share_stats || p.share_positions || p.on_leaderboard
+            ? `Friends see ${[p.share_stats && "these stats", p.share_positions && "your key positions", p.on_leaderboard && "your place on the leaderboard"].filter(Boolean).join(", ")}. `
+            : "Friends don't see your serve stats. "}
+          <Link to="/settings#sharing" className="font-medium text-accent hover:underline">Change what friends see</Link>
+        </p>
         <p className="text-xs text-ink-muted">
           Scores compare your angles with reference ranges that haven't been validated yet, so treat them as a guide.
         </p>

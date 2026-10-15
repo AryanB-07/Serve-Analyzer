@@ -25,7 +25,8 @@ Deliberately awkward rows, the kind real data accumulates:
   recorded; an account with nothing in it;
 - profiles: one with a name, bio and picture, ones without a picture or name, and one that
   has never set one (like every account from before profiles existed);
-- friends: a friendship, a request waiting for an answer, and a block.
+- friends: a friendship, a request waiting for an answer, a block, and different choices of
+  what to share with friends.
 """
 
 from __future__ import annotations
@@ -306,6 +307,10 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
     seeder.profile(pest, username="seed_blocked", display_name="Blocked Ben")
     seeder.db.block(lefty, pest)
     made["blocked"] = 0
+    # Sharing: the player shares everything; the lefty shares stats and is on the leaderboard
+    # with 5 serves (just enough); the newcomer shares nothing.
+    seeder.db.save_profile(player, share_stats=True, share_positions=True, on_leaderboard=True)
+    seeder.db.save_profile(lefty, share_stats=True, on_leaderboard=True)
     seeder.user("unverified", verified=False, terms=None, age_days=200)  # before the Terms were recorded
     made["unverified"] = 0
     return made

@@ -10,6 +10,7 @@ import type {
   Credentials,
   DataExport,
   FramesPayload,
+  Leaderboard,
   Person,
   Profile,
   ProfileUpdate,
@@ -82,6 +83,8 @@ export interface ApiClient {
   /** Cancel, decline or unfriend. */
   removeConnection(connectionId: string): Promise<void>;
   listBlocks(): Promise<BlockedPerson[]>;
+  /** You and your friends who joined it, ranked. */
+  getLeaderboard(): Promise<Leaderboard>;
   block(username: string): Promise<void>;
   unblock(username: string): Promise<void>;
 }
@@ -213,6 +216,7 @@ export const httpClient: ApiClient = {
   acceptRequest: (id) => request(`/connections/${encodeURIComponent(id)}/accept`, { method: "POST" }),
   removeConnection: (id) => request(`/connections/${encodeURIComponent(id)}`, { method: "DELETE" }),
   listBlocks: () => request("/blocks"),
+  getLeaderboard: () => request("/leaderboard"),
   block: (username) => request("/blocks", { method: "POST", body: JSON.stringify({ username }) }),
   unblock: (username) => request(`/blocks/${encodeURIComponent(username)}`, { method: "DELETE" }),
   changePassword: (currentPassword, newPassword) =>

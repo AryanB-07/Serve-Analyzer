@@ -72,7 +72,25 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   let pendingEmail: string | null = null;
   let profile: {
     username: string | null; display_name: string | null; bio: string | null; avatar_url: string | null; accept_requests: boolean;
-  } = { username: null, display_name: null, bio: null, avatar_url: null, accept_requests: true };
+    share_stats: boolean; share_positions: boolean; on_leaderboard: boolean;
+  } = {
+    username: null, display_name: null, bio: null, avatar_url: null, accept_requests: true,
+    share_stats: false, share_positions: false, on_leaderboard: false,
+  };
+  // The pretend friend shares everything, so friends' stats and the leaderboard show in mock mode.
+  const ACE_SCORES = [58, 61, 60, 66, 70, 69, 74, 72, 77, 80, 79, 83];
+  const aceStats = () => ({
+    serves: ACE_SCORES.length,
+    average_score: Math.round(ACE_SCORES.slice(-10).reduce((a, b) => a + b, 0) / 10),
+    averaged_over: 10,
+    best_score: Math.max(...ACE_SCORES),
+    trend: ACE_SCORES.map((score, i) => ({ at: new Date(now() - (ACE_SCORES.length - i) * 4 * 86_400_000).toISOString(), score })),
+    change: 6,
+  });
+  const acePositions = {
+    front_knee_flexion: { score: 84, measured: 10 }, back_knee_flexion: { score: 71, measured: 9 },
+    trunk_tilt: { score: 88, measured: 10 }, elbow_angle: null, wrist_height: { score: 62, measured: 10 },
+  };
   // Pretend people for Friends in mock mode: one friend, one request waiting, one to find.
   const people = new Map<string, { display_name: string; bio: string }>([
     ["ace", { display_name: "Alex Ace", bio: "Flat first serve, working on the kick." }],
@@ -93,6 +111,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       ...summaryOf(username), relationship, connection_id: link?.id ?? null, can_request: relationship === "none",
       bio: relationship === "friends" ? people.get(username)?.bio || null : null,
       friends_since: relationship === "friends" ? link!.accepted_at : null,
+      stats: relationship === "friends" && username === "ace" ? aceStats() : null,
+      positions: relationship === "friends" && username === "ace" ? acePositions : null,
     };
   }
   function findPerson(username: string): string {
@@ -280,7 +300,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       if ("display_name" in body) next.display_name = body.display_name?.trim().replace(/\s+/g, " ") || null;
       if ("bio" in body) next.bio = body.bio?.trim() || null;
-      if (body.accept_requests != null) next.accept_requests = body.accept_requests;
+      for (const key of ["accept_requests", "share_stats", "share_positions", "on_leaderboard"] as const) {
+        if (body[key] != null) next[key] = body[key];
+      }
       profile = next;
       return this.getProfile();
     },
@@ -357,6 +379,28 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const name = usernameOfLink(id);
       if (!name) throw new ApiError(404, "Not found");
       links.delete(name);
+    },
+
+    async getLeaderboard() {
+      await delay();
+      const entries = [];
+      if (links.get("ace")?.status === "accepted") {
+        const ace = aceStats();
+        entries.push({ person: summaryOf("ace"), is_you: false, average_score: ace.average_score, scored_serves: ace.serves, needed: 0 });
+      }
+      if (profile.on_leaderboard) {
+        const mine = (await this.listAnalyses()).items.map((a) => a.overall_score).filter((x): x is number => x != null);
+        const latest = mine.slice(0, 10);
+        entries.push({
+          person: { username: profile.username, display_name: profile.display_name, avatar_url: profile.avatar_url }, is_you: true,
+          average_score: latest.length >= 5 ? Math.round(latest.reduce((a, b) => a + b, 0) / latest.length) : null,
+          scored_serves: mine.length, needed: Math.max(0, 5 - mine.length),
+        });
+      }
+      const ranked = entries.filter((e) => e.needed === 0).sort((a, b) => (b.average_score ?? 0) - (a.average_score ?? 0))
+        .map((e, i) => ({ ...e, rank: i + 1 }));
+      return { window_days: 90, min_serves: 5, averaged_over: 10, you_are_on_it: profile.on_leaderboard,
+        ranked, not_ranked: entries.filter((e) => e.needed > 0).map((e) => ({ ...e, rank: null })) };
     },
 
     async listBlocks() {

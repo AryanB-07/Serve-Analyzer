@@ -195,6 +195,8 @@ class Auth:
                 terms_version=row.get("terms_version"), terms_accepted_at=row.get("terms_accepted_at")),
             profile=ExportedProfile(
                 username=profile["username"], display_name=profile["display_name"], bio=profile["bio"],
+                accept_requests=profile["accept_requests"], share_stats=profile["share_stats"],
+                share_positions=profile["share_positions"], on_leaderboard=profile["on_leaderboard"],
                 avatar=url_for(profile["avatar_key"]) if profile["avatar_key"] else None) if profile else None,
             analyses=items,
             connections=[ExportedConnection(

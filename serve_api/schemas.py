@@ -390,7 +390,15 @@ class ProfileStats(BaseModel):
     best_score: int | None = None
 
 
-class Profile(BaseModel):
+class SharingSettings(BaseModel):
+    """What friends may see of your serves. All off until you turn them on."""
+
+    share_stats: bool = False  # serves analysed, average, best, trend
+    share_positions: bool = False  # each key position's average
+    on_leaderboard: bool = False  # a place on your friends' leaderboard
+
+
+class Profile(SharingSettings):
     username: str | None = None
     display_name: str | None = None
     bio: str | None = None
@@ -408,12 +416,15 @@ class ProfileUpdate(BaseModel):
     display_name: str | None = Field(default=None, max_length=200)
     bio: str | None = Field(default=None, max_length=1000)
     accept_requests: bool | None = None
+    share_stats: bool | None = None
+    share_positions: bool | None = None
+    on_leaderboard: bool | None = None
 
-    @field_validator("accept_requests")
+    @field_validator("accept_requests", "share_stats", "share_positions", "on_leaderboard")
     @classmethod
-    def _accept_requests(cls, value: bool | None) -> bool:
+    def _switch(cls, value: bool | None) -> bool:
         if value is None:
-            raise ValueError("Choose whether to accept friend requests.")
+            raise ValueError("Settings are on or off.")
         return value
 
     @field_validator("username")
@@ -467,6 +478,29 @@ class PersonSummary(BaseModel):
     avatar_url: str | None = None
 
 
+class TrendPoint(BaseModel):
+    at: datetime
+    score: int = Field(ge=0, le=100)
+
+
+class PositionAverage(BaseModel):
+    score: int = Field(ge=0, le=100)
+    measured: int  # how many of the latest serves it was measured in
+
+
+SharedPositions = _keyed("SharedPositions", ["front_knee_flexion", "back_knee_flexion", "trunk_tilt", "elbow_angle",
+                                             "wrist_height"], PositionAverage | None, None)
+
+
+class SharedStats(BaseModel):
+    serves: int
+    average_score: int | None = None  # of the latest `averaged_over` scored serves
+    averaged_over: int = 0
+    best_score: int | None = None
+    trend: list[TrendPoint] = []  # the latest scored serves, oldest first
+    change: int | None = None  # the latest five's average minus the five before's
+
+
 class Person(PersonSummary):
     """Someone's page, as you see it."""
 
@@ -475,6 +509,27 @@ class Person(PersonSummary):
     can_request: bool = False  # whether you could send them a friend request now
     bio: str | None = None  # friends only
     friends_since: datetime | None = None
+    # Friends only, and only what they chose to share (None when they don't).
+    stats: SharedStats | None = None
+    positions: SharedPositions | None = None  # type: ignore[valid-type]
+
+
+class LeaderboardEntry(BaseModel):
+    rank: int | None = None  # None until they have enough serves
+    person: PersonSummary
+    is_you: bool = False
+    average_score: int | None = None
+    scored_serves: int  # within the window
+    needed: int = 0  # more serves before they're ranked
+
+
+class Leaderboard(BaseModel):
+    window_days: int
+    min_serves: int
+    averaged_over: int
+    you_are_on_it: bool
+    ranked: list[LeaderboardEntry]
+    not_ranked: list[LeaderboardEntry]
 
 
 class Connection(BaseModel):
@@ -518,7 +573,8 @@ class ExportedBlock(BaseModel):
     blocked_at: datetime
 
 
-class ExportedProfile(BaseModel):
+class ExportedProfile(SharingSettings):
+    accept_requests: bool = True
     username: str | None = None
     display_name: str | None = None
     bio: str | None = None

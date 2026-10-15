@@ -124,6 +124,9 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
       serve stats, and a password change that signs out other devices.
 - [x] Friends: requests, friendships and blocks, found by exact username only; non-friends see
       a name and picture, friends also see the bio.
+- [x] Sharing with friends: serve stats, key positions and a friends leaderboard, each opt-in.
+- [ ] **Before leaning on ranks:** validate the reference ranges. The leaderboard makes the scores
+  more visible, and every score shown to friends says the ranges aren't validated yet.
 - [ ] **Before profiles are public:** hold a released username for a while before anyone else can
   take it, so nobody can impersonate a renamed player.
 - [x] History (now My Serves): score cards with upload time, optional notes, key-position details, and

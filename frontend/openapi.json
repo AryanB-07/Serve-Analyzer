@@ -1340,6 +1340,48 @@
         }
       }
     },
+    "/leaderboard": {
+      "get": {
+        "tags": [
+          "friends"
+        ],
+        "summary": "Leaderboard",
+        "description": "You and your friends who chose to be on it, ranked by the average of each one's latest\nserves in the window. Too few serves in the window means not ranked yet.",
+        "operationId": "leaderboard_leaderboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Leaderboard"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/blocks": {
       "get": {
         "tags": [
@@ -3339,6 +3381,26 @@
       },
       "ExportedProfile": {
         "properties": {
+          "share_stats": {
+            "type": "boolean",
+            "title": "Share Stats",
+            "default": false
+          },
+          "share_positions": {
+            "type": "boolean",
+            "title": "Share Positions",
+            "default": false
+          },
+          "on_leaderboard": {
+            "type": "boolean",
+            "title": "On Leaderboard",
+            "default": false
+          },
+          "accept_requests": {
+            "type": "boolean",
+            "title": "Accept Requests",
+            "default": true
+          },
           "username": {
             "anyOf": [
               {
@@ -3666,6 +3728,99 @@
         ],
         "title": "LandmarkTrack",
         "description": "Normalised coordinates (0-1 of the frame), one entry per frame; null when missing."
+      },
+      "Leaderboard": {
+        "properties": {
+          "window_days": {
+            "type": "integer",
+            "title": "Window Days"
+          },
+          "min_serves": {
+            "type": "integer",
+            "title": "Min Serves"
+          },
+          "averaged_over": {
+            "type": "integer",
+            "title": "Averaged Over"
+          },
+          "you_are_on_it": {
+            "type": "boolean",
+            "title": "You Are On It"
+          },
+          "ranked": {
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntry"
+            },
+            "type": "array",
+            "title": "Ranked"
+          },
+          "not_ranked": {
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntry"
+            },
+            "type": "array",
+            "title": "Not Ranked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "window_days",
+          "min_serves",
+          "averaged_over",
+          "you_are_on_it",
+          "ranked",
+          "not_ranked"
+        ],
+        "title": "Leaderboard"
+      },
+      "LeaderboardEntry": {
+        "properties": {
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "person": {
+            "$ref": "#/components/schemas/PersonSummary"
+          },
+          "is_you": {
+            "type": "boolean",
+            "title": "Is You",
+            "default": false
+          },
+          "average_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score"
+          },
+          "scored_serves": {
+            "type": "integer",
+            "title": "Scored Serves"
+          },
+          "needed": {
+            "type": "integer",
+            "title": "Needed",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "person",
+          "scored_serves"
+        ],
+        "title": "LeaderboardEntry"
       },
       "LoginRequest": {
         "properties": {
@@ -4352,6 +4507,26 @@
               }
             ],
             "title": "Friends Since"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SharedStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "positions": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SharedPositions"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -4577,8 +4752,43 @@
         ],
         "title": "PhaseRanges"
       },
+      "PositionAverage": {
+        "properties": {
+          "score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score"
+          },
+          "measured": {
+            "type": "integer",
+            "title": "Measured"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "measured"
+        ],
+        "title": "PositionAverage"
+      },
       "Profile": {
         "properties": {
+          "share_stats": {
+            "type": "boolean",
+            "title": "Share Stats",
+            "default": false
+          },
+          "share_positions": {
+            "type": "boolean",
+            "title": "Share Positions",
+            "default": false
+          },
+          "on_leaderboard": {
+            "type": "boolean",
+            "title": "On Leaderboard",
+            "default": false
+          },
           "username": {
             "anyOf": [
               {
@@ -4732,6 +4942,39 @@
               }
             ],
             "title": "Accept Requests"
+          },
+          "share_stats": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Stats"
+          },
+          "share_positions": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Positions"
+          },
+          "on_leaderboard": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Leaderboard"
           }
         },
         "type": "object",
@@ -4935,6 +5178,121 @@
         ],
         "title": "RequestCount"
       },
+      "SharedPositions": {
+        "properties": {
+          "front_knee_flexion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositionAverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "back_knee_flexion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositionAverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trunk_tilt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositionAverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "elbow_angle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositionAverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wrist_height": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositionAverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "SharedPositions"
+      },
+      "SharedStats": {
+        "properties": {
+          "serves": {
+            "type": "integer",
+            "title": "Serves"
+          },
+          "average_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score"
+          },
+          "averaged_over": {
+            "type": "integer",
+            "title": "Averaged Over",
+            "default": 0
+          },
+          "best_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Score"
+          },
+          "trend": {
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            },
+            "type": "array",
+            "title": "Trend",
+            "default": []
+          },
+          "change": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "serves"
+        ],
+        "title": "SharedStats"
+      },
       "SignupRequest": {
         "properties": {
           "email": {
@@ -5049,6 +5407,27 @@
           "unknown"
         ],
         "title": "StatusCounts"
+      },
+      "TrendPoint": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "score"
+        ],
+        "title": "TrendPoint"
       },
       "UploadTarget": {
         "properties": {

@@ -41,7 +41,8 @@ def test_finding_someone_by_username_shows_only_the_basics(app, ann, bob):
     bob.patch("/profile", json={"display_name": "Bob B", "bio": "Lefty."})
     seen = ann.get("/people/BOB").json()
     assert seen == {"username": "bob", "display_name": "Bob B", "avatar_url": None, "relationship": "none",
-                    "connection_id": None, "can_request": True, "bio": None, "friends_since": None}
+                    "connection_id": None, "can_request": True, "bio": None, "friends_since": None,
+                    "stats": None, "positions": None}
     assert ann.get("/people/@bob").status_code == 200  # a leading @ is fine
     assert ann.get("/people/nobody_here").status_code == 404
     assert ann.get("/people/ann").json()["relationship"] == "self"
