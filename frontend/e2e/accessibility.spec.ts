@@ -88,5 +88,17 @@ test("signed-in pages: upload, results, failure, history, account", async ({ pag
   await page.goto("/profile");
   await expect(page.getByRole("heading", { name: "Your serves" })).toBeVisible();
   await expectAccessible(page, "profile");
+  await page.request.patch("/api/profile", { data: { username: `a11y_${Date.now().toString(36)}` } });
+  await page.goto("/friends");
+  await expect(page.getByRole("form", { name: "Find someone" })).toBeVisible();
+  await expectAccessible(page, "friends");
+  await page.goto("/u/nobody_has_this_name");
+  await expect(page.getByRole("heading", { name: "No one has that username" })).toBeVisible();
+  await expectAccessible(page, "a username nobody has");
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto("/friends");
+  await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
+  await expectAccessible(page, "friends on a phone, with the tab bar");
+  await page.setViewportSize({ width: 1280, height: 720 });
   await deleteAccount(page);
 });

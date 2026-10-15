@@ -6,8 +6,8 @@
  * Change both whenever either document changes materially; signups record which version they
  * accepted.
  */
-export const TERMS_VERSION = "2026-10-14";
-export const LAST_UPDATED = "14 October 2026";
+export const TERMS_VERSION = "2026-10-15";
+export const LAST_UPDATED = "15 October 2026";
 
 export const LEGAL = {
   /** Who runs the service: your name, or your company's legal name. */

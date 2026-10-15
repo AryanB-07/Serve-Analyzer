@@ -13,7 +13,7 @@ export function Avatar({ url, name, size = "md" }: { url: string | null | undefi
   }
   return (
     <span
-      className={`${box} inline-grid shrink-0 place-items-center rounded-full bg-accent/15 font-semibold text-accent`}
+      className={`${box} inline-grid shrink-0 place-items-center rounded-full bg-accent font-semibold text-on-accent`}
       aria-hidden
     >
       {initials || (

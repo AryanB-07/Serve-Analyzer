@@ -309,6 +309,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/people/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Person
+         * @description Someone's page: what they show you, and where the two of you stand.
+         */
+        get: operations["get_person_people__username__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Connections */
+        get: operations["list_connections_connections_get"];
+        put?: never;
+        /**
+         * Send Request
+         * @description Send a friend request. If they'd already asked you, you're friends straight away.
+         */
+        post: operations["send_request_connections_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count Requests
+         * @description Friend requests waiting for you, for the navigation's badge.
+         */
+        get: operations["count_requests_connections_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{connection_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Request
+         * @description Accept a request someone sent you.
+         */
+        post: operations["accept_request_connections__connection_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{connection_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Connection
+         * @description Cancel a request you sent, decline one you received, or end a friendship.
+         */
+        delete: operations["remove_connection_connections__connection_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Blocks */
+        get: operations["list_blocks_blocks_get"];
+        put?: never;
+        /**
+         * Block
+         * @description Block someone. Any request or friendship between you ends, and they can't find you.
+         */
+        post: operations["block_blocks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/blocks/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unblock */
+        delete: operations["unblock_blocks__username__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/analyses": {
         parameters: {
             query?: never;
@@ -571,6 +710,15 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** BlockedPerson */
+        BlockedPerson: {
+            person: components["schemas"]["PersonSummary"];
+            /**
+             * Blocked At
+             * Format: date-time
+             */
+            blocked_at: string;
+        };
         /**
          * ChangeEmailRequest
          * @description The current password too, so a borrowed or stolen session can't take over the account.
@@ -595,6 +743,38 @@ export interface components {
         ConfirmEmailChangeRequest: {
             /** Token */
             token: string;
+        };
+        /** Connection */
+        Connection: {
+            /** Id */
+            id: string;
+            person: components["schemas"]["PersonSummary"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "accepted";
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "incoming" | "outgoing";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Accepted At */
+            accepted_at?: string | null;
+        };
+        /** ConnectionList */
+        ConnectionList: {
+            /** Friends */
+            friends: components["schemas"]["Connection"][];
+            /** Incoming */
+            incoming: components["schemas"]["Connection"][];
+            /** Outgoing */
+            outgoing: components["schemas"]["Connection"][];
         };
         /** CreateAnalysisRequest */
         CreateAnalysisRequest: {
@@ -639,6 +819,16 @@ export interface components {
             profile?: components["schemas"]["ExportedProfile"] | null;
             /** Analyses */
             analyses: components["schemas"]["ExportedAnalysis"][];
+            /**
+             * Connections
+             * @default []
+             */
+            connections: components["schemas"]["ExportedConnection"][];
+            /**
+             * Blocks
+             * @default []
+             */
+            blocks: components["schemas"]["ExportedBlock"][];
         };
         /**
          * DeleteAccountRequest
@@ -709,6 +899,38 @@ export interface components {
             files: {
                 [key: string]: string;
             };
+        };
+        /** ExportedBlock */
+        ExportedBlock: {
+            /** Username */
+            username?: string | null;
+            /**
+             * Blocked At
+             * Format: date-time
+             */
+            blocked_at: string;
+        };
+        /** ExportedConnection */
+        ExportedConnection: {
+            /** Username */
+            username?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "accepted";
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "incoming" | "outgoing";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Accepted At */
+            accepted_at?: string | null;
         };
         /** ExportedProfile */
         ExportedProfile: {
@@ -927,6 +1149,46 @@ export interface components {
              */
             email: string;
         };
+        /**
+         * Person
+         * @description Someone's page, as you see it.
+         */
+        Person: {
+            /** Username */
+            username?: string | null;
+            /** Display Name */
+            display_name?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /**
+             * Relationship
+             * @enum {string}
+             */
+            relationship: "self" | "none" | "requested" | "incoming" | "friends";
+            /** Connection Id */
+            connection_id?: string | null;
+            /**
+             * Can Request
+             * @default false
+             */
+            can_request: boolean;
+            /** Bio */
+            bio?: string | null;
+            /** Friends Since */
+            friends_since?: string | null;
+        };
+        /**
+         * PersonSummary
+         * @description What anyone who can see you is shown: never an email or anything private.
+         */
+        PersonSummary: {
+            /** Username */
+            username?: string | null;
+            /** Display Name */
+            display_name?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
+        };
         /** PhaseConfidences */
         PhaseConfidences: {
             trophy?: components["schemas"]["MetricConfidences"] | null;
@@ -982,6 +1244,11 @@ export interface components {
              */
             member_since: string;
             stats: components["schemas"]["ProfileStats"];
+            /**
+             * Accept Requests
+             * @default true
+             */
+            accept_requests: boolean;
         };
         /** ProfileStats */
         ProfileStats: {
@@ -1009,6 +1276,8 @@ export interface components {
             display_name?: string | null;
             /** Bio */
             bio?: string | null;
+            /** Accept Requests */
+            accept_requests?: boolean | null;
         };
         /** RawLandmarkTrack */
         RawLandmarkTrack: {
@@ -1059,6 +1328,11 @@ export interface components {
             reason: "not_a_serve" | "wrong_phases" | "wrong_tracking" | "wrong_feedback" | "was_a_serve" | "other";
             /** Note */
             note?: string | null;
+        };
+        /** RequestCount */
+        RequestCount: {
+            /** Incoming */
+            incoming: number;
         };
         /** SignupRequest */
         SignupRequest: {
@@ -1144,6 +1418,11 @@ export interface components {
             available: boolean;
             /** Problem */
             problem?: string | null;
+        };
+        /** UsernameRequest */
+        UsernameRequest: {
+            /** Username */
+            username: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -2012,6 +2291,466 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_person_people__username__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_connections_connections_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionList"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    send_request_connections_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UsernameRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    count_requests_connections_count_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestCount"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    accept_request_connections__connection_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                connection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_connection_connections__connection_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                connection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_blocks_blocks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlockedPerson"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    block_blocks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UsernameRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unblock_blocks__username__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

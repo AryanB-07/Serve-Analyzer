@@ -14,6 +14,8 @@ import { LoginPage, SignupPage } from "./features/auth/AuthPages";
 import { RequireAuth } from "./features/auth/RequireAuth";
 import { ComparePage } from "./features/compare/ComparePage";
 import { DemoPage } from "./features/demo/DemoPage";
+import { FriendsPage } from "./features/friends/FriendsPage";
+import { PersonPage } from "./features/friends/PersonPage";
 import { HistoryPage } from "./features/history/HistoryPage";
 import { PrivacyPage, TermsPage } from "./features/legal/LegalPages";
 import { ProfilePage } from "./features/profile/ProfilePage";
@@ -63,6 +65,8 @@ export const routes = [
               { path: "/history", element: <Moved to="/serves" /> },
               { path: "/compare", element: <ComparePage /> },
               { path: "/profile", element: <ProfilePage /> },
+              { path: "/friends", element: <FriendsPage /> },
+              { path: "/u/:username", element: <PersonPage /> },
               { path: "/settings", element: <SettingsPage /> },
               { path: "/account", element: <Moved to="/settings" /> },
             ],

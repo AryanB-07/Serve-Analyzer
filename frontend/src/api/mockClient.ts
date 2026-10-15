@@ -2,6 +2,7 @@ import { ApiError, UploadAbortedError, type ApiClient } from "./client";
 import { normaliseUsername, usernameProblem } from "../lib/username";
 import { DEMO_IDS } from "./demo";
 import type {
+  Person,
   AnalysisList,
   AnalysisResult,
   AnalysisStatus,
@@ -69,9 +70,37 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   const reports = new Map<string, Report>();
   const notes = new Map<string, string | null>();
   let pendingEmail: string | null = null;
-  let profile: { username: string | null; display_name: string | null; bio: string | null; avatar_url: string | null } = {
-    username: null, display_name: null, bio: null, avatar_url: null,
-  };
+  let profile: {
+    username: string | null; display_name: string | null; bio: string | null; avatar_url: string | null; accept_requests: boolean;
+  } = { username: null, display_name: null, bio: null, avatar_url: null, accept_requests: true };
+  // Pretend people for Friends in mock mode: one friend, one request waiting, one to find.
+  const people = new Map<string, { display_name: string; bio: string }>([
+    ["ace", { display_name: "Alex Ace", bio: "Flat first serve, working on the kick." }],
+    ["serve_queen", { display_name: "Serena Q", bio: "Coach. Ask me about the trophy position." }],
+    ["taken", { display_name: "Tay Ken", bio: "" }],
+  ]);
+  const links = new Map<string, { id: string; status: "pending" | "accepted"; direction: "incoming" | "outgoing"; created_at: string; accepted_at: string | null }>([
+    ["ace", { id: "c-ace", status: "accepted", direction: "outgoing", created_at: "2026-09-01T10:00:00Z", accepted_at: "2026-09-02T10:00:00Z" }],
+    ["serve_queen", { id: "c-queen", status: "pending", direction: "incoming", created_at: "2026-10-10T10:00:00Z", accepted_at: null }],
+  ]);
+  const blocked = new Map<string, string>();
+  const summaryOf = (username: string) => ({ username, display_name: people.get(username)?.display_name ?? null, avatar_url: null });
+  function personOf(username: string): Person {
+    if (username === profile.username) return { ...summaryOf(username), display_name: profile.display_name, relationship: "self", can_request: false, bio: profile.bio };
+    const link = links.get(username);
+    const relationship = !link ? "none" : link.status === "accepted" ? "friends" : link.direction === "outgoing" ? "requested" : "incoming";
+    return {
+      ...summaryOf(username), relationship, connection_id: link?.id ?? null, can_request: relationship === "none",
+      bio: relationship === "friends" ? people.get(username)?.bio || null : null,
+      friends_since: relationship === "friends" ? link!.accepted_at : null,
+    };
+  }
+  function findPerson(username: string): string {
+    const name = normaliseUsername(username);
+    if ((!people.has(name) && name !== profile.username) || blocked.has(name)) throw new ApiError(404, "No one has that username.");
+    return name;
+  }
+  const usernameOfLink = (id: string) => [...links.entries()].find(([, l]) => l.id === id)?.[0];
   // Pretend someone else has these, so "taken" can be tried in mock mode.
   const takenUsernames = new Set(["taken", "ace", "serve_queen"]);
 
@@ -204,6 +233,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         exported_at: ts.toISOString(),
         links_expire_at: new Date(ts.getTime() + 6 * 3600_000).toISOString(),
         account: { email: user.email, email_verified: user.email_verified ?? false, created_at: user.created_at },
+        connections: [...links.entries()].map(([username, l]) => ({ username, status: l.status, direction: l.direction, created_at: l.created_at, accepted_at: l.accepted_at })),
+        blocks: [...blocked.entries()].map(([username, at]) => ({ username, blocked_at: at })),
         analyses: items.map((a) => ({
           id: a.id,
           filename: a.filename,
@@ -249,6 +280,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       if ("display_name" in body) next.display_name = body.display_name?.trim().replace(/\s+/g, " ") || null;
       if ("bio" in body) next.bio = body.bio?.trim() || null;
+      if (body.accept_requests != null) next.accept_requests = body.accept_requests;
       profile = next;
       return this.getProfile();
     },
@@ -272,6 +304,76 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       if (profile.avatar_url) URL.revokeObjectURL(profile.avatar_url);
       profile = { ...profile, avatar_url: null };
       return this.getProfile();
+    },
+
+    async getPerson(username) {
+      await delay();
+      return personOf(findPerson(username));
+    },
+
+    async listConnections() {
+      await delay();
+      const all = [...links.entries()].map(([username, l]) => ({ ...l, person: summaryOf(username) }));
+      return {
+        friends: all.filter((c) => c.status === "accepted"),
+        incoming: all.filter((c) => c.status === "pending" && c.direction === "incoming"),
+        outgoing: all.filter((c) => c.status === "pending" && c.direction === "outgoing"),
+      };
+    },
+
+    async countRequests() {
+      await delay();
+      return [...links.values()].filter((l) => l.status === "pending" && l.direction === "incoming").length;
+    },
+
+    async sendRequest(username) {
+      await delay();
+      if (!profile.username) throw new ApiError(409, "Choose a username first, so people know who's asking. You can set one in Settings.");
+      const name = findPerson(username);
+      if (name === profile.username) throw new ApiError(400, "That's you.");
+      const link = links.get(name);
+      if (link?.status === "pending" && link.direction === "incoming") {
+        links.set(name, { ...link, status: "accepted", accepted_at: new Date(now()).toISOString() });
+      } else if (link) {
+        throw new ApiError(409, link.status === "accepted" ? "You're already friends." : "You've already sent them a request.");
+      } else {
+        links.set(name, { id: `c-${name}-${now()}`, status: "pending", direction: "outgoing", created_at: new Date(now()).toISOString(), accepted_at: null });
+      }
+      return personOf(name);
+    },
+
+    async acceptRequest(id) {
+      await delay();
+      const name = usernameOfLink(id);
+      const link = name ? links.get(name) : undefined;
+      if (!name || !link || link.status !== "pending" || link.direction !== "incoming") throw new ApiError(404, "Friend request not found");
+      const accepted = { ...link, status: "accepted" as const, accepted_at: new Date(now()).toISOString() };
+      links.set(name, accepted);
+      return { ...accepted, person: summaryOf(name) };
+    },
+
+    async removeConnection(id) {
+      await delay();
+      const name = usernameOfLink(id);
+      if (!name) throw new ApiError(404, "Not found");
+      links.delete(name);
+    },
+
+    async listBlocks() {
+      await delay();
+      return [...blocked.entries()].map(([username, at]) => ({ person: summaryOf(username), blocked_at: at }));
+    },
+
+    async block(username) {
+      await delay();
+      const name = findPerson(username);
+      links.delete(name);
+      blocked.set(name, new Date(now()).toISOString());
+    },
+
+    async unblock(username) {
+      await delay();
+      if (!blocked.delete(normaliseUsername(username))) throw new ApiError(404, "You haven't blocked anyone with that username.");
     },
 
     async changePassword(currentPassword) {

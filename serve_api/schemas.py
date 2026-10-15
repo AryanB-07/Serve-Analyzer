@@ -338,6 +338,8 @@ class DataExport(BaseModel):
     account: ExportedAccount
     profile: ExportedProfile | None = None
     analyses: list[ExportedAnalysis]
+    connections: list[ExportedConnection] = []
+    blocks: list[ExportedBlock] = []
 
 
 # --- profiles ---------------------------------------------------------------------------------
@@ -395,6 +397,7 @@ class Profile(BaseModel):
     avatar_url: str | None = None
     member_since: datetime
     stats: ProfileStats
+    accept_requests: bool = True  # whether anyone with your username can send a friend request
 
 
 class ProfileUpdate(BaseModel):
@@ -404,6 +407,14 @@ class ProfileUpdate(BaseModel):
     username: str | None = Field(default=None, max_length=40)
     display_name: str | None = Field(default=None, max_length=200)
     bio: str | None = Field(default=None, max_length=1000)
+    accept_requests: bool | None = None
+
+    @field_validator("accept_requests")
+    @classmethod
+    def _accept_requests(cls, value: bool | None) -> bool:
+        if value is None:
+            raise ValueError("Choose whether to accept friend requests.")
+        return value
 
     @field_validator("username")
     @classmethod
@@ -441,6 +452,70 @@ class UsernameCheck(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str = Field(min_length=1, max_length=256)
     new_password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=256)
+
+
+# --- friends ----------------------------------------------------------------------------------
+
+Relationship = Literal["self", "none", "requested", "incoming", "friends"]
+
+
+class PersonSummary(BaseModel):
+    """What anyone who can see you is shown: never an email or anything private."""
+
+    username: str | None = None
+    display_name: str | None = None
+    avatar_url: str | None = None
+
+
+class Person(PersonSummary):
+    """Someone's page, as you see it."""
+
+    relationship: Relationship
+    connection_id: str | None = None  # the request or friendship, when there is one
+    can_request: bool = False  # whether you could send them a friend request now
+    bio: str | None = None  # friends only
+    friends_since: datetime | None = None
+
+
+class Connection(BaseModel):
+    id: str
+    person: PersonSummary  # the other person
+    status: Literal["pending", "accepted"]
+    direction: Literal["incoming", "outgoing"]  # who asked: them, or you
+    created_at: datetime
+    accepted_at: datetime | None = None
+
+
+class ConnectionList(BaseModel):
+    friends: list[Connection]
+    incoming: list[Connection]
+    outgoing: list[Connection]
+
+
+class RequestCount(BaseModel):
+    incoming: int
+
+
+class UsernameRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=40)
+
+
+class BlockedPerson(BaseModel):
+    person: PersonSummary
+    blocked_at: datetime
+
+
+class ExportedConnection(BaseModel):
+    username: str | None = None
+    status: Literal["pending", "accepted"]
+    direction: Literal["incoming", "outgoing"]
+    created_at: datetime
+    accepted_at: datetime | None = None
+
+
+class ExportedBlock(BaseModel):
+    username: str | None = None
+    blocked_at: datetime
 
 
 class ExportedProfile(BaseModel):

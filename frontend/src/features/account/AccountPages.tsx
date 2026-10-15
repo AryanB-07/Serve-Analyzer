@@ -13,6 +13,7 @@ import {
   useVerifyEmail,
 } from "../../api/session";
 import { ApiError } from "../../api/client";
+import { useBlocks, useUnblock } from "../../api/friends";
 import { useChangePassword, useProfile, useUpdateProfile, useUsernameCheck } from "../../api/profile";
 import type { ProfileUpdate } from "../../api/types";
 import { normaliseUsername, usernameProblem } from "../../lib/username";
@@ -570,7 +571,7 @@ function useUsernameState(value: string, current: string | null) {
   const ask = !name || local || name === current || settled !== name ? null : name;
   const check = useUsernameCheck(ask);
   const answer = check.data && check.data.username === name ? check.data : null;
-  let text: ReactNode = "Letters, numbers and underscores, 3 to 20 of them.";
+  let text: ReactNode = "Letters, numbers and underscores, 3 to 20 of them. People who know it can find you and see your name and picture.";
   let tone = "text-ink-muted";
   if (local) [text, tone] = [local, "text-bad"];
   else if (name && name === current) text = "This is your username.";
@@ -626,7 +627,11 @@ function ProfileSettings() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 id={`${id}-title`} className="font-semibold">Profile</h2>
-          <p className="text-sm text-ink-muted">Only you can see your profile for now.</p>
+          <p className="text-sm text-ink-muted">
+            {p.username
+              ? "People who know your username see your name and picture; friends also see your bio."
+              : "Nobody can find you until you choose a username."}
+          </p>
         </div>
         <Link to="/profile" className="shrink-0 text-sm font-medium text-accent hover:underline">View profile</Link>
       </div>
@@ -696,6 +701,82 @@ function ProfileSettings() {
   );
 }
 
+function FriendRequestsSetting() {
+  const id = useId();
+  const profile = useProfile();
+  const save = useUpdateProfile();
+  const on = profile.data?.accept_requests ?? true;
+  return (
+    <div className="space-y-1">
+      <label className="flex cursor-pointer items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          checked={on}
+          disabled={!profile.data || save.isPending}
+          onChange={(e) => save.mutate({ accept_requests: e.target.checked })}
+          aria-describedby={`${id}-hint`}
+          className="mt-0.5 size-4 accent-[var(--accent)]"
+        />
+        <span>
+          <span className="font-medium">Let people send me friend requests</span>
+          <span id={`${id}-hint`} className="block text-ink-muted">
+            {on ? "Anyone who knows your username can ask." : "Nobody can send you one. You can still send requests yourself."}
+          </span>
+        </span>
+      </label>
+      {save.error && <ErrorText>{settingsErrorMessage(save.error)}</ErrorText>}
+    </div>
+  );
+}
+
+function BlockedPeople() {
+  const blocks = useBlocks();
+  const unblock = useUnblock();
+  const items = blocks.data ?? [];
+  return (
+    <div id="blocked" className="scroll-mt-20 space-y-2">
+      <h3 className="text-sm font-semibold">Blocked people</h3>
+      {blocks.isError ? (
+        <ErrorText>{settingsErrorMessage(blocks.error)}</ErrorText>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-ink-muted">You haven't blocked anyone.</p>
+      ) : (
+        <ul className="divide-y divide-border rounded-lg border border-border">
+          {items.map((b) => (
+            <li key={b.person.username ?? b.blocked_at} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+              <span className="min-w-0 truncate">
+                {b.person.display_name ?? `@${b.person.username}`}
+                {b.person.display_name && <span className="text-ink-muted"> @{b.person.username}</span>}
+              </span>
+              <button
+                type="button"
+                disabled={unblock.isPending || !b.person.username}
+                onClick={() => unblock.mutate(b.person.username!)}
+                className="shrink-0 font-medium text-accent hover:underline disabled:opacity-50"
+                aria-label={`Unblock ${b.person.display_name ?? b.person.username}`}
+              >
+                Unblock
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {unblock.error && <ErrorText>{settingsErrorMessage(unblock.error)}</ErrorText>}
+    </div>
+  );
+}
+
+function FriendsSettings() {
+  const id = useId();
+  return (
+    <section aria-labelledby={`${id}-title`} className="space-y-4 rounded-xl border border-border bg-surface p-5">
+      <h2 id={`${id}-title`} className="font-semibold">Friends and privacy</h2>
+      <FriendRequestsSetting />
+      <BlockedPeople />
+    </section>
+  );
+}
+
 function ChangePassword() {
   const id = useId();
   const change = useChangePassword();
@@ -748,6 +829,7 @@ export function SettingsPage() {
       <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
       <VerifyEmailBanner />
       <ProfileSettings />
+      <FriendsSettings />
       <section className="space-y-2 rounded-xl border border-border bg-surface p-5">
         <h2 className="font-semibold">Sign-in details</h2>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">

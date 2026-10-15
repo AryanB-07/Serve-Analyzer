@@ -25,6 +25,12 @@ export type DataExport = Schemas["DataExport"];
 export type Profile = Schemas["Profile"];
 export type ProfileUpdate = Schemas["ProfileUpdate"];
 export type UsernameCheck = Schemas["UsernameCheck"];
+export type Person = Schemas["Person"];
+export type PersonSummary = Schemas["PersonSummary"];
+export type Relationship = Person["relationship"];
+export type Connection = Schemas["Connection"];
+export type ConnectionList = Schemas["ConnectionList"];
+export type BlockedPerson = Schemas["BlockedPerson"];
 
 export type PhaseName = keyof Schemas["PhaseMetrics"];
 export type MetricName = keyof Schemas["MetricValues"];

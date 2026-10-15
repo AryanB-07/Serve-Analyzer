@@ -23,8 +23,9 @@ Deliberately awkward rows, the kind real data accumulates:
 - long, multi-line, emoji and HTML-looking notes and filenames;
 - a "this result looks wrong" report; an unverified account from before the Terms were
   recorded; an account with nothing in it;
-- profiles: one with a name, bio and picture, one without a picture, and two accounts that
-  have never set one (like every account from before profiles existed).
+- profiles: one with a name, bio and picture, ones without a picture or name, and one that
+  has never set one (like every account from before profiles existed);
+- friends: a friendship, a request waiting for an answer, and a block.
 """
 
 from __future__ import annotations
@@ -292,8 +293,19 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
                         results=vary(base["side_hitting"], rnd, quality_profile=0.6))
     made["lefty"] = 5
 
-    seeder.user("new", age_days=0.5)  # signed up, nothing analysed yet
+    newbie = seeder.user("new", age_days=0.5)  # signed up, nothing analysed yet
+    seeder.profile(newbie, username="seed_newbie")
     made["new"] = 0
+
+    # Friends: the player and the lefty are friends; the newcomer has asked the player; the
+    # lefty has blocked a fifth account, which has a username but nothing else.
+    friendship = seeder.db.request_connection(lefty, player)
+    seeder.db.accept_connection(friendship["id"], player)
+    seeder.db.request_connection(newbie, player)
+    pest = seeder.user("blocked", age_days=20)
+    seeder.profile(pest, username="seed_blocked", display_name="Blocked Ben")
+    seeder.db.block(lefty, pest)
+    made["blocked"] = 0
     seeder.user("unverified", verified=False, terms=None, age_days=200)  # before the Terms were recorded
     made["unverified"] = 0
     return made

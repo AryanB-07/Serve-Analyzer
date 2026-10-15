@@ -31,6 +31,8 @@ from .db import Database, now
 from .purge import analysis_prefixes, run_purges
 from .schemas import (
     ChangePasswordRequest,
+    ExportedBlock,
+    ExportedConnection,
     ExportedProfile,
     ChangeEmailRequest,
     ConfirmEmailChangeRequest,
@@ -56,7 +58,7 @@ EXTEND_AFTER = timedelta(days=1)
 BAD_CREDENTIALS = "Incorrect email or password."
 # The date of the current Terms of Service and Privacy Policy (frontend/src/features/legal).
 # Change it whenever either document changes materially.
-TERMS_VERSION = "2026-10-14"
+TERMS_VERSION = "2026-10-15"
 VERIFY_TTL = timedelta(hours=24)
 RESET_TTL = timedelta(hours=1)
 BAD_LINK = "This link is invalid or has expired. Request a new one."
@@ -180,6 +182,11 @@ class Auth:
                 files=files,
             ))
         profile = self.db.get_profile(user.id)
+        links = self.db.connections_of(user.id)
+        blocked = self.db.blocked_by(user.id)
+        others = self.db.profiles_of([c["addressee_id"] if c["requester_id"] == user.id else c["requester_id"]
+                                      for c in links] + [b["blocked_id"] for b in blocked])
+        name_of = lambda uid: (others.get(uid) or {}).get("username")  # noqa: E731
         return DataExport(
             exported_at=now(),
             links_expire_at=now() + timedelta(seconds=self.settings.download_url_ttl_s),
@@ -190,6 +197,11 @@ class Auth:
                 username=profile["username"], display_name=profile["display_name"], bio=profile["bio"],
                 avatar=url_for(profile["avatar_key"]) if profile["avatar_key"] else None) if profile else None,
             analyses=items,
+            connections=[ExportedConnection(
+                username=name_of(c["addressee_id"] if c["requester_id"] == user.id else c["requester_id"]),
+                status=c["status"], direction="outgoing" if c["requester_id"] == user.id else "incoming",
+                created_at=c["created_at"], accepted_at=c["accepted_at"]) for c in links],
+            blocks=[ExportedBlock(username=name_of(b["blocked_id"]), blocked_at=b["created_at"]) for b in blocked],
         )
 
     def _send(self, tasks: BackgroundTasks, message: m.Email) -> None:

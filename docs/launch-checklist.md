@@ -122,6 +122,8 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
   (`serve_analyzer/data/reference_ranges.json`), and simple mode turns them into grades.
 - [x] Profile and Settings: username, display name, bio and picture (metadata stripped),
       serve stats, and a password change that signs out other devices.
+- [x] Friends: requests, friendships and blocks, found by exact username only; non-friends see
+      a name and picture, friends also see the bio.
 - [ ] **Before profiles are public:** hold a released username for a while before anyone else can
   take it, so nobody can impersonate a renamed player.
 - [x] History (now My Serves): score cards with upload time, optional notes, key-position details, and

@@ -132,7 +132,7 @@ export function ProfilePage() {
             ) : (
               <p className="text-sm">
                 <Link to="/settings#profile" className="font-medium text-accent hover:underline">Choose a username</Link>
-                <span className="text-ink-muted"> so friends can find you, once you can connect.</span>
+                <span className="text-ink-muted"> so friends can find you.</span>
               </p>
             )}
             {p.bio ? (
@@ -149,7 +149,9 @@ export function ProfilePage() {
           </div>
         </div>
         <p className="mt-6 border-t border-border pt-4 text-xs text-ink-muted">
-          Only you can see your profile for now.
+          {p.username
+            ? "People who know your username see your name and picture. Friends also see your bio. Nobody sees your serves."
+            : "Nobody can find you until you choose a username."}
         </p>
       </section>
 

@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
     Column,
     DateTime,
     ForeignKey,
@@ -17,6 +18,7 @@ from sqlalchemy import (
     Table,
     Text,
 )
+from sqlalchemy import true
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import TypeDecorator
 
@@ -105,6 +107,34 @@ profiles = Table(
     # Storage key of the current profile picture (keys.avatar_key), or none.
     Column("avatar_key", String(255)),
     Column("updated_at", UTCDateTime, nullable=False),
+    # Privacy: whether anyone who knows your username can send you a friend request.
+    Column("accept_requests", Boolean, nullable=False, server_default=true()),
+)
+
+connections = Table(
+    "connections",
+    metadata,
+    # A friend request, and once accepted, a friendship. One per pair of people, whichever of
+    # them asked: `pair` is both ids in sorted order, under a unique index.
+    Column("id", String(32), primary_key=True),
+    Column("requester_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("addressee_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("pair", String(65), nullable=False, unique=True),
+    Column("status", String(16), nullable=False),  # "pending" | "accepted"
+    Column("created_at", UTCDateTime, nullable=False),
+    Column("accepted_at", UTCDateTime),
+    Index("connections_addressee", "addressee_id", "status"),
+    Index("connections_requester", "requester_id", "status"),
+)
+
+blocks = Table(
+    "blocks",
+    metadata,
+    # The blocked person can't find, request or see the blocker, and isn't told.
+    Column("blocker_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("blocked_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("created_at", UTCDateTime, nullable=False),
+    Index("blocks_blocked", "blocked_id"),
 )
 
 email_tokens = Table(

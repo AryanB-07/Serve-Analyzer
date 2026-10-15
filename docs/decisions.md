@@ -223,6 +223,19 @@ and what would change the decision. Numbers link to the reports and docs they co
 - **Trade-off (pictures):** the server doesn't prove the image data decodes, only that the file is a well-formed, square, metadata-free JPEG. A broken one would just fail to show, and only its uploader could send it.
 - **Trade-off:** a username someone gives up is free for anyone straight away. Once profiles are public, that allows impersonation; a cool-off period would fix it.
 
+### 16e. Friends: mutual, found only by exact username, and blocks you can't detect
+
+- **Chosen:**
+  - mutual friendships (request, then accept), not one-way follows. A follow model makes everyone's data a broadcast; mutual means both people chose it.
+  - one `connections` row per pair of people, whichever asked, under a unique index on the sorted pair of ids. Two requests can't exist between the same people, and if both ask at the same moment, the second one finds the first and accepts it.
+  - people are found only by their exact username. There's no search by name, no directory and no suggestions, so nobody can browse the members. That matters with a minimum age of 13.
+  - a block hides each person from the other completely. The blocked person gets the same 404 as for a username nobody has, so a block can't be detected by probing.
+  - non-friends see only display name, username and picture; friends also see the bio; nobody sees serves yet.
+  - consent comes from choosing a username: an account without one can't be found at all. Every account from before this feature has none, so nothing became visible without the person acting.
+  - phones get a bottom tab bar for the main sections. The header can't hold a third link at 360 px, and messages will make four.
+- **Considered:** search by display name (useful, but it lets strangers browse); "decline" remembered forever (stops repeat requests, but adds state; the hourly rate limit and blocking cover it for now).
+- **Trade-off:** someone who declines a request can be asked again later. Blocking is the answer if that's unwanted.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

@@ -46,6 +46,7 @@ def profile_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
             username=row.get("username"), display_name=row.get("display_name"), bio=row.get("bio"),
             avatar_url=storage.presign("GET", avatar)[0] if avatar else None,
             member_since=user.created_at, stats=ProfileStats(**db.profile_stats(user.id)),
+            accept_requests=row.get("accept_requests", True),
         )
 
     def limited(limiter: RateLimiter, user: User) -> None:

@@ -39,6 +39,7 @@ from .schemas import (
     User,
 )
 from .settings import Settings
+from .social import social_router
 from .storage import LocalStorage, StorageError, make_storage
 
 IMMUTABLE = "private, max-age=31536000, immutable"
@@ -82,6 +83,7 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     app.middleware("http")(origin_guard(settings))
     app.include_router(auth.router())
     app.include_router(profile_router(db, storage, auth))
+    app.include_router(social_router(db, storage, auth))
     app.state.auth = auth
     signed_in = Depends(auth.current_user)
 

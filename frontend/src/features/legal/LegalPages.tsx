@@ -58,7 +58,7 @@ export function PrivacyPage() {
           <li>
             <strong>Your profile,</strong> if you fill it in: a username, a display name, a short bio and a profile picture.
             Pictures are cropped and re-saved before they're stored, which removes the location and other details phones
-            put in photos. Only you can see your profile for now; we'll ask before anyone else can.
+            put in photos. See "What other people see" below for who can see it.
           </li>
           <li>
             <strong>Notes:</strong> anything you write in a note on a serve in My Serves, stored with that analysis and
@@ -87,12 +87,33 @@ export function PrivacyPage() {
       <Section title="What we don't do">
         <ul className={list}>
           <li>No advertising, analytics or tracking scripts. The app loads nothing from other companies' servers.</li>
-          <li>We don't sell, rent or share your personal information or videos.</li>
+          <li>
+            We don't sell, rent or share your personal information or videos with other companies. Other people using Serve
+            Analyzer see only what's described under "What other people see".
+          </li>
           <li>We don't use your videos to train machine-learning models.</li>
           <li>
             We don't identify people. The analysis estimates where joints are so it can measure technique. It doesn't use
             face recognition and doesn't try to work out who anyone is.
           </li>
+        </ul>
+      </Section>
+
+      <Section title="What other people see">
+        <ul className={list}>
+          <li>
+            Until you choose a username, nobody can find you. Once you have one, anyone signed in who types it exactly sees
+            your display name, username and picture. Nobody is listed or suggested to anyone.
+          </li>
+          <li>
+            Friends (people whose request you accepted, or who accepted yours) also see your bio. Nobody sees your email,
+            your serves, your notes or your results.
+          </li>
+          <li>
+            You can stop people sending you friend requests, remove a friend, or block someone in Settings or on their page.
+            Someone you block can't find you or send you requests, and isn't told.
+          </li>
+          <li>We record friend requests, friendships and blocks, with when they happened. They're in your data download.</li>
         </ul>
       </Section>
 
@@ -267,6 +288,8 @@ export function TermsPage() {
           <li>upload anything illegal, sexual, violent or hateful, or that invades someone's privacy;</li>
           <li>attack, overload, scrape or try to get around the service's security or usage limits;</li>
           <li>access other people's accounts or data;</li>
+          <li>harass, threaten or spam anyone, or keep contacting someone who has declined, removed or blocked you;</li>
+          <li>pretend to be someone else with your username, name or picture;</li>
           <li>resell or rebrand the service without our written permission.</li>
         </ul>
         <p>We may remove content or suspend accounts that break these rules.</p>

@@ -2,11 +2,15 @@ import type {
   AnalysisList,
   AnalysisResult,
   AnalysisSummary,
+  BlockedPerson,
+  Connection,
+  ConnectionList,
   CreateAnalysisRequest,
   CreateAnalysisResponse,
   Credentials,
   DataExport,
   FramesPayload,
+  Person,
   Profile,
   ProfileUpdate,
   Report,
@@ -67,6 +71,19 @@ export interface ApiClient {
   removeAvatar(): Promise<Profile>;
   /** Keeps this device signed in and signs out every other one. */
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
+  /** Someone's page by username; 404 if there's no one (or a block either way). */
+  getPerson(username: string): Promise<Person>;
+  listConnections(): Promise<ConnectionList>;
+  /** Friend requests waiting for you. */
+  countRequests(): Promise<number>;
+  /** Send a friend request (or accept theirs, if they'd already asked you). */
+  sendRequest(username: string): Promise<Person>;
+  acceptRequest(connectionId: string): Promise<Connection>;
+  /** Cancel, decline or unfriend. */
+  removeConnection(connectionId: string): Promise<void>;
+  listBlocks(): Promise<BlockedPerson[]>;
+  block(username: string): Promise<void>;
+  unblock(username: string): Promise<void>;
 }
 
 export class ApiError extends Error {
@@ -189,6 +206,15 @@ export const httpClient: ApiClient = {
   checkUsername: (username) => request(`/profile/username-check?${new URLSearchParams({ username })}`),
   setAvatar: (jpeg) => request("/profile/avatar", { method: "PUT", body: jpeg, headers: { "Content-Type": "image/jpeg" } }),
   removeAvatar: () => request("/profile/avatar", { method: "DELETE" }),
+  getPerson: (username) => request(`/people/${encodeURIComponent(username)}`),
+  listConnections: () => request("/connections"),
+  countRequests: async () => (await request<{ incoming: number }>("/connections/count")).incoming,
+  sendRequest: (username) => request("/connections", { method: "POST", body: JSON.stringify({ username }) }),
+  acceptRequest: (id) => request(`/connections/${encodeURIComponent(id)}/accept`, { method: "POST" }),
+  removeConnection: (id) => request(`/connections/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  listBlocks: () => request("/blocks"),
+  block: (username) => request("/blocks", { method: "POST", body: JSON.stringify({ username }) }),
+  unblock: (username) => request(`/blocks/${encodeURIComponent(username)}`, { method: "DELETE" }),
   changePassword: (currentPassword, newPassword) =>
     request("/auth/password-change", {
       method: "POST",

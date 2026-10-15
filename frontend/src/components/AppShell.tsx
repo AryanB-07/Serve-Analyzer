@@ -2,11 +2,13 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 
 import { USE_MOCKS } from "../api";
+import { useRequestCount } from "../api/friends";
 import { useProfile } from "../api/profile";
 import { useLogOut, useSession } from "../api/session";
 import { SIGNING_OUT } from "../features/auth/AuthPages";
 import { HelpButton, HelpProvider } from "../features/help/HelpProvider";
 import { Avatar } from "./Avatar";
+import { useMediaQuery } from "../lib/useMediaQuery";
 import { ThemeToggle } from "./ThemeToggle";
 
 function navClass({ isActive }: { isActive: boolean }) {
@@ -96,6 +98,75 @@ function AccountMenu() {
   );
 }
 
+const ICONS = {
+  analyze: "M12 4v12M6 10l6-6 6 6M5 20h14",
+  serves: "M4 6h16M4 12h16M4 18h10",
+  friends: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21c.8-3.6 3.6-6 7-6s6.2 2.4 7 6M16 3.5a4 4 0 0 1 0 7.5M18.5 15c1.9.9 3 2.9 3.5 6",
+};
+
+/** The main sections: in the header on wide screens, a tab bar along the bottom on phones. */
+function MainNav({ phone }: { phone: boolean }) {
+  const requests = useRequestCount().data ?? 0;
+  const items = [
+    { to: "/", label: "Analyze", end: true, icon: ICONS.analyze, badge: 0 },
+    { to: "/serves", label: "My Serves", end: false, icon: ICONS.serves, badge: 0 },
+    { to: "/friends", label: "Friends", end: false, icon: ICONS.friends, badge: requests },
+  ];
+  const badge = (n: number) =>
+    n > 0 && (
+      <span aria-hidden className="ml-1 inline-grid min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold leading-4 text-on-accent">
+        {n > 9 ? "9+" : n}
+      </span>
+    );
+  // An explicit name, since browsers join a link's text pieces differently ("Friends , 1 new…").
+  const label = (item: (typeof items)[number]) =>
+    item.badge > 0 ? `${item.label}, ${item.badge} new ${item.badge === 1 ? "request" : "requests"}` : undefined;
+  if (!phone) {
+    return (
+      <nav aria-label="Main" className="flex items-center gap-1">
+        {items.map((item) => (
+          <NavLink key={item.to} to={item.to} end={item.end} className={navClass} aria-label={label(item)}>
+            {item.label}
+            {badge(item.badge)}
+          </NavLink>
+        ))}
+      </nav>
+    );
+  }
+  return (
+    <nav
+      aria-label="Main"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+    >
+      <ul className="mx-auto grid max-w-md grid-cols-3">
+        {items.map((item) => (
+          <li key={item.to}>
+            <NavLink
+              to={item.to}
+              end={item.end}
+              aria-label={label(item)}
+              className={({ isActive }) =>
+                `flex flex-col items-center gap-0.5 py-2 text-xs font-medium ${isActive ? "text-accent" : "text-ink-muted hover:text-ink"}`}
+            >
+              <span className="relative">
+                <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d={item.icon} />
+                </svg>
+                {item.badge > 0 && (
+                  <span aria-hidden className="absolute -right-2 -top-1 grid min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold leading-4 text-on-accent">
+                    {item.badge > 9 ? "9+" : item.badge}
+                  </span>
+                )}
+              </span>
+              {item.label}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 export function AppShell() {
   return (
     <HelpProvider>
@@ -106,6 +177,7 @@ export function AppShell() {
 
 function Shell() {
   const signedIn = Boolean(useSession().data);
+  const phone = useMediaQuery("(max-width: 639px)");
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -127,16 +199,7 @@ function Shell() {
             </svg>
             <span className="hidden sm:inline">Serve Analyzer</span>
           </NavLink>
-          {signedIn && (
-            <nav aria-label="Main" className="flex items-center gap-1">
-              <NavLink to="/" end className={navClass}>
-                Analyze
-              </NavLink>
-              <NavLink to="/serves" className={navClass}>
-                My Serves
-              </NavLink>
-            </nav>
-          )}
+          {signedIn && !phone && <MainNav phone={false} />}
           <div className="ml-auto flex items-center gap-1 sm:gap-3">
             {USE_MOCKS && (
               <span className="whitespace-nowrap rounded-full border border-warn/40 px-2 py-0.5 text-xs font-medium text-warn">
@@ -152,7 +215,8 @@ function Shell() {
       <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
         <Outlet />
       </main>
-      <footer className="border-t border-border">
+      {signedIn && phone && <MainNav phone />}
+      <footer className={`border-t border-border ${signedIn && phone ? "pb-20" : ""}`}>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-ink-muted">
           <span>Serve Analyzer · Tennis serve biomechanics, frame by frame</span>
           <nav aria-label="Legal" className="flex gap-4">

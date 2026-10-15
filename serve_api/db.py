@@ -14,11 +14,13 @@ from typing import Any, Literal
 from sqlalchemy import (
     Connection,
     Engine,
+    and_,
     create_engine,
     delete,
     event,
     func,
     insert,
+    or_,
     select,
     tuple_,
     update,
@@ -29,6 +31,8 @@ from sqlalchemy.exc import IntegrityError
 from .tables import (
     analyses,
     auth_attempts,
+    blocks,
+    connections,
     email_tokens,
     profiles,
     result_reports,
@@ -457,6 +461,9 @@ class Database:
             # Explicit deletes rather than relying on ON DELETE CASCADE alone.
             for table in (result_reports, analyses, sessions, email_tokens, profiles):
                 conn.execute(delete(table).where(table.c.user_id == user_id))
+            conn.execute(delete(connections).where(or_(connections.c.requester_id == user_id,
+                                                       connections.c.addressee_id == user_id)))
+            conn.execute(delete(blocks).where(or_(blocks.c.blocker_id == user_id, blocks.c.blocked_id == user_id)))
             conn.execute(delete(users).where(users.c.id == user_id))
         return purge_ids
 
@@ -562,6 +569,108 @@ class Database:
                 .order_by(analyses.c.created_at.desc(), analyses.c.id.desc()).limit(recent)).scalars())
         return {"serves": serves, "best_score": best, "averaged_over": len(latest),
                 "average_score": int(sum(latest) / len(latest) + 0.5) if latest else None}  # half up, like scores
+
+    # --- friends ---------------------------------------------------------------
+
+    @staticmethod
+    def pair_of(a: str, b: str) -> str:
+        return ":".join(sorted((a, b)))
+
+    def person_by_username(self, username: str) -> dict[str, Any] | None:
+        """A profile with a username (``user_id`` included), or None."""
+        with self.engine.connect() as conn:
+            row = conn.execute(select(profiles).where(profiles.c.username == username)).mappings().first()
+        return dict(row) if row else None
+
+    def profiles_of(self, user_ids: list[str]) -> dict[str, dict[str, Any]]:
+        if not user_ids:
+            return {}
+        with self.engine.connect() as conn:
+            rows = conn.execute(select(profiles).where(profiles.c.user_id.in_(user_ids))).mappings().all()
+        return {r["user_id"]: dict(r) for r in rows}
+
+    def blocked_between(self, a: str, b: str) -> bool:
+        """Whether either has blocked the other."""
+        with self.engine.connect() as conn:
+            return conn.execute(select(func.count()).select_from(blocks).where(or_(
+                and_(blocks.c.blocker_id == a, blocks.c.blocked_id == b),
+                and_(blocks.c.blocker_id == b, blocks.c.blocked_id == a)))).scalar_one() > 0
+
+    def connection_between(self, a: str, b: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(connections).where(connections.c.pair == self.pair_of(a, b))).mappings().first()
+        return dict(row) if row else None
+
+    def get_connection(self, connection_id: str, user_id: str) -> dict[str, Any] | None:
+        """One of ``user_id``'s connections (either side), or None."""
+        with self.engine.connect() as conn:
+            row = conn.execute(select(connections).where(
+                connections.c.id == connection_id,
+                or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id))).mappings().first()
+        return dict(row) if row else None
+
+    def request_connection(self, requester_id: str, addressee_id: str) -> dict[str, Any] | Literal["exists"]:
+        """A friend request, or "exists" if the two already have one (either way) or are friends."""
+        row = {"id": uuid.uuid4().hex, "requester_id": requester_id, "addressee_id": addressee_id,
+               "pair": self.pair_of(requester_id, addressee_id), "status": "pending",
+               "created_at": now(), "accepted_at": None}
+        try:
+            with self.engine.begin() as conn:
+                conn.execute(insert(connections).values(**row))
+        except IntegrityError:
+            return "exists"
+        return row
+
+    def accept_connection(self, connection_id: str, addressee_id: str) -> dict[str, Any] | None:
+        """Accept a pending request sent to ``addressee_id``; None if there's no such request."""
+        with self.engine.begin() as conn:
+            done = conn.execute(update(connections).where(
+                connections.c.id == connection_id, connections.c.addressee_id == addressee_id,
+                connections.c.status == "pending").values(status="accepted", accepted_at=now())).rowcount
+        return self.get_connection(connection_id, addressee_id) if done else None
+
+    def delete_connection(self, connection_id: str, user_id: str) -> bool:
+        """Cancel, decline or end a connection; either person can."""
+        with self.engine.begin() as conn:
+            return conn.execute(delete(connections).where(
+                connections.c.id == connection_id,
+                or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id))).rowcount > 0
+
+    def connections_of(self, user_id: str) -> list[dict[str, Any]]:
+        """Every request and friendship ``user_id`` is part of, newest first."""
+        with self.engine.connect() as conn:
+            rows = conn.execute(select(connections).where(
+                or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id))
+                .order_by(func.coalesce(connections.c.accepted_at, connections.c.created_at).desc())).mappings().all()
+        return [dict(r) for r in rows]
+
+    def friend_ids(self, user_id: str) -> list[str]:
+        return [c["addressee_id"] if c["requester_id"] == user_id else c["requester_id"]
+                for c in self.connections_of(user_id) if c["status"] == "accepted"]
+
+    def incoming_requests(self, user_id: str) -> int:
+        with self.engine.connect() as conn:
+            return conn.execute(select(func.count()).select_from(connections).where(
+                connections.c.addressee_id == user_id, connections.c.status == "pending")).scalar_one()
+
+    def block(self, blocker_id: str, blocked_id: str) -> None:
+        """Block someone, ending any request or friendship between the two."""
+        with self.engine.begin() as conn:
+            conn.execute(delete(connections).where(connections.c.pair == self.pair_of(blocker_id, blocked_id)))
+            exists = conn.execute(select(func.count()).select_from(blocks).where(
+                blocks.c.blocker_id == blocker_id, blocks.c.blocked_id == blocked_id)).scalar_one()
+            if not exists:
+                conn.execute(insert(blocks).values(blocker_id=blocker_id, blocked_id=blocked_id, created_at=now()))
+
+    def unblock(self, blocker_id: str, blocked_id: str) -> bool:
+        with self.engine.begin() as conn:
+            return conn.execute(delete(blocks).where(
+                blocks.c.blocker_id == blocker_id, blocks.c.blocked_id == blocked_id)).rowcount > 0
+
+    def blocked_by(self, blocker_id: str) -> list[dict[str, Any]]:
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(select(blocks).where(blocks.c.blocker_id == blocker_id)
+                                                  .order_by(blocks.c.created_at.desc())).mappings()]
 
     def set_password_hash(self, user_id: str, password_hash: str) -> None:
         with self.engine.begin() as conn:

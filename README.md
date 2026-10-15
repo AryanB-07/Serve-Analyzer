@@ -40,6 +40,10 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
   position phones store; the API checks the JPEG and strips any metadata left without decoding it. The profile shows your serve stats. Settings changes the profile,
   email and password (keeping this device signed in and signing out the rest), downloads your
   data and deletes the account.
+- **Friends:** find someone by their exact username (nobody is listed or suggested), send a
+  request, accept or decline, unfriend, and block. Friends see each other's bio; anyone else
+  sees only a name and picture. A blocked person can't find or contact the blocker and isn't
+  told. A badge counts waiting requests; on phones the sections move to a bottom tab bar.
 - **My Serves and compare:** every serve as a card with its score out of 100 (coloured by band),
   upload time and an optional note; the five key positions' scores behind "Show details"; a
   sidebar filtering by upload time, overall score and any key position's band (kept in the URL,
@@ -448,6 +452,10 @@ frontend/
 | `GET /profile`, `PATCH /profile` | Your username, display name, bio, picture and serve stats |
 | `GET /profile/username-check?username=` | Whether a username is valid and free |
 | `PUT /profile/avatar`, `DELETE` | Set (a square JPEG up to 1 MB) or remove the profile picture |
+| `GET /people/{username}` | Someone's page as you see them, and where you stand (404 for no one, or a block) |
+| `GET /connections`, `GET /connections/count` | Your friends, requests in and out; how many are waiting |
+| `POST /connections`, `POST /connections/{id}/accept`, `DELETE /connections/{id}` | Ask, accept, and cancel, decline or unfriend |
+| `GET /blocks`, `POST /blocks`, `DELETE /blocks/{username}` | Blocked people |
 | `DELETE /auth/me` | Delete the account and everything in it (needs the password) |
 
 Interactive docs are at http://localhost:8000/docs while the API is running. Failures carry
