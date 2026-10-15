@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 export const MAILPIT = process.env.MAILPIT_URL ?? "http://localhost:8025";
@@ -65,4 +66,19 @@ export async function signOut(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Your account" }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+}
+
+/** axe-core (WCAG 2.1 A and AA) finds nothing on the page, in both themes. */
+export async function expectAccessible(page: Page, what: string) {
+  for (const theme of ["dark", "light"] as const) {
+    await page.evaluate((t) => { document.documentElement.dataset.theme = t; }, theme);
+    // Let colour transitions finish, or the scan measures colours half-way between themes.
+    // Only transitions: a spinner's animation never finishes.
+    await page.evaluate(() =>
+      Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished)),
+    );
+    const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+    const summary = violations.map((v) => `${v.id} (${v.impact}): ${v.help} — ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(", ")}`);
+    expect(summary, `${what}, ${theme} theme`).toEqual([]);
+  }
 }

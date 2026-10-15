@@ -249,6 +249,21 @@ and what would change the decision. Numbers link to the reports and docs they co
   - storing each person's averages: faster, but a copy to keep in step, and it would outlive turning sharing off.
 - **Deferred to Phase 4:** comparing your serve with a friend's. It needs friends to open one of your analyses, which is what sending a serve builds. Extending the owner check once, for shares, keeps that path in one place.
 
+### 16g. Messaging: friends only, polling, and reports that outlive deletion
+
+- **Chosen:**
+  - one-to-one conversations between accepted friends. A conversation is one row per pair, like a friendship; members are in their own table, so each person has a read position, and a group chat would fit later without a new design.
+  - updates by polling: 5 s in an open conversation, 15 s for the list, 30 s for the badge.
+  - unfriending keeps the conversation readable but closed, and says why. A block hides it from both people while it lasts, so the blocked person still can't tell the blocker exists. Unblocking brings it back, closed until they're friends again.
+  - deleting a message clears its text for everyone and leaves a "Message deleted" marker. Deleting an account deletes the messages it sent; the other person keeps their own.
+  - a report keeps a copy of the reported message and survives either account being deleted, with that account's id cleared. Otherwise the person reported could erase the evidence by deleting the message, or the account. Reports are kept a year, which the Privacy Policy states, and `python -m serve_api.reports --people` lists them.
+  - rate limits are counted from the messages table itself (30 a minute, 500 a day), so busy conversations don't add a row to the attempts table for every message.
+- **Considered:**
+  - websockets or server-sent events: instant, but each open tab holds a connection on a single small server, and Caddy, the API and the tests would all need more work. Polling is a few cheap indexed queries. Push is the upgrade if conversations get busy.
+  - messaging anyone by username: with a minimum age of 13, friends-only is the safer default.
+  - keeping deleted messages' text for moderation: reports keep their own copy, so a deleted message can really be gone.
+- **Trade-off:** polling means up to 5 s before a reply appears, and some traffic even when nothing has changed.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

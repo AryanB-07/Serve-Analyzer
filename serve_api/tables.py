@@ -131,6 +131,58 @@ connections = Table(
     Index("connections_requester", "requester_id", "status"),
 )
 
+conversations = Table(
+    "conversations",
+    metadata,
+    # One conversation per pair of people (both ids, sorted, under a unique index), like
+    # connections. Members are listed separately so each has their own read position.
+    Column("id", String(32), primary_key=True),
+    Column("pair", String(65), nullable=False, unique=True),
+    Column("created_at", UTCDateTime, nullable=False),
+    Column("last_message_at", UTCDateTime, nullable=False),
+)
+
+conversation_members = Table(
+    "conversation_members",
+    metadata,
+    Column("conversation_id", String(32), ForeignKey("conversations.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    # Messages up to here count as read; the other person sees "Seen" from it.
+    Column("last_read_at", UTCDateTime),
+    Index("conversation_members_user", "user_id"),
+)
+
+messages = Table(
+    "messages",
+    metadata,
+    Column("id", String(32), primary_key=True),
+    Column("conversation_id", String(32), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False),
+    Column("sender_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("body", Text),  # cleared when the sender deletes the message
+    Column("created_at", UTCDateTime, nullable=False),
+    Column("deleted_at", UTCDateTime),
+    Index("messages_conversation", "conversation_id", "created_at"),
+    Index("messages_sender", "sender_id"),
+)
+
+user_reports = Table(
+    "user_reports",
+    metadata,
+    # Someone reporting a person or a message, for the operator to review (serve_api/reports.py).
+    # Kept when the reporter or reported account is deleted, with the id left empty, so a
+    # pattern of abuse isn't erased by deleting the account.
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("reporter_id", String(32), ForeignKey("users.id", ondelete="SET NULL")),
+    Column("reported_id", String(32), ForeignKey("users.id", ondelete="SET NULL")),
+    Column("reported_username", String(20)),
+    Column("message_id", String(32)),
+    Column("message_body", Text),  # a copy, so deleting the message doesn't remove the evidence
+    Column("reason", String(32), nullable=False),
+    Column("note", Text),
+    Column("created_at", UTCDateTime, nullable=False),
+    Index("user_reports_created", "created_at"),
+)
+
 blocks = Table(
     "blocks",
     metadata,

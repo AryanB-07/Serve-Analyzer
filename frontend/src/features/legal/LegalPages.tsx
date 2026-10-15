@@ -116,6 +116,10 @@ export function PrivacyPage() {
             Someone you block can't find you or send you requests, and isn't told.
           </li>
           <li>We record friend requests, friendships and blocks, with when they happened. They're in your data download.</li>
+          <li>
+            <strong>Messages</strong> go only between friends, and only the two of you can read them. We don't read
+            them, except a message someone reports to us: a copy of it is kept with the report so we can look into it.
+          </li>
         </ul>
       </Section>
 
@@ -179,6 +183,14 @@ export function PrivacyPage() {
           </li>
           <li>
             <strong>Problem reports:</strong> until you delete the analysis they're about, or your account.
+          </li>
+          <li>
+            <strong>Messages:</strong> until you delete them or your account. A message you delete is gone for both of
+            you; deleting your account deletes every message you sent, while the other person keeps their own.
+          </li>
+          <li>
+            <strong>Reports of people or messages:</strong> 1 year, so repeated abuse can be spotted. They stay if either
+            account is deleted, without the deleted account's link to it, and include a copy of any reported message.
           </li>
           <li>
             <strong>Sign-in attempt records:</strong> 1 day.

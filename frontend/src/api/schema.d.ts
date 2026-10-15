@@ -469,6 +469,146 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Conversations
+         * @description Your conversations with messages in them, newest first.
+         */
+        get: operations["list_conversations_conversations_get"];
+        put?: never;
+        /**
+         * Start Conversation
+         * @description Open your conversation with a friend, making it the first time.
+         */
+        post: operations["start_conversation_conversations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/conversations/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count Unread
+         * @description Unread messages across all your conversations, for the navigation's badge.
+         */
+        get: operations["count_unread_conversations_unread_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Conversation */
+        get: operations["get_conversation_conversations__conversation_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/conversations/{conversation_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Messages
+         * @description Newest first; pass ``before`` (the last page's ``next_cursor``) for older ones.
+         */
+        get: operations["list_messages_conversations__conversation_id__messages_get"];
+        put?: never;
+        /** Send Message */
+        post: operations["send_message_conversations__conversation_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/conversations/{conversation_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Read */
+        post: operations["mark_read_conversations__conversation_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/messages/{message_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Message
+         * @description Delete one of your messages for everyone. It shows as "Message deleted".
+         */
+        delete: operations["delete_message_messages__message_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report
+         * @description Report someone, or one of their messages to you, for the operator to review. A copy of
+         *     the message is kept with the report, so deleting it doesn't remove the evidence.
+         */
+        post: operations["report_reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/analyses": {
         parameters: {
             query?: never;
@@ -797,6 +937,22 @@ export interface components {
             /** Outgoing */
             outgoing: components["schemas"]["Connection"][];
         };
+        /** ConversationSummary */
+        ConversationSummary: {
+            /** Id */
+            id: string;
+            person?: components["schemas"]["PersonSummary"] | null;
+            last_message?: components["schemas"]["MessagePreview"] | null;
+            /**
+             * Unread
+             * @default 0
+             */
+            unread: number;
+            /** Can Send */
+            can_send: boolean;
+            /** Why Not */
+            why_not?: string | null;
+        };
         /** CreateAnalysisRequest */
         CreateAnalysisRequest: {
             /**
@@ -850,6 +1006,16 @@ export interface components {
              * @default []
              */
             blocks: components["schemas"]["ExportedBlock"][];
+            /**
+             * Conversations
+             * @default []
+             */
+            conversations: components["schemas"]["ExportedConversation"][];
+            /**
+             * Reports Made
+             * @default []
+             */
+            reports_made: components["schemas"]["ExportedUserReport"][];
         };
         /**
          * DeleteAccountRequest
@@ -953,6 +1119,30 @@ export interface components {
             /** Accepted At */
             accepted_at?: string | null;
         };
+        /** ExportedConversation */
+        ExportedConversation: {
+            /** With Username */
+            with_username?: string | null;
+            /** Messages */
+            messages: components["schemas"]["ExportedMessage"][];
+        };
+        /** ExportedMessage */
+        ExportedMessage: {
+            /** From You */
+            from_you: boolean;
+            /** Body */
+            body?: string | null;
+            /**
+             * Deleted
+             * @default false
+             */
+            deleted: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** ExportedProfile */
         ExportedProfile: {
             /**
@@ -983,6 +1173,25 @@ export interface components {
             bio?: string | null;
             /** Avatar */
             avatar?: string | null;
+        };
+        /** ExportedUserReport */
+        ExportedUserReport: {
+            /** Username */
+            username?: string | null;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "spam" | "harassment" | "inappropriate" | "impersonation" | "other";
+            /** Note */
+            note?: string | null;
+            /** Message */
+            message?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** FeedbackItem */
         FeedbackItem: {
@@ -1120,6 +1329,51 @@ export interface components {
              * @default false
              */
             camera_view_assumed: boolean;
+        };
+        /** Message */
+        Message: {
+            /** Id */
+            id: string;
+            /** From You */
+            from_you: boolean;
+            /** Body */
+            body?: string | null;
+            /**
+             * Deleted
+             * @default false
+             */
+            deleted: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** MessagePage */
+        MessagePage: {
+            /** Items */
+            items: components["schemas"]["Message"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Seen Up To */
+            seen_up_to?: string | null;
+        };
+        /** MessagePreview */
+        MessagePreview: {
+            /** Text */
+            text?: string | null;
+            /** From You */
+            from_you: boolean;
+            /**
+             * Deleted
+             * @default false
+             */
+            deleted: boolean;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
         };
         /** MetricConfidences */
         MetricConfidences: {
@@ -1440,6 +1694,11 @@ export interface components {
             /** Incoming */
             incoming: number;
         };
+        /** SendMessage */
+        SendMessage: {
+            /** Body */
+            body: string;
+        };
         /** SharedPositions */
         SharedPositions: {
             front_knee_flexion?: components["schemas"]["PositionAverage"] | null;
@@ -1497,6 +1756,11 @@ export interface components {
             left_ankle: components["schemas"]["LandmarkTrack"];
             right_ankle: components["schemas"]["LandmarkTrack"];
         };
+        /** StartConversation */
+        StartConversation: {
+            /** Username */
+            username: string;
+        };
         /** StatusCounts */
         StatusCounts: {
             /** Good */
@@ -1517,6 +1781,11 @@ export interface components {
             at: string;
             /** Score */
             score: number;
+        };
+        /** UnreadCount */
+        UnreadCount: {
+            /** Unread */
+            unread: number;
         };
         /** UploadTarget */
         UploadTarget: {
@@ -1554,6 +1823,20 @@ export interface components {
              * @default false
              */
             email_verified: boolean;
+        };
+        /** UserReportRequest */
+        UserReportRequest: {
+            /** Username */
+            username: string;
+            /** Message Id */
+            message_id?: string | null;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "spam" | "harassment" | "inappropriate" | "impersonation" | "other";
+            /** Note */
+            note?: string | null;
         };
         /** UsernameCheck */
         UsernameCheck: {
@@ -2934,6 +3217,468 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_conversations_conversations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationSummary"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_conversation_conversations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartConversation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationSummary"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    count_unread_conversations_unread_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCount"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_conversation_conversations__conversation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationSummary"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_messages_conversations__conversation_id__messages_get: {
+        parameters: {
+            query?: {
+                before?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessagePage"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_message_conversations__conversation_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessage"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    mark_read_conversations__conversation_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_message_messages__message_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

@@ -33,7 +33,10 @@ from .schemas import (
     ChangePasswordRequest,
     ExportedBlock,
     ExportedConnection,
+    ExportedConversation,
+    ExportedMessage,
     ExportedProfile,
+    ExportedUserReport,
     ChangeEmailRequest,
     ConfirmEmailChangeRequest,
     DataExport,
@@ -186,7 +189,18 @@ class Auth:
         blocked = self.db.blocked_by(user.id)
         others = self.db.profiles_of([c["addressee_id"] if c["requester_id"] == user.id else c["requester_id"]
                                       for c in links] + [b["blocked_id"] for b in blocked])
+        chats = self.db.conversations_of(user.id)
+        others.update(self.db.profiles_of([c["other_id"] for c in chats if c["other_id"]]))
         name_of = lambda uid: (others.get(uid) or {}).get("username")  # noqa: E731
+        conversations = [ExportedConversation(
+            with_username=name_of(c["other_id"]) if c["other_id"] else None,
+            messages=[ExportedMessage(from_you=m["sender_id"] == user.id, body=m["body"],
+                                      deleted=m["deleted_at"] is not None, created_at=m["created_at"])
+                      for m in reversed(self.db.messages_page(c["id"], limit=100_000))],
+        ) for c in chats]
+        reports_made = [ExportedUserReport(username=r["reported_username"], reason=r["reason"], note=r["note"],
+                                           message=r["message_body"], created_at=r["created_at"])
+                        for r in self.db.people_reports(reporter_id=user.id)]
         return DataExport(
             exported_at=now(),
             links_expire_at=now() + timedelta(seconds=self.settings.download_url_ttl_s),
@@ -204,6 +218,8 @@ class Auth:
                 status=c["status"], direction="outgoing" if c["requester_id"] == user.id else "incoming",
                 created_at=c["created_at"], accepted_at=c["accepted_at"]) for c in links],
             blocks=[ExportedBlock(username=name_of(b["blocked_id"]), blocked_at=b["created_at"]) for b in blocked],
+            conversations=conversations,
+            reports_made=reports_made,
         )
 
     def _send(self, tasks: BackgroundTasks, message: m.Email) -> None:

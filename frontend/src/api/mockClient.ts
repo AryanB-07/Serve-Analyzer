@@ -102,6 +102,33 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     ["serve_queen", { id: "c-queen", status: "pending", direction: "incoming", created_at: "2026-10-10T10:00:00Z", accepted_at: null }],
   ]);
   const blocked = new Map<string, string>();
+  // Mock conversations, keyed by the other person's username.
+  type MockMessage = { id: string; from_you: boolean; body: string | null; deleted: boolean; created_at: string };
+  const chats = new Map<string, { id: string; messages: MockMessage[]; read_at: string | null }>([
+    ["ace", {
+      id: "conv-ace", read_at: null, messages: [
+        { id: "m1", from_you: false, body: "Saw your new serve. The knee bend looks much deeper!", deleted: false, created_at: "2026-10-12T18:00:00Z" },
+        { id: "m2", from_you: true, body: "Thanks! Still working on the toss.", deleted: false, created_at: "2026-10-12T18:05:00Z" },
+        { id: "m3", from_you: false, body: "Hit on Saturday?", deleted: false, created_at: "2026-10-13T09:00:00Z" },
+      ],
+    }],
+  ]);
+  const chatById = (id: string) => {
+    const entry = [...chats.entries()].find(([, c]) => c.id === id);
+    if (!entry || blocked.has(entry[0])) throw new ApiError(404, "Conversation not found");
+    return entry;
+  };
+  const isFriend = (username: string) => links.get(username)?.status === "accepted";
+  function conversationSummary(username: string) {
+    const chat = chats.get(username)!;
+    const last = chat.messages[chat.messages.length - 1];
+    const unread = chat.messages.filter((m) => !m.from_you && !m.deleted && (!chat.read_at || m.created_at > chat.read_at)).length;
+    return {
+      id: chat.id, person: summaryOf(username), unread, can_send: isFriend(username),
+      why_not: isFriend(username) ? null : "You're no longer friends.",
+      last_message: last ? { text: last.body?.slice(0, 120) ?? null, from_you: last.from_you, deleted: last.deleted, at: last.created_at } : null,
+    };
+  }
   const summaryOf = (username: string) => ({ username, display_name: people.get(username)?.display_name ?? null, avatar_url: null });
   function personOf(username: string): Person {
     if (username === profile.username) return { ...summaryOf(username), display_name: profile.display_name, relationship: "self", can_request: false, bio: profile.bio };
@@ -255,6 +282,11 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         account: { email: user.email, email_verified: user.email_verified ?? false, created_at: user.created_at },
         connections: [...links.entries()].map(([username, l]) => ({ username, status: l.status, direction: l.direction, created_at: l.created_at, accepted_at: l.accepted_at })),
         blocks: [...blocked.entries()].map(([username, at]) => ({ username, blocked_at: at })),
+        conversations: [...chats.entries()].map(([username, c]) => ({
+          with_username: username,
+          messages: c.messages.map(({ from_you, body, deleted, created_at }) => ({ from_you, body, deleted, created_at })),
+        })),
+        reports_made: [],
         analyses: items.map((a) => ({
           id: a.id,
           filename: a.filename,
@@ -401,6 +433,71 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         .map((e, i) => ({ ...e, rank: i + 1 }));
       return { window_days: 90, min_serves: 5, averaged_over: 10, you_are_on_it: profile.on_leaderboard,
         ranked, not_ranked: entries.filter((e) => e.needed > 0).map((e) => ({ ...e, rank: null })) };
+    },
+
+    async listConversations() {
+      await delay();
+      return [...chats.keys()].filter((u) => !blocked.has(u) && chats.get(u)!.messages.length).map(conversationSummary)
+        .sort((a, b) => (b.last_message?.at ?? "").localeCompare(a.last_message?.at ?? ""));
+    },
+
+    async countUnread() {
+      await delay();
+      return [...chats.keys()].filter((u) => !blocked.has(u)).reduce((n, u) => n + conversationSummary(u).unread, 0);
+    },
+
+    async startConversation(username) {
+      await delay();
+      const name = findPerson(username);
+      if (!chats.has(name)) {
+        if (!isFriend(name)) throw new ApiError(403, "You can only message friends.");
+        chats.set(name, { id: `conv-${name}`, messages: [], read_at: null });
+      }
+      return conversationSummary(name);
+    },
+
+    async getConversation(id) {
+      await delay();
+      return conversationSummary(chatById(id)[0]);
+    },
+
+    async listMessages(id) {
+      await delay();
+      const [, chat] = chatById(id);
+      return { items: [...chat.messages].reverse(), next_cursor: null, seen_up_to: chat.messages.at(-1)?.created_at ?? null };
+    },
+
+    async sendMessage(id, body) {
+      await delay();
+      const [username, chat] = chatById(id);
+      if (!isFriend(username)) throw new ApiError(403, "You can only message friends.");
+      const text = body.trim();
+      if (!text) throw new ApiError(422, "Write a message first.");
+      if (text.length > 2000) throw new ApiError(422, "Messages are up to 2,000 characters.");
+      const message = { id: `m-${now()}-${chat.messages.length}`, from_you: true, body: text, deleted: false, created_at: new Date(now()).toISOString() };
+      chat.messages.push(message);
+      return message;
+    },
+
+    async markRead(id) {
+      await delay();
+      chatById(id)[1].read_at = new Date(now()).toISOString();
+    },
+
+    async deleteMessage(messageId) {
+      await delay();
+      for (const chat of chats.values()) {
+        const m = chat.messages.find((x) => x.id === messageId && x.from_you && !x.deleted);
+        if (m) {
+          Object.assign(m, { body: null, deleted: true });
+          return;
+        }
+      }
+      throw new ApiError(404, "Message not found");
+    },
+
+    async report() {
+      await delay();
     },
 
     async listBlocks() {

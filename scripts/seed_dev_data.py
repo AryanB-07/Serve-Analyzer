@@ -26,7 +26,7 @@ Deliberately awkward rows, the kind real data accumulates:
 - profiles: one with a name, bio and picture, ones without a picture or name, and one that
   has never set one (like every account from before profiles existed);
 - friends: a friendship, a request waiting for an answer, a block, and different choices of
-  what to share with friends.
+  what to share with friends; a conversation with an unread reply and a deleted message; a report.
 """
 
 from __future__ import annotations
@@ -311,6 +311,23 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
     # with 5 serves (just enough); the newcomer shares nothing.
     seeder.db.save_profile(player, share_stats=True, share_positions=True, on_leaderboard=True)
     seeder.db.save_profile(lefty, share_stats=True, on_leaderboard=True)
+
+    # A conversation between the two friends, with an unread reply, a deleted message, and a
+    # long one; and a report the blocked account's behaviour earned.
+    conv = seeder.db.conversation_with(player, lefty, create=True)
+    for sender, text in [
+        (lefty, "Saw your serve from Tuesday. The knee bend looks much deeper!"),
+        (player, "Thanks! Still working on the toss, it keeps drifting left."),
+        (player, "Ignore that last bit, wrong drill."),
+        (lefty, "Try tossing with your palm up and hold the arm up longer. " * 6),
+        (lefty, "Hit on Saturday? 10am at the club 🎾"),
+    ]:
+        seeder.db.add_message(conv["id"], sender, text.strip())
+    deleted = seeder.db.messages_page(conv["id"], limit=10)[2]  # "Ignore that last bit"
+    seeder.db.delete_message(deleted["id"], player)
+    seeder.db.mark_read(conv["id"], lefty)
+    seeder.db.save_user_report(reporter_id=lefty, reported_id=pest, reported_username="seed_blocked",
+                               message_id=None, message_body=None, reason="spam", note="Kept sending requests.")
     seeder.user("unverified", verified=False, terms=None, age_days=200)  # before the Terms were recorded
     made["unverified"] = 0
     return made

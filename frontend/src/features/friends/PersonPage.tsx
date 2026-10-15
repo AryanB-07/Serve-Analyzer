@@ -1,8 +1,9 @@
 import { useId, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 
 import { ApiError } from "../../api/client";
 import { useAcceptRequest, useBlock, usePerson, useRemoveConnection, useSendRequest } from "../../api/friends";
+import { useStartConversation } from "../../api/messages";
 import type { Person } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
 import { Sparkline } from "../../components/Sparkline";
@@ -10,6 +11,7 @@ import { KEY_POSITIONS } from "../../lib/historyFilters";
 import { METRIC_INFO } from "../../lib/metricInfo";
 import { bandOf } from "../../lib/score";
 import { ScoreBar, SCORE_TEXT } from "../results/MetricCards";
+import { ReportForm } from "../messages/ReportForm";
 import { displayName, friendsErrorMessage } from "./FriendsPage";
 
 const primary = "rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-50";
@@ -21,8 +23,11 @@ function Actions({ person }: { person: Person }) {
   const accept = useAcceptRequest();
   const remove = useRemoveConnection();
   const [confirmUnfriend, setConfirmUnfriend] = useState(false);
+  const start = useStartConversation();
+  const navigate = useNavigate();
   const busy = send.isPending || accept.isPending || remove.isPending;
-  const error = send.error ?? accept.error ?? remove.error;
+  const error = send.error ?? accept.error ?? remove.error ?? start.error;
+  const message = () => start.mutate(person.username!, { onSuccess: (c) => navigate(`/messages/${c.id}`) });
   const name = displayName(person);
 
   let actions;
@@ -65,6 +70,9 @@ function Actions({ person }: { person: Person }) {
         </>
       ) : (
         <>
+          <button type="button" disabled={start.isPending} onClick={message} className={primary}>
+            {start.isPending ? "Opening…" : "Message"}
+          </button>
           <p className="text-sm text-good">Friends{person.friends_since ? ` since ${when(person.friends_since)}` : ""}</p>
           <button type="button" onClick={() => setConfirmUnfriend(true)} className="text-sm text-ink-muted hover:text-ink">Remove friend…</button>
         </>
@@ -201,6 +209,7 @@ export function PersonPage() {
   // Once blocked, they're hidden from you too, so their page would read "no one has that
   // username": say what happened instead.
   const [blocked, setBlocked] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
 
   if (blocked) {
     return (
@@ -246,7 +255,18 @@ export function PersonPage() {
         </div>
       </section>
       <FriendServes person={p} />
-      {p.relationship !== "self" && <BlockControl person={p} onBlocked={setBlocked} />}
+      {p.relationship !== "self" && (
+        <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+          <BlockControl person={p} onBlocked={setBlocked} />
+          {reporting ? (
+            <div className="w-full">
+              <ReportForm username={p.username!} name={displayName(p)} onDone={() => setReporting(false)} onBlocked={() => setBlocked(displayName(p))} />
+            </div>
+          ) : (
+            <button type="button" onClick={() => setReporting(true)} className="text-sm text-ink-muted hover:text-bad">Report {displayName(p)}…</button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

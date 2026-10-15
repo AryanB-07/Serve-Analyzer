@@ -16,6 +16,7 @@ from . import keys, migrate
 from .auth import Auth, origin_guard
 from .error_reporting import init_error_reporting
 from .mailer import Mailer
+from .messaging import messaging_router
 from .profile import profile_router
 from .purge import analysis_prefixes, run_purges
 from .convert import result_from_file, summary_from_row
@@ -84,6 +85,7 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     app.include_router(auth.router())
     app.include_router(profile_router(db, storage, auth))
     app.include_router(social_router(db, storage, auth))
+    app.include_router(messaging_router(db, storage, auth))
     app.state.auth = auth
     signed_in = Depends(auth.current_user)
 

@@ -46,6 +46,10 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
   told. A badge counts waiting requests; on phones the sections move to a bottom tab bar.
   Friends can share serve stats (average, best, trend), key-position averages and a place on a
   friends leaderboard: each one opt-in, worked out on the server from the stored scores.
+- **Messages:** one-to-one between friends, with unread counts, "Seen", deleting your own
+  messages for everyone, and reporting a person or a message (with the option to block). It
+  stays readable but closes when a friendship ends; a block hides it from both. Updates arrive
+  by polling (5 s in an open conversation).
 - **My Serves and compare:** every serve as a card with its score out of 100 (coloured by band),
   upload time and an optional note; the five key positions' scores behind "Show details"; a
   sidebar filtering by upload time, overall score and any key position's band (kept in the URL,
@@ -459,6 +463,10 @@ frontend/
 | `POST /connections`, `POST /connections/{id}/accept`, `DELETE /connections/{id}` | Ask, accept, and cancel, decline or unfriend |
 | `GET /blocks`, `POST /blocks`, `DELETE /blocks/{username}` | Blocked people |
 | `GET /leaderboard` | You and your friends who joined it, ranked by the average of each one's latest serves |
+| `GET /conversations`, `POST /conversations`, `GET /conversations/unread` | Your conversations; open one with a friend; the unread total |
+| `GET`/`POST /conversations/{id}/messages`, `POST /conversations/{id}/read` | Read (paged, newest first) and send; mark as read |
+| `DELETE /messages/{id}` | Delete your message for everyone |
+| `POST /reports` | Report a person, or one of their messages to you |
 | `DELETE /auth/me` | Delete the account and everything in it (needs the password) |
 
 Interactive docs are at http://localhost:8000/docs while the API is running. Failures carry

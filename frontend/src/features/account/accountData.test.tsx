@@ -40,6 +40,8 @@ const EXPORT: DataExport = {
     { id: "a2", filename: "two.mov", hand: "right", status: "failed", created_at: "2026-10-02T10:00:00Z", files: {} },
   ],  connections: [],
   blocks: [],
+  conversations: [],
+  reports_made: [],
 };
 
 beforeEach(() => {

@@ -35,6 +35,11 @@ export type SharedStats = Schemas["SharedStats"];
 export type SharedPositions = Schemas["SharedPositions"];
 export type Leaderboard = Schemas["Leaderboard"];
 export type LeaderboardEntry = Schemas["LeaderboardEntry"];
+export type Message = Schemas["Message"];
+export type MessagePage = Schemas["MessagePage"];
+export type ConversationSummary = Schemas["ConversationSummary"];
+export type UserReportRequest = Schemas["UserReportRequest"];
+export type UserReportReason = UserReportRequest["reason"];
 
 export type PhaseName = keyof Schemas["PhaseMetrics"];
 export type MetricName = keyof Schemas["MetricValues"];

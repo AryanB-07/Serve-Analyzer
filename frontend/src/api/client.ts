@@ -5,12 +5,15 @@ import type {
   BlockedPerson,
   Connection,
   ConnectionList,
+  ConversationSummary,
   CreateAnalysisRequest,
   CreateAnalysisResponse,
   Credentials,
   DataExport,
   FramesPayload,
   Leaderboard,
+  Message,
+  MessagePage,
   Person,
   Profile,
   ProfileUpdate,
@@ -20,6 +23,7 @@ import type {
   UploadTarget,
   User,
   UsernameCheck,
+  UserReportRequest,
 } from "./types";
 import { demoFile, isDemoId } from "./demo";
 
@@ -85,6 +89,18 @@ export interface ApiClient {
   listBlocks(): Promise<BlockedPerson[]>;
   /** You and your friends who joined it, ranked. */
   getLeaderboard(): Promise<Leaderboard>;
+  listConversations(): Promise<ConversationSummary[]>;
+  countUnread(): Promise<number>;
+  /** Open (or make) your conversation with a friend. */
+  startConversation(username: string): Promise<ConversationSummary>;
+  getConversation(id: string): Promise<ConversationSummary>;
+  /** Newest first; ``before`` is the previous page's next_cursor. */
+  listMessages(id: string, before?: string): Promise<MessagePage>;
+  sendMessage(id: string, body: string): Promise<Message>;
+  markRead(id: string): Promise<void>;
+  deleteMessage(messageId: string): Promise<void>;
+  /** Report a person, or one of their messages to you. */
+  report(body: UserReportRequest): Promise<void>;
   block(username: string): Promise<void>;
   unblock(username: string): Promise<void>;
 }
@@ -217,6 +233,17 @@ export const httpClient: ApiClient = {
   removeConnection: (id) => request(`/connections/${encodeURIComponent(id)}`, { method: "DELETE" }),
   listBlocks: () => request("/blocks"),
   getLeaderboard: () => request("/leaderboard"),
+  listConversations: () => request("/conversations"),
+  countUnread: async () => (await request<{ unread: number }>("/conversations/unread")).unread,
+  startConversation: (username) => request("/conversations", { method: "POST", body: JSON.stringify({ username }) }),
+  getConversation: (id) => request(`/conversations/${encodeURIComponent(id)}`),
+  listMessages: (id, before) =>
+    request(`/conversations/${encodeURIComponent(id)}/messages${before ? `?${new URLSearchParams({ before })}` : ""}`),
+  sendMessage: (id, body) =>
+    request(`/conversations/${encodeURIComponent(id)}/messages`, { method: "POST", body: JSON.stringify({ body }) }),
+  markRead: (id) => request(`/conversations/${encodeURIComponent(id)}/read`, { method: "POST" }),
+  deleteMessage: (id) => request(`/messages/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  report: (body) => request("/reports", { method: "POST", body: JSON.stringify(body) }),
   block: (username) => request("/blocks", { method: "POST", body: JSON.stringify({ username }) }),
   unblock: (username) => request(`/blocks/${encodeURIComponent(username)}`, { method: "DELETE" }),
   changePassword: (currentPassword, newPassword) =>

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 
 import { USE_MOCKS } from "../api";
 import { useRequestCount } from "../api/friends";
+import { useUnreadCount } from "../api/messages";
 import { useProfile } from "../api/profile";
 import { useLogOut, useSession } from "../api/session";
 import { SIGNING_OUT } from "../features/auth/AuthPages";
@@ -102,15 +103,18 @@ const ICONS = {
   analyze: "M12 4v12M6 10l6-6 6 6M5 20h14",
   serves: "M4 6h16M4 12h16M4 18h10",
   friends: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21c.8-3.6 3.6-6 7-6s6.2 2.4 7 6M16 3.5a4 4 0 0 1 0 7.5M18.5 15c1.9.9 3 2.9 3.5 6",
+  messages: "M4 5h16v11H8l-4 4V5Z",
 };
 
 /** The main sections: in the header on wide screens, a tab bar along the bottom on phones. */
 function MainNav({ phone }: { phone: boolean }) {
   const requests = useRequestCount().data ?? 0;
+  const unread = useUnreadCount().data ?? 0;
   const items = [
-    { to: "/", label: "Analyze", end: true, icon: ICONS.analyze, badge: 0 },
-    { to: "/serves", label: "My Serves", end: false, icon: ICONS.serves, badge: 0 },
-    { to: "/friends", label: "Friends", end: false, icon: ICONS.friends, badge: requests },
+    { to: "/", label: "Analyze", end: true, icon: ICONS.analyze, badge: 0, unit: "" },
+    { to: "/serves", label: "My Serves", end: false, icon: ICONS.serves, badge: 0, unit: "" },
+    { to: "/friends", label: "Friends", end: false, icon: ICONS.friends, badge: requests, unit: "request" },
+    { to: "/messages", label: "Messages", end: false, icon: ICONS.messages, badge: unread, unit: "message" },
   ];
   const badge = (n: number) =>
     n > 0 && (
@@ -120,7 +124,7 @@ function MainNav({ phone }: { phone: boolean }) {
     );
   // An explicit name, since browsers join a link's text pieces differently ("Friends , 1 new…").
   const label = (item: (typeof items)[number]) =>
-    item.badge > 0 ? `${item.label}, ${item.badge} new ${item.badge === 1 ? "request" : "requests"}` : undefined;
+    item.badge > 0 ? `${item.label}, ${item.badge} new ${item.unit}${item.badge === 1 ? "" : "s"}` : undefined;
   if (!phone) {
     return (
       <nav aria-label="Main" className="flex items-center gap-1">
@@ -138,7 +142,7 @@ function MainNav({ phone }: { phone: boolean }) {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-3">
+      <ul className="mx-auto grid max-w-md grid-cols-4">
         {items.map((item) => (
           <li key={item.to}>
             <NavLink
@@ -197,7 +201,7 @@ function Shell() {
               <circle cx="12" cy="12" r="10" fill="currentColor" />
               <path d="M4.5 6.5c3.5 2 3.5 9 0 11M19.5 6.5c-3.5 2-3.5 9 0 11" fill="none" stroke="var(--bg)" strokeWidth="1.6" />
             </svg>
-            <span className="hidden sm:inline">Serve Analyzer</span>
+            <span className="hidden md:inline">Serve Analyzer</span>
           </NavLink>
           {signedIn && !phone && <MainNav phone={false} />}
           <div className="ml-auto flex items-center gap-1 sm:gap-3">

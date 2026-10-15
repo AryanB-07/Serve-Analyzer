@@ -22,6 +22,7 @@ from sqlalchemy import (
     insert,
     or_,
     select,
+    true,
     tuple_,
     update,
 )
@@ -33,11 +34,15 @@ from .tables import (
     auth_attempts,
     blocks,
     connections,
+    conversation_members,
+    conversations,
     email_tokens,
+    messages,
     profiles,
     result_reports,
     sessions,
     storage_purges,
+    user_reports,
     users,
 )
 
@@ -464,6 +469,14 @@ class Database:
             conn.execute(delete(connections).where(or_(connections.c.requester_id == user_id,
                                                        connections.c.addressee_id == user_id)))
             conn.execute(delete(blocks).where(or_(blocks.c.blocker_id == user_id, blocks.c.blocked_id == user_id)))
+            # Messages they sent go; the other person keeps their side of the conversation.
+            conn.execute(delete(messages).where(messages.c.sender_id == user_id))
+            conn.execute(delete(conversation_members).where(conversation_members.c.user_id == user_id))
+            conn.execute(delete(conversations).where(~conversations.c.id.in_(
+                select(conversation_members.c.conversation_id))))
+            # Reports stay for review, without the deleted account's id.
+            conn.execute(update(user_reports).where(user_reports.c.reporter_id == user_id).values(reporter_id=None))
+            conn.execute(update(user_reports).where(user_reports.c.reported_id == user_id).values(reported_id=None))
             conn.execute(delete(users).where(users.c.id == user_id))
         return purge_ids
 
@@ -719,6 +732,128 @@ class Database:
         with self.engine.connect() as conn:
             return [dict(r) for r in conn.execute(select(blocks).where(blocks.c.blocker_id == blocker_id)
                                                   .order_by(blocks.c.created_at.desc())).mappings()]
+
+    # --- messages --------------------------------------------------------------
+
+    def conversation_with(self, a: str, b: str, create: bool = False) -> dict[str, Any] | None:
+        """The conversation between two people, made the first time when ``create``."""
+        pair = self.pair_of(a, b)
+        with self.engine.connect() as conn:
+            row = conn.execute(select(conversations).where(conversations.c.pair == pair)).mappings().first()
+        if row or not create:
+            return dict(row) if row else None
+        ts = now()
+        new = {"id": uuid.uuid4().hex, "pair": pair, "created_at": ts, "last_message_at": ts}
+        try:
+            with self.engine.begin() as conn:
+                conn.execute(insert(conversations).values(**new))
+                for uid in (a, b):
+                    conn.execute(insert(conversation_members).values(conversation_id=new["id"], user_id=uid))
+        except IntegrityError:  # both opened it at once: use the one that won
+            return self.conversation_with(a, b)
+        return new
+
+    def membership(self, conversation_id: str, user_id: str) -> dict[str, Any] | None:
+        """``user_id``'s side of a conversation, with ``other_id`` (None if they deleted their
+        account) and the other person's ``other_read_at``; None if ``user_id`` isn't in it."""
+        with self.engine.connect() as conn:
+            members = conn.execute(select(conversation_members).where(
+                conversation_members.c.conversation_id == conversation_id)).mappings().all()
+        mine = next((m for m in members if m["user_id"] == user_id), None)
+        if mine is None:
+            return None
+        other = next((m for m in members if m["user_id"] != user_id), None)
+        return {"conversation_id": conversation_id, "last_read_at": mine["last_read_at"],
+                "other_id": other["user_id"] if other else None,
+                "other_read_at": other["last_read_at"] if other else None}
+
+    def conversations_of(self, user_id: str) -> list[dict[str, Any]]:
+        """``user_id``'s conversations that have messages, newest first, each with the other
+        person's id, the last message and how many are unread."""
+        me = conversation_members.alias("me")
+        them = conversation_members.alias("them")
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                select(conversations.c.id, conversations.c.last_message_at, me.c.last_read_at,
+                       them.c.user_id.label("other_id"))
+                .join(me, and_(me.c.conversation_id == conversations.c.id, me.c.user_id == user_id))
+                .outerjoin(them, and_(them.c.conversation_id == conversations.c.id, them.c.user_id != user_id))
+                .order_by(conversations.c.last_message_at.desc())).mappings().all()
+            out = []
+            for r in rows:
+                last = conn.execute(select(messages).where(messages.c.conversation_id == r["id"])
+                                    .order_by(messages.c.created_at.desc(), messages.c.id.desc()).limit(1)).mappings().first()
+                if last is None:
+                    continue
+                unread = conn.execute(select(func.count()).select_from(messages).where(
+                    messages.c.conversation_id == r["id"], messages.c.sender_id != user_id,
+                    messages.c.deleted_at.is_(None),
+                    messages.c.created_at > r["last_read_at"] if r["last_read_at"] else true())).scalar_one()
+                out.append({**dict(r), "last": dict(last), "unread": unread})
+        return out
+
+    def messages_page(self, conversation_id: str, limit: int, before: tuple[datetime, str] | None = None) -> list[dict[str, Any]]:
+        """Newest first, older than ``before`` (created_at, id) when given."""
+        query = select(messages).where(messages.c.conversation_id == conversation_id)
+        if before:
+            query = query.where(tuple_(messages.c.created_at, messages.c.id) < tuple_(*before))
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(
+                query.order_by(messages.c.created_at.desc(), messages.c.id.desc()).limit(limit)).mappings()]
+
+    def get_message(self, message_id: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(messages).where(messages.c.id == message_id)).mappings().first()
+        return dict(row) if row else None
+
+    def add_message(self, conversation_id: str, sender_id: str, body: str) -> dict[str, Any]:
+        ts = now()
+        row = {"id": uuid.uuid4().hex, "conversation_id": conversation_id, "sender_id": sender_id,
+               "body": body, "created_at": ts, "deleted_at": None}
+        with self.engine.begin() as conn:
+            conn.execute(insert(messages).values(**row))
+            conn.execute(update(conversations).where(conversations.c.id == conversation_id).values(last_message_at=ts))
+            # Sending counts as having read everything before it.
+            conn.execute(update(conversation_members).where(
+                conversation_members.c.conversation_id == conversation_id,
+                conversation_members.c.user_id == sender_id).values(last_read_at=ts))
+        return row
+
+    def mark_read(self, conversation_id: str, user_id: str) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(update(conversation_members).where(
+                conversation_members.c.conversation_id == conversation_id,
+                conversation_members.c.user_id == user_id).values(last_read_at=now()))
+
+    def delete_message(self, message_id: str, sender_id: str) -> bool:
+        """Delete one of ``sender_id``'s messages for everyone: its text goes, a marker stays."""
+        with self.engine.begin() as conn:
+            return conn.execute(update(messages).where(
+                messages.c.id == message_id, messages.c.sender_id == sender_id, messages.c.deleted_at.is_(None))
+                .values(body=None, deleted_at=now())).rowcount > 0
+
+    def messages_sent_since(self, sender_id: str, since: datetime) -> int:
+        with self.engine.connect() as conn:
+            return conn.execute(select(func.count()).select_from(messages).where(
+                messages.c.sender_id == sender_id, messages.c.created_at >= since)).scalar_one()
+
+    def save_user_report(self, **fields: Any) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(insert(user_reports).values(created_at=now(), **fields))
+
+    def people_reports(self, since: datetime | None = None, reporter_id: str | None = None) -> list[dict[str, Any]]:
+        """Reports of people and messages, oldest first."""
+        query = select(user_reports).order_by(user_reports.c.created_at)
+        if since:
+            query = query.where(user_reports.c.created_at >= since)
+        if reporter_id:
+            query = query.where(user_reports.c.reporter_id == reporter_id)
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(query).mappings()]
+
+    def delete_old_user_reports(self, before: datetime) -> int:
+        with self.engine.begin() as conn:
+            return conn.execute(delete(user_reports).where(user_reports.c.created_at < before)).rowcount
 
     def set_password_hash(self, user_id: str, password_hash: str) -> None:
         with self.engine.begin() as conn:

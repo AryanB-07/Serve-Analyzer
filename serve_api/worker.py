@@ -40,6 +40,8 @@ HEARTBEAT = timedelta(seconds=20)
 MAX_ATTEMPTS = 3
 SWEEP_EVERY_S = 30.0
 HOUSEKEEPING_EVERY_S = 3600.0
+# Reports of people and messages are kept a year for spotting repeat abuse (Privacy Policy).
+REPORTS_KEPT = timedelta(days=365)
 ABANDONED_AFTER = timedelta(days=1)   # an upload that never arrived
 ATTEMPTS_KEPT = timedelta(days=1)     # longer than any rate-limit window
 
@@ -175,6 +177,8 @@ def housekeeping(db: Database, storage: Storage, upload_retention_days: int = 0)
         storage.delete_prefix(keys.upload_prefix(analysis_id))
         log.info("deleted abandoned upload %s", analysis_id)
     backfill_scores(db, storage)
+    if old := db.delete_old_user_reports(now() - REPORTS_KEPT):
+        log.info("deleted %d reports of people older than a year", old)
     sessions, attempts = db.delete_expired(attempts_before=now() - ATTEMPTS_KEPT)
     if sessions or attempts:
         log.info("deleted %d expired sessions and %d old sign-in attempts", sessions, attempts)

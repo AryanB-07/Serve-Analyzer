@@ -340,6 +340,8 @@ class DataExport(BaseModel):
     analyses: list[ExportedAnalysis]
     connections: list[ExportedConnection] = []
     blocks: list[ExportedBlock] = []
+    conversations: list[ExportedConversation] = []
+    reports_made: list[ExportedUserReport] = []
 
 
 # --- profiles ---------------------------------------------------------------------------------
@@ -558,6 +560,91 @@ class UsernameRequest(BaseModel):
 class BlockedPerson(BaseModel):
     person: PersonSummary
     blocked_at: datetime
+
+
+# --- messages ---------------------------------------------------------------------------------
+
+MAX_MESSAGE = 2000
+ReportReason = Literal["spam", "harassment", "inappropriate", "impersonation", "other"]
+
+
+class Message(BaseModel):
+    id: str
+    from_you: bool
+    body: str | None = None  # None once deleted
+    deleted: bool = False
+    created_at: datetime
+
+
+class MessagePreview(BaseModel):
+    text: str | None = None  # the start of the message; None if it was deleted
+    from_you: bool
+    deleted: bool = False
+    at: datetime
+
+
+class ConversationSummary(BaseModel):
+    id: str
+    person: PersonSummary | None = None  # None when they've deleted their account
+    last_message: MessagePreview | None = None
+    unread: int = 0
+    can_send: bool  # only while you're friends
+    why_not: str | None = None  # when you can't send, why
+
+
+class MessagePage(BaseModel):
+    items: list[Message]  # newest first
+    next_cursor: str | None = None
+    seen_up_to: datetime | None = None  # the other person has read everything up to here
+
+
+class StartConversation(BaseModel):
+    username: str = Field(min_length=1, max_length=40)
+
+
+class SendMessage(BaseModel):
+    body: str = Field(min_length=1, max_length=MAX_MESSAGE * 2)
+
+    @field_validator("body")
+    @classmethod
+    def _body(cls, value: str) -> str:
+        cleaned = "".join(ch for ch in value.replace("\r\n", "\n") if ch not in _CONTROL or ch in "\n\t").strip()
+        if not cleaned:
+            raise ValueError("Write a message first.")
+        if len(cleaned) > MAX_MESSAGE:
+            raise ValueError(f"Messages are up to {MAX_MESSAGE:,} characters.")
+        return cleaned
+
+
+class UnreadCount(BaseModel):
+    unread: int
+
+
+class UserReportRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=40)
+    message_id: str | None = Field(default=None, max_length=32)
+    reason: ReportReason
+    note: str | None = Field(default=None, max_length=1000)
+
+
+class ExportedMessage(BaseModel):
+    from_you: bool
+    body: str | None = None
+    deleted: bool = False
+    created_at: datetime
+
+
+class ExportedConversation(BaseModel):
+    with_username: str | None = None  # None if they deleted their account
+    messages: list[ExportedMessage]
+
+
+class ExportedUserReport(BaseModel):
+    username: str | None = None
+    reason: ReportReason
+    note: str | None = None
+    message: str | None = None
+    created_at: datetime
 
 
 class ExportedConnection(BaseModel):

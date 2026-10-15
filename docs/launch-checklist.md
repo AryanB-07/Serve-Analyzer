@@ -125,6 +125,10 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 - [x] Friends: requests, friendships and blocks, found by exact username only; non-friends see
       a name and picture, friends also see the bio.
 - [x] Sharing with friends: serve stats, key positions and a friends leaderboard, each opt-in.
+- [x] Messages between friends, with read state, deleting, reporting and blocking.
+- [ ] **After launch, weekly:** review reports of people and messages
+  (`docker compose -f deploy/docker-compose.yml exec api python -m serve_api.reports --people`), and act
+  on them: there's no in-app moderation tool yet, so suspending an account means deleting it.
 - [ ] **Before leaning on ranks:** validate the reference ranges. The leaderboard makes the scores
   more visible, and every score shown to friends says the ranges aren't validated yet.
 - [ ] **Before profiles are public:** hold a released username for a while before anyone else can

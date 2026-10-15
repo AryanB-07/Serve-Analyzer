@@ -3,28 +3,11 @@
  * themes. Automated checks catch about a third of problems (contrast, labels, landmarks, ARIA
  * misuse); keyboard use is covered by the other specs.
  */
-import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "./fixtures";
-import { deleteAccount, newEmail, signUpAndVerify } from "./helpers";
+import { deleteAccount, expectAccessible, newEmail, signUpAndVerify } from "./helpers";
 
 const SAMPLE = new URL("../../tests/fixtures/sample_serve.mp4", import.meta.url).pathname;
 const STILL_CLIP = new URL("../../tests/fixtures/standing_still.mp4", import.meta.url).pathname;
-
-async function expectAccessible(page: Page, what: string) {
-  for (const theme of ["dark", "light"] as const) {
-    await page.evaluate((t) => { document.documentElement.dataset.theme = t; }, theme);
-    // Let colour transitions finish, or the scan measures colours half-way between themes.
-    // Only transitions: a spinner's animation never finishes.
-    await page.evaluate(() =>
-      Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished)),
-    );
-    const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
-    const summary = violations.map((v) => `${v.id} (${v.impact}): ${v.help} — ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(", ")}`);
-    expect(summary, `${what}, ${theme} theme`).toEqual([]);
-  }
-}
 
 test("signed-out pages", async ({ page }) => {
   for (const [path, heading] of [
@@ -92,6 +75,9 @@ test("signed-in pages: upload, results, failure, history, account", async ({ pag
   await page.goto("/friends");
   await expect(page.getByRole("form", { name: "Find someone" })).toBeVisible();
   await expectAccessible(page, "friends");
+  await page.goto("/messages");
+  await expect(page.getByText("No messages yet")).toBeVisible();
+  await expectAccessible(page, "messages, empty");
   await page.goto("/u/nobody_has_this_name");
   await expect(page.getByRole("heading", { name: "No one has that username" })).toBeVisible();
   await expectAccessible(page, "a username nobody has");

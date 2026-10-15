@@ -7,7 +7,8 @@ migrations as the API would at startup, and gives analyses from before History's
 scores (the worker's housekeeping step). Then, signed in as each account (a short-lived session
 made directly, so no passwords are needed, and removed afterwards):
 
-- /auth/me, the profile (and its picture), friends, requests, blocks, and each friend's page;
+- /auth/me, the profile (and its picture), friends, requests, blocks, each friend's page,
+  conversations and their messages, and the leaderboard;
 - the data download;
 - History, every page, with each kind of filter;
 - each analysis's summary, report, and for finished ones the result, the frames, and the
@@ -85,6 +86,15 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
     links = c.get(client, "/connections", f"{who} friends")
     c.get(client, "/connections/count", f"{who} request count")
     c.get(client, "/blocks", f"{who} blocked people")
+    chats = c.get(client, "/conversations", f"{who} conversations")
+    c.get(client, "/conversations/unread", f"{who} unread count")
+    if chats.status_code == 200:
+        for chat in chats.json():
+            c.counts["conversations"] += 1
+            c.get(client, f"/conversations/{chat['id']}", f"{who} conversation")
+            page = c.get(client, f"/conversations/{chat['id']}/messages", f"{who} messages")
+            if page.status_code == 200:
+                c.counts["messages"] += len(page.json()["items"])
     board = c.get(client, "/leaderboard", f"{who} leaderboard")
     if board.status_code == 200:
         c.counts["leaderboard places"] += len(board.json()["ranked"]) + len(board.json()["not_ranked"])
