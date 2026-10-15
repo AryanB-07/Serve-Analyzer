@@ -1038,20 +1038,21 @@
         }
       }
     },
-    "/connections": {
+    "/follows": {
       "get": {
         "tags": [
           "friends"
         ],
-        "summary": "List Connections",
-        "operationId": "list_connections_connections_get",
+        "summary": "My Lists",
+        "description": "Your friends, followers and following, newest first.",
+        "operationId": "my_lists_follows_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConnectionList"
+                  "$ref": "#/components/schemas/FollowLists"
                 }
               }
             }
@@ -1077,26 +1078,29 @@
             }
           }
         }
-      },
-      "post": {
+      }
+    },
+    "/follows/{username}": {
+      "put": {
         "tags": [
           "friends"
         ],
-        "summary": "Send Request",
-        "description": "Send a friend request. If they'd already asked you, you're friends straight away.",
-        "operationId": "send_request_connections_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UsernameRequest"
-              }
+        "summary": "Follow",
+        "description": "Follow someone (or follow them back). Doing it again changes nothing.",
+        "operationId": "follow_follows__username__put",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Username"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -1107,64 +1111,64 @@
             }
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "409": {
-            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Conflict"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           },
           "422": {
             "description": "Validation Error",
@@ -1177,79 +1181,28 @@
             }
           }
         }
-      }
-    },
-    "/connections/count": {
-      "get": {
+      },
+      "delete": {
         "tags": [
           "friends"
         ],
-        "summary": "Count Requests",
-        "description": "Friend requests waiting for you, for the navigation's badge.",
-        "operationId": "count_requests_connections_count_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestCount"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/connections/{connection_id}/accept": {
-      "post": {
-        "tags": [
-          "friends"
-        ],
-        "summary": "Accept Request",
-        "description": "Accept a request someone sent you.",
-        "operationId": "accept_request_connections__connection_id__accept_post",
+        "summary": "Unfollow",
+        "description": "Stop following someone; if you were friends, you aren't any more. Already not\nfollowing is fine.",
+        "operationId": "unfollow_follows__username__delete",
         "parameters": [
           {
-            "name": "connection_id",
+            "name": "username",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Connection Id"
+              "title": "Username"
             }
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Connection"
-                }
-              }
-            }
+          "204": {
+            "description": "Successful Response"
           },
           "401": {
             "content": {
@@ -1284,22 +1237,22 @@
         }
       }
     },
-    "/connections/{connection_id}": {
+    "/followers/{username}": {
       "delete": {
         "tags": [
           "friends"
         ],
-        "summary": "Remove Connection",
-        "description": "Cancel a request you sent, decline one you received, or end a friendship.",
-        "operationId": "remove_connection_connections__connection_id__delete",
+        "summary": "Remove Follower",
+        "description": "Remove someone from your followers (they aren't told). Ends a friendship too.",
+        "operationId": "remove_follower_followers__username__delete",
         "parameters": [
           {
-            "name": "connection_id",
+            "name": "username",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Connection Id"
+              "title": "Username"
             }
           }
         ],
@@ -1431,7 +1384,7 @@
           "friends"
         ],
         "summary": "Block",
-        "description": "Block someone. Any request or friendship between you ends, and they can't find you.",
+        "description": "Block someone. Neither of you follows the other any more, and they can't find you.",
         "operationId": "block_blocks_post",
         "requestBody": {
           "content": {
@@ -3551,91 +3504,6 @@
         ],
         "title": "ConfirmEmailChangeRequest"
       },
-      "Connection": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "person": {
-            "$ref": "#/components/schemas/PersonSummary"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "pending",
-              "accepted"
-            ],
-            "title": "Status"
-          },
-          "direction": {
-            "type": "string",
-            "enum": [
-              "incoming",
-              "outgoing"
-            ],
-            "title": "Direction"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "accepted_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Accepted At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "person",
-          "status",
-          "direction",
-          "created_at"
-        ],
-        "title": "Connection"
-      },
-      "ConnectionList": {
-        "properties": {
-          "friends": {
-            "items": {
-              "$ref": "#/components/schemas/Connection"
-            },
-            "type": "array",
-            "title": "Friends"
-          },
-          "incoming": {
-            "items": {
-              "$ref": "#/components/schemas/Connection"
-            },
-            "type": "array",
-            "title": "Incoming"
-          },
-          "outgoing": {
-            "items": {
-              "$ref": "#/components/schemas/Connection"
-            },
-            "type": "array",
-            "title": "Outgoing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "friends",
-          "incoming",
-          "outgoing"
-        ],
-        "title": "ConnectionList"
-      },
       "ConversationSummary": {
         "properties": {
           "id": {
@@ -3803,12 +3671,20 @@
             "type": "array",
             "title": "Analyses"
           },
-          "connections": {
+          "following": {
             "items": {
-              "$ref": "#/components/schemas/ExportedConnection"
+              "$ref": "#/components/schemas/ExportedFollow"
             },
             "type": "array",
-            "title": "Connections",
+            "title": "Following",
+            "default": []
+          },
+          "followers": {
+            "items": {
+              "$ref": "#/components/schemas/ExportedFollow"
+            },
+            "type": "array",
+            "title": "Followers",
             "default": []
           },
           "blocks": {
@@ -4086,61 +3962,6 @@
         ],
         "title": "ExportedBlock"
       },
-      "ExportedConnection": {
-        "properties": {
-          "username": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Username"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "pending",
-              "accepted"
-            ],
-            "title": "Status"
-          },
-          "direction": {
-            "type": "string",
-            "enum": [
-              "incoming",
-              "outgoing"
-            ],
-            "title": "Direction"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "accepted_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Accepted At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "status",
-          "direction",
-          "created_at"
-        ],
-        "title": "ExportedConnection"
-      },
       "ExportedConversation": {
         "properties": {
           "with_username": {
@@ -4167,6 +3988,31 @@
           "messages"
         ],
         "title": "ExportedConversation"
+      },
+      "ExportedFollow": {
+        "properties": {
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since"
+          }
+        },
+        "type": "object",
+        "required": [
+          "since"
+        ],
+        "title": "ExportedFollow"
       },
       "ExportedMessage": {
         "properties": {
@@ -4219,8 +4065,8 @@
           "kind": {
             "type": "string",
             "enum": [
-              "request_received",
-              "request_accepted",
+              "new_follower",
+              "followed_back",
               "serve_received"
             ],
             "title": "Kind"
@@ -4271,9 +4117,9 @@
             "title": "On Leaderboard",
             "default": false
           },
-          "accept_requests": {
+          "allow_follows": {
             "type": "boolean",
-            "title": "Accept Requests",
+            "title": "Allow Follows",
             "default": true
           },
           "username": {
@@ -4457,6 +4303,94 @@
           "text"
         ],
         "title": "FeedbackItem"
+      },
+      "FollowCounts": {
+        "properties": {
+          "followers": {
+            "type": "integer",
+            "title": "Followers"
+          },
+          "following": {
+            "type": "integer",
+            "title": "Following"
+          },
+          "friends": {
+            "type": "integer",
+            "title": "Friends"
+          }
+        },
+        "type": "object",
+        "required": [
+          "followers",
+          "following",
+          "friends"
+        ],
+        "title": "FollowCounts"
+      },
+      "FollowEntry": {
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonSummary"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since"
+          },
+          "you_follow": {
+            "type": "boolean",
+            "title": "You Follow"
+          },
+          "follows_you": {
+            "type": "boolean",
+            "title": "Follows You"
+          }
+        },
+        "type": "object",
+        "required": [
+          "person",
+          "since",
+          "you_follow",
+          "follows_you"
+        ],
+        "title": "FollowEntry"
+      },
+      "FollowLists": {
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/FollowCounts"
+          },
+          "friends": {
+            "items": {
+              "$ref": "#/components/schemas/FollowEntry"
+            },
+            "type": "array",
+            "title": "Friends"
+          },
+          "followers": {
+            "items": {
+              "$ref": "#/components/schemas/FollowEntry"
+            },
+            "type": "array",
+            "title": "Followers"
+          },
+          "following": {
+            "items": {
+              "$ref": "#/components/schemas/FollowEntry"
+            },
+            "type": "array",
+            "title": "Following"
+          }
+        },
+        "type": "object",
+        "required": [
+          "counts",
+          "friends",
+          "followers",
+          "following"
+        ],
+        "title": "FollowLists",
+        "description": "Your friends (people who follow each other with you), followers and following."
       },
       "FrameLandmarks": {
         "properties": {
@@ -5453,8 +5387,8 @@
           "kind": {
             "type": "string",
             "enum": [
-              "request_received",
-              "request_accepted",
+              "new_follower",
+              "followed_back",
               "serve_received"
             ],
             "title": "Kind"
@@ -5576,27 +5510,19 @@
             "enum": [
               "self",
               "none",
-              "requested",
-              "incoming",
+              "following",
+              "follows_you",
               "friends"
             ],
             "title": "Relationship"
           },
-          "connection_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Connection Id"
-          },
-          "can_request": {
+          "can_follow": {
             "type": "boolean",
-            "title": "Can Request",
+            "title": "Can Follow",
             "default": false
+          },
+          "counts": {
+            "$ref": "#/components/schemas/FollowCounts"
           },
           "bio": {
             "anyOf": [
@@ -5644,7 +5570,8 @@
         },
         "type": "object",
         "required": [
-          "relationship"
+          "relationship",
+          "counts"
         ],
         "title": "Person",
         "description": "Someone's page, as you see it."
@@ -5954,9 +5881,9 @@
           "stats": {
             "$ref": "#/components/schemas/ProfileStats"
           },
-          "accept_requests": {
+          "allow_follows": {
             "type": "boolean",
-            "title": "Accept Requests",
+            "title": "Allow Follows",
             "default": true
           }
         },
@@ -6045,7 +5972,7 @@
             ],
             "title": "Bio"
           },
-          "accept_requests": {
+          "allow_follows": {
             "anyOf": [
               {
                 "type": "boolean"
@@ -6054,7 +5981,7 @@
                 "type": "null"
               }
             ],
-            "title": "Accept Requests"
+            "title": "Allow Follows"
           },
           "share_stats": {
             "anyOf": [
@@ -6277,19 +6204,6 @@
           "reason"
         ],
         "title": "ReportRequest"
-      },
-      "RequestCount": {
-        "properties": {
-          "incoming": {
-            "type": "integer",
-            "title": "Incoming"
-          }
-        },
-        "type": "object",
-        "required": [
-          "incoming"
-        ],
-        "title": "RequestCount"
       },
       "SendMessage": {
         "properties": {

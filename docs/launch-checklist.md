@@ -133,7 +133,7 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 - [ ] **Before leaning on ranks:** validate the reference ranges. The leaderboard makes the scores
   more visible, and every score shown to friends says the ranges aren't validated yet.
 - [x] A released username is held for its owner for 30 days, so nobody can impersonate a renamed player.
-- [x] Notifications (requests, accepted requests, serves sent to you) and account suspension.
+- [x] Notifications (new followers, follow-backs, serves sent to you) and account suspension.
 - [x] History (now My Serves): score cards with upload time, optional notes, key-position details, and
       server-side filters by time, score and key position.
 

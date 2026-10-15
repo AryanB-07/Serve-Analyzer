@@ -2,9 +2,9 @@ import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ApiError } from "../../api/client";
-import { useAcceptRequest, useConnections, useLeaderboard, useRemoveConnection } from "../../api/friends";
+import { useFollow, useFollows, useLeaderboard, useRemoveFollower, useUnfollow } from "../../api/friends";
 import { useProfile } from "../../api/profile";
-import type { Connection, LeaderboardEntry, PersonSummary } from "../../api/types";
+import type { FollowEntry, FollowLists, LeaderboardEntry, PersonSummary } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
 import { bandOf } from "../../lib/score";
 import { normaliseUsername, usernameProblem } from "../../lib/username";
@@ -88,48 +88,96 @@ function FindSomeone() {
   );
 }
 
-function Incoming({ item }: { item: Connection }) {
-  const accept = useAcceptRequest();
-  const decline = useRemoveConnection();
-  const busy = accept.isPending || decline.isPending;
-  const error = accept.error ?? decline.error;
+type Tab = "friends" | "followers" | "following";
+const TABS: { key: Tab; label: string; empty: string }[] = [
+  { key: "friends", label: "Friends", empty: "No friends yet. Friends are people you follow who follow you back." },
+  { key: "followers", label: "Followers", empty: "Nobody follows you yet." },
+  { key: "following", label: "Following", empty: "You don't follow anyone yet. Find someone by their username above." },
+];
+
+/** One person in a list, with what you can do about them from here. */
+function FollowRow({ entry, tab }: { entry: FollowEntry; tab: Tab }) {
+  const follow = useFollow();
+  const unfollow = useUnfollow();
+  const remove = useRemoveFollower();
+  const [confirming, setConfirming] = useState<null | "unfollow" | "remove">(null);
+  const name = displayName(entry.person);
+  const username = entry.person.username;
+  const busy = follow.isPending || unfollow.isPending || remove.isPending;
+  const error = follow.error ?? unfollow.error ?? remove.error;
+  const detail = tab === "friends" ? `Friends since ${when(entry.since)}`
+    : tab === "followers" ? `Followed you ${when(entry.since)}${entry.you_follow ? " · you follow back" : ""}`
+      : `Following since ${when(entry.since)}${entry.follows_you ? " · follows you" : ""}`;
+  if (!username) return <PersonRow person={entry.person} detail={detail} />;
+  const done = { onSuccess: () => setConfirming(null) };
   return (
     <>
-      <PersonRow person={item.person} detail={`Asked ${when(item.created_at)}`}>
-        <button type="button" disabled={busy} onClick={() => accept.mutate(item.id)} className={`${small} bg-accent text-on-accent hover:bg-accent-strong`}
-          aria-label={`Accept ${displayName(item.person)}'s request`}>
-          Accept
-        </button>
-        <button type="button" disabled={busy} onClick={() => decline.mutate(item.id)} className={`${small} border border-border hover:bg-surface-2`}
-          aria-label={`Decline ${displayName(item.person)}'s request`}>
-          Decline
-        </button>
+      <PersonRow person={entry.person} detail={detail}>
+        {confirming ? (
+          <>
+            <span className="self-center text-xs text-ink-muted">
+              {confirming === "remove" ? `Remove ${name} from your followers? They won't be told.`
+                : tab === "friends" ? `Unfollow ${name}? You won't be friends any more.` : `Unfollow ${name}?`}
+            </span>
+            <button type="button" disabled={busy}
+              onClick={() => (confirming === "remove" ? remove.mutate(username, done) : unfollow.mutate(username, done))}
+              className={`${small} border border-border hover:bg-surface-2`}>
+              {confirming === "remove" ? "Remove" : "Unfollow"}
+            </button>
+            <button type="button" onClick={() => setConfirming(null)} className="px-2 text-sm text-ink-muted hover:text-ink">Cancel</button>
+          </>
+        ) : (
+          <>
+            {tab === "followers" && !entry.you_follow && (
+              <button type="button" disabled={busy} onClick={() => follow.mutate(username)}
+                className={`${small} bg-accent text-on-accent hover:bg-accent-strong`} aria-label={`Follow ${name} back`}>
+                Follow back
+              </button>
+            )}
+            {tab === "followers" ? (
+              <button type="button" onClick={() => setConfirming("remove")} className={`${small} border border-border hover:bg-surface-2`}
+                aria-label={`Remove ${name} from your followers`}>
+                Remove
+              </button>
+            ) : (
+              <button type="button" onClick={() => setConfirming("unfollow")} className={`${small} border border-border hover:bg-surface-2`}
+                aria-label={tab === "friends" ? `Unfriend ${name}` : `Unfollow ${name}`}>
+                {tab === "friends" ? "Unfriend" : "Unfollow"}
+              </button>
+            )}
+          </>
+        )}
       </PersonRow>
       {error && <li role="alert" className="text-sm text-bad">{friendsErrorMessage(error)}</li>}
     </>
   );
 }
 
-function Outgoing({ item }: { item: Connection }) {
-  const cancel = useRemoveConnection();
-  return (
-    <PersonRow person={item.person} detail={`Sent ${when(item.created_at)}`}>
-      <button type="button" disabled={cancel.isPending} onClick={() => cancel.mutate(item.id)} className={`${small} border border-border hover:bg-surface-2`}
-        aria-label={`Cancel your request to ${displayName(item.person)}`}>
-        Cancel
-      </button>
-    </PersonRow>
-  );
-}
-
-function Section({ title, count, children, empty }: { title: string; count: number; children: ReactNode; empty?: ReactNode }) {
+function FollowTabs({ lists }: { lists: FollowLists }) {
+  const [tab, setTab] = useState<Tab>(lists.counts.friends > 0 || lists.counts.followers === 0 ? "friends" : "followers");
   const id = useId();
+  const current = TABS.find((t) => t.key === tab)!;
+  const items = lists[tab];
   return (
-    <section aria-labelledby={id} className="space-y-2">
-      <h2 id={id} className="text-lg font-semibold">
-        {title} <span className="text-sm font-normal text-ink-muted">({count})</span>
-      </h2>
-      {count === 0 && empty ? <p className="text-sm text-ink-muted">{empty}</p> : <ul className="space-y-2">{children}</ul>}
+    <section aria-label="Your friends, followers and following" className="space-y-3">
+      <div role="tablist" aria-label="Lists" className="flex gap-1 rounded-xl border border-border bg-surface p-1">
+        {TABS.map((t) => (
+          <button key={t.key} type="button" role="tab" id={`${id}-${t.key}`} aria-selected={tab === t.key} aria-controls={`${id}-panel`}
+            onClick={() => setTab(t.key)}
+            className={`flex-1 rounded-lg px-2 py-1.5 text-sm font-medium ${tab === t.key ? "bg-surface-2 text-ink" : "text-ink-muted hover:text-ink"}`}>
+            {t.label} <span className="tabular text-ink-muted">{lists.counts[t.key]}</span>
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab}`}>
+        {items.length === 0 ? (
+          <p className="py-6 text-center text-sm text-ink-muted">{current.empty}</p>
+        ) : (
+          <ul className="space-y-2">
+            {items.map((e) => <FollowRow key={`${tab}-${e.person.username}`} entry={e} tab={tab} />)}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }
@@ -199,52 +247,41 @@ function LeaderboardSection() {
 }
 
 export function FriendsPage() {
-  const list = useConnections();
+  const follows = useFollows();
   const profile = useProfile();
-  const data = list.data;
+  const data = follows.data;
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 py-4">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Friends</h1>
-        <p className="text-ink-muted">Connect with people you play with. Friends see your bio, and whatever you choose to share in Settings.</p>
+        <p className="text-ink-muted">
+          Follow people you play with. When they follow you back you're friends: you see each other's bio, can message,
+          and see whatever serve stats each of you shares.
+        </p>
       </header>
 
       {profile.data && !profile.data.username && (
         <div role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm">
-          <p className="font-medium">Choose a username to send friend requests</p>
-          <p className="mt-1 text-ink-muted">It's how people find you, and how they know who's asking.</p>
+          <p className="font-medium">Choose a username to follow people</p>
+          <p className="mt-1 text-ink-muted">It's how people find you, and how they see who's following them.</p>
           <Link to="/settings#profile" className="mt-2 inline-block font-medium text-accent hover:underline">Choose one in Settings</Link>
         </div>
       )}
 
       <FindSomeone />
 
-      {list.isError ? (
+      {follows.isError ? (
         <div role="alert" className="space-y-2">
           <p>We couldn't load your friends.</p>
-          <button type="button" onClick={() => list.refetch()} className="rounded-lg border border-border px-4 py-2">Try again</button>
+          <button type="button" onClick={() => follows.refetch()} className="rounded-lg border border-border px-4 py-2">Try again</button>
         </div>
       ) : !data ? (
         <p className="text-ink-muted">Loading…</p>
       ) : (
         <>
-          {data.incoming.length > 0 && (
-            <Section title="Requests" count={data.incoming.length}>
-              {data.incoming.map((c) => <Incoming key={c.id} item={c} />)}
-            </Section>
-          )}
-          <Section title="Your friends" count={data.friends.length} empty="No friends yet. Find someone by their username above.">
-            {data.friends.map((c) => (
-              <PersonRow key={c.id} person={c.person} detail={c.accepted_at ? `Friends since ${when(c.accepted_at)}` : undefined} />
-            ))}
-          </Section>
-          {data.friends.length > 0 && <LeaderboardSection />}
-          {data.outgoing.length > 0 && (
-            <Section title="Sent" count={data.outgoing.length}>
-              {data.outgoing.map((c) => <Outgoing key={c.id} item={c} />)}
-            </Section>
-          )}
+          <FollowTabs lists={data} />
+          {data.counts.friends > 0 && <LeaderboardSection />}
         </>
       )}
     </div>

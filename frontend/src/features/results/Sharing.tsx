@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 
-import { useConnections } from "../../api/friends";
+import { useFollows } from "../../api/friends";
 import { useStartConversation } from "../../api/messages";
 import { api } from "../../api";
 import type { AnalysisSummary } from "../../api/types";
@@ -44,9 +44,9 @@ export function SendToFriend({ summary }: { summary: AnalysisSummary }) {
   const [sentTo, setSentTo] = useState<{ name: string; conversation: string } | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const connections = useConnections();
+  const follows = useFollows();
   const start = useStartConversation();
-  const friends = connections.data?.friends ?? [];
+  const friends = follows.data?.friends ?? [];
 
   async function send(username: string, name: string) {
     setError(null);
@@ -84,7 +84,7 @@ export function SendToFriend({ summary }: { summary: AnalysisSummary }) {
           ) : (
             <ul className="max-h-64 space-y-1 overflow-y-auto">
               {friends.map((f) => f.person.username && (
-                <li key={f.id}>
+                <li key={f.person.username}>
                   <button type="button" disabled={busy !== null} onClick={() => send(f.person.username!, displayName(f.person))}
                     className="flex w-full items-center gap-2 rounded-lg p-1.5 text-left text-sm hover:bg-surface-2 disabled:opacity-50">
                     <Avatar url={f.person.avatar_url} name={f.person.display_name ?? f.person.username} size="sm" />

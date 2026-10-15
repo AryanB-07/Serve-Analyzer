@@ -340,7 +340,8 @@ class DataExport(BaseModel):
     account: ExportedAccount
     profile: ExportedProfile | None = None
     analyses: list[ExportedAnalysis]
-    connections: list[ExportedConnection] = []
+    following: list[ExportedFollow] = []
+    followers: list[ExportedFollow] = []
     blocks: list[ExportedBlock] = []
     conversations: list[ExportedConversation] = []
     reports_made: list[ExportedUserReport] = []
@@ -410,7 +411,7 @@ class Profile(SharingSettings):
     avatar_url: str | None = None
     member_since: datetime
     stats: ProfileStats
-    accept_requests: bool = True  # whether anyone with your username can send a friend request
+    allow_follows: bool = True  # whether anyone with your username can follow you
 
 
 class ProfileUpdate(BaseModel):
@@ -420,12 +421,12 @@ class ProfileUpdate(BaseModel):
     username: str | None = Field(default=None, max_length=40)
     display_name: str | None = Field(default=None, max_length=200)
     bio: str | None = Field(default=None, max_length=1000)
-    accept_requests: bool | None = None
+    allow_follows: bool | None = None
     share_stats: bool | None = None
     share_positions: bool | None = None
     on_leaderboard: bool | None = None
 
-    @field_validator("accept_requests", "share_stats", "share_positions", "on_leaderboard")
+    @field_validator("allow_follows", "share_stats", "share_positions", "on_leaderboard")
     @classmethod
     def _switch(cls, value: bool | None) -> bool:
         if value is None:
@@ -472,7 +473,8 @@ class ChangePasswordRequest(BaseModel):
 
 # --- friends ----------------------------------------------------------------------------------
 
-Relationship = Literal["self", "none", "requested", "incoming", "friends"]
+# From your side: you follow them ("following"), they follow you ("follows_you"), both ("friends").
+Relationship = Literal["self", "none", "following", "follows_you", "friends"]
 
 
 class PersonSummary(BaseModel):
@@ -506,12 +508,18 @@ class SharedStats(BaseModel):
     change: int | None = None  # the latest five's average minus the five before's
 
 
+class FollowCounts(BaseModel):
+    followers: int
+    following: int
+    friends: int
+
+
 class Person(PersonSummary):
     """Someone's page, as you see it."""
 
     relationship: Relationship
-    connection_id: str | None = None  # the request or friendship, when there is one
-    can_request: bool = False  # whether you could send them a friend request now
+    can_follow: bool = False  # whether you could follow them now (they allow it, or follow you)
+    counts: FollowCounts
     bio: str | None = None  # friends only
     friends_since: datetime | None = None
     # Friends only, and only what they chose to share (None when they don't).
@@ -537,23 +545,20 @@ class Leaderboard(BaseModel):
     not_ranked: list[LeaderboardEntry]
 
 
-class Connection(BaseModel):
-    id: str
-    person: PersonSummary  # the other person
-    status: Literal["pending", "accepted"]
-    direction: Literal["incoming", "outgoing"]  # who asked: them, or you
-    created_at: datetime
-    accepted_at: datetime | None = None
+class FollowEntry(BaseModel):
+    person: PersonSummary
+    since: datetime  # when they followed you, you followed them, or (friends) the later of the two
+    you_follow: bool
+    follows_you: bool
 
 
-class ConnectionList(BaseModel):
-    friends: list[Connection]
-    incoming: list[Connection]
-    outgoing: list[Connection]
+class FollowLists(BaseModel):
+    """Your friends (people who follow each other with you), followers and following."""
 
-
-class RequestCount(BaseModel):
-    incoming: int
+    counts: FollowCounts
+    friends: list[FollowEntry]
+    followers: list[FollowEntry]
+    following: list[FollowEntry]
 
 
 class UsernameRequest(BaseModel):
@@ -671,7 +676,7 @@ class ExportedUserReport(BaseModel):
     created_at: datetime
 
 
-NotificationKind = Literal["request_received", "request_accepted", "serve_received"]
+NotificationKind = Literal["new_follower", "followed_back", "serve_received"]
 
 
 class Notification(BaseModel):
@@ -690,12 +695,9 @@ class ExportedNotification(BaseModel):
     read: bool
 
 
-class ExportedConnection(BaseModel):
+class ExportedFollow(BaseModel):
     username: str | None = None
-    status: Literal["pending", "accepted"]
-    direction: Literal["incoming", "outgoing"]
-    created_at: datetime
-    accepted_at: datetime | None = None
+    since: datetime
 
 
 class ExportedBlock(BaseModel):
@@ -704,7 +706,7 @@ class ExportedBlock(BaseModel):
 
 
 class ExportedProfile(SharingSettings):
-    accept_requests: bool = True
+    allow_follows: bool = True
     username: str | None = None
     display_name: str | None = None
     bio: str | None = None

@@ -329,28 +329,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/connections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Connections */
-        get: operations["list_connections_connections_get"];
-        put?: never;
-        /**
-         * Send Request
-         * @description Send a friend request. If they'd already asked you, you're friends straight away.
-         */
-        post: operations["send_request_connections_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/connections/count": {
+    "/follows": {
         parameters: {
             query?: never;
             header?: never;
@@ -358,10 +337,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Count Requests
-         * @description Friend requests waiting for you, for the navigation's badge.
+         * My Lists
+         * @description Your friends, followers and following, newest first.
          */
-        get: operations["count_requests_connections_count_get"];
+        get: operations["my_lists_follows_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -370,7 +349,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/connections/{connection_id}/accept": {
+    "/follows/{username}": {
         parameters: {
             query?: never;
             header?: never;
@@ -378,19 +357,24 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
         /**
-         * Accept Request
-         * @description Accept a request someone sent you.
+         * Follow
+         * @description Follow someone (or follow them back). Doing it again changes nothing.
          */
-        post: operations["accept_request_connections__connection_id__accept_post"];
-        delete?: never;
+        put: operations["follow_follows__username__put"];
+        post?: never;
+        /**
+         * Unfollow
+         * @description Stop following someone; if you were friends, you aren't any more. Already not
+         *     following is fine.
+         */
+        delete: operations["unfollow_follows__username__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/connections/{connection_id}": {
+    "/followers/{username}": {
         parameters: {
             query?: never;
             header?: never;
@@ -401,10 +385,10 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Remove Connection
-         * @description Cancel a request you sent, decline one you received, or end a friendship.
+         * Remove Follower
+         * @description Remove someone from your followers (they aren't told). Ends a friendship too.
          */
-        delete: operations["remove_connection_connections__connection_id__delete"];
+        delete: operations["remove_follower_followers__username__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -443,7 +427,7 @@ export interface paths {
         put?: never;
         /**
          * Block
-         * @description Block someone. Any request or friendship between you ends, and they can't find you.
+         * @description Block someone. Neither of you follows the other any more, and they can't find you.
          */
         post: operations["block_blocks_post"];
         delete?: never;
@@ -963,38 +947,6 @@ export interface components {
             /** Token */
             token: string;
         };
-        /** Connection */
-        Connection: {
-            /** Id */
-            id: string;
-            person: components["schemas"]["PersonSummary"];
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "pending" | "accepted";
-            /**
-             * Direction
-             * @enum {string}
-             */
-            direction: "incoming" | "outgoing";
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Accepted At */
-            accepted_at?: string | null;
-        };
-        /** ConnectionList */
-        ConnectionList: {
-            /** Friends */
-            friends: components["schemas"]["Connection"][];
-            /** Incoming */
-            incoming: components["schemas"]["Connection"][];
-            /** Outgoing */
-            outgoing: components["schemas"]["Connection"][];
-        };
         /** ConversationSummary */
         ConversationSummary: {
             /** Id */
@@ -1055,10 +1007,15 @@ export interface components {
             /** Analyses */
             analyses: components["schemas"]["ExportedAnalysis"][];
             /**
-             * Connections
+             * Following
              * @default []
              */
-            connections: components["schemas"]["ExportedConnection"][];
+            following: components["schemas"]["ExportedFollow"][];
+            /**
+             * Followers
+             * @default []
+             */
+            followers: components["schemas"]["ExportedFollow"][];
             /**
              * Blocks
              * @default []
@@ -1160,34 +1117,22 @@ export interface components {
              */
             blocked_at: string;
         };
-        /** ExportedConnection */
-        ExportedConnection: {
-            /** Username */
-            username?: string | null;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "pending" | "accepted";
-            /**
-             * Direction
-             * @enum {string}
-             */
-            direction: "incoming" | "outgoing";
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Accepted At */
-            accepted_at?: string | null;
-        };
         /** ExportedConversation */
         ExportedConversation: {
             /** With Username */
             with_username?: string | null;
             /** Messages */
             messages: components["schemas"]["ExportedMessage"][];
+        };
+        /** ExportedFollow */
+        ExportedFollow: {
+            /** Username */
+            username?: string | null;
+            /**
+             * Since
+             * Format: date-time
+             */
+            since: string;
         };
         /** ExportedMessage */
         ExportedMessage: {
@@ -1214,7 +1159,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "request_received" | "request_accepted" | "serve_received";
+            kind: "new_follower" | "followed_back" | "serve_received";
             /** Username */
             username?: string | null;
             /**
@@ -1243,10 +1188,10 @@ export interface components {
              */
             on_leaderboard: boolean;
             /**
-             * Accept Requests
+             * Allow Follows
              * @default true
              */
-            accept_requests: boolean;
+            allow_follows: boolean;
             /** Username */
             username?: string | null;
             /** Display Name */
@@ -1287,6 +1232,41 @@ export interface components {
             status?: ("good" | "borderline" | "off" | "unknown") | null;
             /** Plain */
             plain?: string | null;
+        };
+        /** FollowCounts */
+        FollowCounts: {
+            /** Followers */
+            followers: number;
+            /** Following */
+            following: number;
+            /** Friends */
+            friends: number;
+        };
+        /** FollowEntry */
+        FollowEntry: {
+            person: components["schemas"]["PersonSummary"];
+            /**
+             * Since
+             * Format: date-time
+             */
+            since: string;
+            /** You Follow */
+            you_follow: boolean;
+            /** Follows You */
+            follows_you: boolean;
+        };
+        /**
+         * FollowLists
+         * @description Your friends (people who follow each other with you), followers and following.
+         */
+        FollowLists: {
+            counts: components["schemas"]["FollowCounts"];
+            /** Friends */
+            friends: components["schemas"]["FollowEntry"][];
+            /** Followers */
+            followers: components["schemas"]["FollowEntry"][];
+            /** Following */
+            following: components["schemas"]["FollowEntry"][];
         };
         /** FrameLandmarks */
         FrameLandmarks: {
@@ -1555,7 +1535,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "request_received" | "request_accepted" | "serve_received";
+            kind: "new_follower" | "followed_back" | "serve_received";
             person?: components["schemas"]["PersonSummary"] | null;
             /** Conversation Id */
             conversation_id?: string | null;
@@ -1597,14 +1577,13 @@ export interface components {
              * Relationship
              * @enum {string}
              */
-            relationship: "self" | "none" | "requested" | "incoming" | "friends";
-            /** Connection Id */
-            connection_id?: string | null;
+            relationship: "self" | "none" | "following" | "follows_you" | "friends";
             /**
-             * Can Request
+             * Can Follow
              * @default false
              */
-            can_request: boolean;
+            can_follow: boolean;
+            counts: components["schemas"]["FollowCounts"];
             /** Bio */
             bio?: string | null;
             /** Friends Since */
@@ -1702,10 +1681,10 @@ export interface components {
             member_since: string;
             stats: components["schemas"]["ProfileStats"];
             /**
-             * Accept Requests
+             * Allow Follows
              * @default true
              */
-            accept_requests: boolean;
+            allow_follows: boolean;
         };
         /** ProfileStats */
         ProfileStats: {
@@ -1733,8 +1712,8 @@ export interface components {
             display_name?: string | null;
             /** Bio */
             bio?: string | null;
-            /** Accept Requests */
-            accept_requests?: boolean | null;
+            /** Allow Follows */
+            allow_follows?: boolean | null;
             /** Share Stats */
             share_stats?: boolean | null;
             /** Share Positions */
@@ -1791,11 +1770,6 @@ export interface components {
             reason: "not_a_serve" | "wrong_phases" | "wrong_tracking" | "wrong_feedback" | "was_a_serve" | "other";
             /** Note */
             note?: string | null;
-        };
-        /** RequestCount */
-        RequestCount: {
-            /** Incoming */
-            incoming: number;
         };
         /**
          * SendMessage
@@ -2905,7 +2879,7 @@ export interface operations {
             };
         };
     };
-    list_connections_connections_get: {
+    my_lists_follows_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2920,7 +2894,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConnectionList"];
+                    "application/json": components["schemas"]["FollowLists"];
                 };
             };
             /** @description Unauthorized */
@@ -2943,21 +2917,19 @@ export interface operations {
             };
         };
     };
-    send_request_connections_post: {
+    follow_follows__username__put: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                username: string;
+            };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UsernameRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3030,63 +3002,23 @@ export interface operations {
             };
         };
     };
-    count_requests_connections_count_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RequestCount"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    accept_request_connections__connection_id__accept_post: {
+    unfollow_follows__username__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                connection_id: string;
+                username: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            200: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["Connection"];
-                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
@@ -3117,12 +3049,12 @@ export interface operations {
             };
         };
     };
-    remove_connection_connections__connection_id__delete: {
+    remove_follower_followers__username__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                connection_id: string;
+                username: string;
             };
             cookie?: never;
         };

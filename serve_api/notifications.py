@@ -1,4 +1,4 @@
-"""Notifications: someone sent you a friend request, accepted yours, or sent you a serve.
+"""Notifications: someone followed you, followed you back (you're friends now), or sent you a serve.
 
 Messages have their own unread badge, so they aren't repeated here. Notifications from anyone
 hidden from you (a block either way, or a suspended account) are left out; ones about a request

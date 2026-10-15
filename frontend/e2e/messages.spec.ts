@@ -17,10 +17,9 @@ test("friends message each other, and it closes when the friendship ends", async
   const [annName, bobName] = [`ann_m${tag}`, `bob_m${tag}`];
   const ann = await personWithUsername(browser, baseURL, annName, "Ann Msg");
   const bob = await personWithUsername(browser, baseURL, bobName, "Bob Msg");
-  // Friends first: Ann asks, Bob accepts (both through the API; the UI for this is in friends.spec).
-  expect((await ann.request.post("/api/connections", { data: { username: bobName } })).status()).toBe(201);
-  const requestId = (await (await bob.request.get("/api/connections")).json()).incoming[0].id;
-  expect((await bob.request.post(`/api/connections/${requestId}/accept`)).status()).toBe(200);
+  // Friends first: each follows the other (through the API; the UI for this is in friends.spec).
+  expect((await ann.request.put(`/api/follows/${bobName}`)).status()).toBe(200);
+  expect((await bob.request.put(`/api/follows/${annName}`)).status()).toBe(200);
 
   // Ann opens the conversation from Bob's page and sends two lines.
   await ann.goto(`/u/${bobName}`);
@@ -65,9 +64,8 @@ test("friends message each other, and it closes when the friendship ends", async
   await bob.goto("/messages");
   await expectAccessible(bob, "the messages list");
 
-  // Bob ends the friendship: the conversation stays readable for both, but is closed.
-  const friendship = (await (await bob.request.get("/api/connections")).json()).friends[0].id;
-  expect((await bob.request.delete(`/api/connections/${friendship}`)).status()).toBe(204);
+  // Bob unfollows Ann, which ends the friendship: the conversation stays readable, but closed.
+  expect((await bob.request.delete(`/api/follows/${annName}`)).status()).toBe(204);
   await ann.reload();
   await expect(ann.getByText(/You're no longer friends\. You can still read the conversation\./)).toBeVisible();
   await expect(annThread).toContainText("Yes! 10am?");

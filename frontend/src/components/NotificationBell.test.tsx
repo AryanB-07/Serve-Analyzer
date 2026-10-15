@@ -26,8 +26,8 @@ const person = (username: string, display_name: string | null = null) => ({ user
 beforeEach(() => {
   fake.items = [
     { id: "n1", kind: "serve_received", person: person("ann", "Ann A"), conversation_id: "c1", created_at: new Date().toISOString(), read: false },
-    { id: "n2", kind: "request_accepted", person: person("bob"), conversation_id: null, created_at: "2026-10-01T10:00:00Z", read: false },
-    { id: "n3", kind: "request_received", person: person("carol"), conversation_id: null, created_at: "2026-09-01T10:00:00Z", read: true },
+    { id: "n2", kind: "followed_back", person: person("bob"), conversation_id: null, created_at: "2026-10-01T10:00:00Z", read: false },
+    { id: "n3", kind: "new_follower", person: person("carol"), conversation_id: null, created_at: "2026-09-01T10:00:00Z", read: true },
   ];
   fake.listNotifications.mockReset().mockImplementation(async () => fake.items);
   fake.countNotifications.mockReset().mockImplementation(async () => fake.items.filter((n) => !n.read).length);
@@ -52,8 +52,8 @@ describe("the notification bell", () => {
     await userEvent.click(bell);
     const ann = await screen.findByRole("link", { name: /Ann A sent you a serve/ });
     expect(ann).toHaveAttribute("href", "/messages/c1");
-    expect(screen.getByRole("link", { name: /@bob accepted your friend request/ })).toHaveAttribute("href", "/u/bob");
-    expect(screen.getByRole("link", { name: /@carol sent you a friend request/ })).toHaveAttribute("href", "/friends");
+    expect(screen.getByRole("link", { name: /@bob followed you back/ })).toHaveAttribute("href", "/u/bob");
+    expect(screen.getByRole("link", { name: /@carol started following you/ })).toHaveAttribute("href", "/u/carol");
     expect(within(ann).getByText("(new)")).toBeInTheDocument();
     await vi.waitFor(() => expect(fake.markNotificationsRead).toHaveBeenCalled());
     expect(await screen.findByRole("button", { name: "Notifications" })).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("the notification bell", () => {
     expect(bell).toHaveAttribute("aria-expanded", "false");
     expect(bell).toHaveFocus();
     await userEvent.click(bell);
-    await userEvent.click(await screen.findByRole("link", { name: /accepted your friend request/ }));
+    await userEvent.click(await screen.findByRole("link", { name: /followed you back/ }));
     expect(router.state.location.pathname).toBe("/u/bob");
     expect(bell).toHaveAttribute("aria-expanded", "false");
   });

@@ -67,8 +67,7 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
                              avatar_url=storage.presign("GET", avatar)[0] if avatar else None)
 
     def friends(a: str, b: str | None) -> bool:
-        conn = db.connection_between(a, b) if b else None
-        return bool(conn and conn["status"] == "accepted")
+        return db.are_friends(a, b)
 
     def mine(conversation_id: str, user: User) -> dict:
         """``user``'s side of the conversation; 404 if they aren't in it or there's a block."""

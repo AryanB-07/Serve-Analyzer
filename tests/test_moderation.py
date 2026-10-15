@@ -11,7 +11,7 @@ from serve_api.db import now
 from serve_api.storage import LocalStorage
 from serve_api.tables import notifications, released_usernames
 from tests.test_account import PASSWORD, app, client, db_of, mailer, signup  # noqa: F401
-from tests.test_connections import befriend, person
+from tests.test_follows import befriend, person
 from tests.test_messages import chat, say
 from tests.test_shared_serves import finished, send
 
@@ -39,26 +39,25 @@ def kinds(c: TestClient) -> list[tuple[str, str]]:
 
 # --- notifications -------------------------------------------------------------------------------
 
-def test_a_request_and_its_acceptance_are_announced(app, ann, bob):
-    ann.post("/connections", json={"username": "bob"})
-    assert kinds(bob) == [("request_received", "ann")]
+def test_a_follow_and_a_follow_back_are_announced(app, ann, bob):
+    ann.put("/follows/bob")
+    assert kinds(bob) == [("new_follower", "ann")]
     assert bob.get("/notifications/unread").json() == {"unread": 1}
-    request_id = bob.get("/connections").json()["incoming"][0]["id"]
-    bob.post(f"/connections/{request_id}/accept")
-    assert kinds(ann) == [("request_accepted", "bob")]
-    assert kinds(bob) == []  # the request is dealt with
+    bob.put("/follows/ann")
+    assert kinds(ann) == [("followed_back", "bob")]
 
 
-def test_asking_someone_who_already_asked_counts_as_accepting(app, ann, bob):
-    ann.post("/connections", json={"username": "bob"})
-    bob.post("/connections", json={"username": "ann"})
-    assert kinds(ann) == [("request_accepted", "bob")] and kinds(bob) == []
+def test_following_again_doesnt_pile_up_notifications(app, ann, bob):
+    for _ in range(3):
+        ann.put("/follows/bob")
+        ann.delete("/follows/bob")
+    ann.put("/follows/bob")
+    assert kinds(bob) == [("new_follower", "ann")]
 
 
-def test_a_cancelled_or_declined_request_isnt_announced_any_more(app, ann, bob):
-    ann.post("/connections", json={"username": "bob"})
-    request_id = ann.get("/connections").json()["outgoing"][0]["id"]
-    ann.delete(f"/connections/{request_id}")
+def test_an_unfollow_takes_its_notification_with_it(app, ann, bob):
+    ann.put("/follows/bob")
+    ann.delete("/follows/bob")
     assert kinds(bob) == []
 
 
@@ -73,7 +72,7 @@ def test_a_serve_sent_is_announced_with_its_conversation(app, settings, ann, bob
 
 
 def test_opening_notifications_marks_them_read(app, ann, bob):
-    ann.post("/connections", json={"username": "bob"})
+    ann.put("/follows/bob")
     assert bob.post("/notifications/read").status_code == 204
     assert bob.get("/notifications/unread").json() == {"unread": 0}
     assert bob.get("/notifications").json()[0]["read"] is True
@@ -88,10 +87,10 @@ def test_notifications_from_blocked_people_go(app, ann, bob):
 
 def test_notifications_go_with_the_account_and_after_90_days(app, settings, ann, bob):
     carol = person(app, "carol")
-    ann.post("/connections", json={"username": "bob"})
-    carol.post("/connections", json={"username": "bob"})
+    ann.put("/follows/bob")
+    carol.put("/follows/bob")
     ann.request("DELETE", "/auth/me", json={"password": PASSWORD})
-    assert kinds(bob) == [("request_received", "carol")]
+    assert kinds(bob) == [("new_follower", "carol")]
     assert bob.get("/auth/me/export").json()["notifications"][0]["username"] == "carol"
     db = db_of(app)
     with db.engine.begin() as conn:
@@ -160,12 +159,11 @@ def test_a_suspended_account_disappears_for_everyone_else(app, settings, ann, bo
     for c in (ann, bob):
         c.patch("/profile", json={"on_leaderboard": True})
     carol = person(app, "carol")
-    carol.post("/connections", json={"username": "bob"})
+    carol.put("/follows/bob")
     ops("suspend", "ann", "--reason", "harassment")
     ops("suspend", "carol", "--reason", "spam")
     assert bob.get("/people/ann").status_code == 404
-    assert bob.get("/connections").json() == {"friends": [], "incoming": [], "outgoing": []}
-    assert bob.get("/connections/count").json() == {"incoming": 0}
+    assert bob.get("/follows").json()["counts"] == {"followers": 0, "following": 0, "friends": 0}
     assert bob.get("/conversations").json() == [] and bob.get("/conversations/unread").json() == {"unread": 0}
     assert bob.get(f"/analyses/{analysis_id}").status_code == 404
     assert all(e["person"]["username"] != "ann" for e in bob.get("/leaderboard").json()["not_ranked"])

@@ -9,7 +9,7 @@ from serve_api.db import now
 from serve_api.storage import LocalStorage
 from serve_api.tables import user_reports
 from tests.test_account import PASSWORD, app, client, db_of, mailer, settings, signup  # noqa: F401
-from tests.test_connections import befriend, person
+from tests.test_follows import befriend, person
 
 
 @pytest.fixture
@@ -141,10 +141,10 @@ def test_an_opened_conversation_without_messages_isnt_listed(app, ann, bob):
 # --- when friendships end ------------------------------------------------------------------------
 
 def test_after_unfriending_the_conversation_stays_readable_but_closed(app, ann, bob):
-    friendship = befriend(ann, bob, "bob")
+    befriend(ann, bob, "bob")
     conv = chat(ann, "bob")
     say(ann, conv, "see you")
-    ann.delete(f"/connections/{friendship}")
+    ann.delete("/follows/bob")  # unfollowing ends the friendship
     assert bodies(bob, conv) == ["see you"]
     listed = bob.get("/conversations").json()[0]
     assert listed["can_send"] is False and listed["why_not"] == "You're no longer friends."

@@ -19,9 +19,8 @@ test("a serve sent to a friend opens read-only, until the message is deleted", a
   const [annName, bobName] = [`ann_s${tag}`, `bob_s${tag}`];
   const ann = await personWithUsername(browser, baseURL, annName, "Ann Share");
   const bob = await personWithUsername(browser, baseURL, bobName, "Bob Share");
-  expect((await ann.request.post("/api/connections", { data: { username: bobName } })).status()).toBe(201);
-  const requestId = (await (await bob.request.get("/api/connections")).json()).incoming[0].id;
-  expect((await bob.request.post(`/api/connections/${requestId}/accept`)).status()).toBe(200);
+  expect((await ann.request.put(`/api/follows/${bobName}`)).status()).toBe(200);
+  expect((await bob.request.put(`/api/follows/${annName}`)).status()).toBe(200);
 
   // Ann analyses the sample serve, then sends it to Bob from its results page.
   await ann.goto("/");

@@ -40,10 +40,12 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
   position phones store; the API checks the JPEG and strips any metadata left without decoding it. The profile shows your serve stats. Settings changes the profile,
   email and password (keeping this device signed in and signing out the rest), downloads your
   data and deletes the account.
-- **Friends:** find someone by their exact username (nobody is listed or suggested), send a
-  request, accept or decline, unfriend, and block. Friends see each other's bio; anyone else
-  sees only a name and picture. A blocked person can't find or contact the blocker and isn't
-  told. A badge counts waiting requests; on phones the sections move to a bottom tab bar.
+- **Following and friends:** find someone by their exact username (nobody is listed or
+  suggested) and follow them; two people who follow each other are friends (worked out from the
+  follows, never stored). Unfollow, remove a follower, or block. Lists of friends, followers and
+  following, with counts. Friends see each other's bio; anyone else sees a name, picture and
+  counts. A blocked person can't find or follow the blocker and isn't told. On phones the
+  sections move to a bottom tab bar.
   Friends can share serve stats (average, best, trend), key-position averages and a place on a
   friends leaderboard: each one opt-in, worked out on the server from the stored scores.
 - **Messages:** one-to-one between friends, with unread counts, "Seen", deleting your own
@@ -53,7 +55,7 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
 - **Sending serves:** send one of your analyses in a message, or with "Send to a friend" from its
   results page. The friend opens it read-only (no note, filename or original video) and can
   compare it with one of their own, until the message is deleted or the friendship ends.
-- **Notifications and safety:** a bell for friend requests, accepted requests and serves sent
+- **Notifications and safety:** a bell for new followers, follow-backs and serves sent
   to you. A username someone gives up is held for them for 30 days, so it can't be taken to
   impersonate them. `python -m serve_api.moderate` shows the reports about an account and
   suspends it (it can't sign in, and is hidden from everyone) or lifts the suspension.
@@ -466,8 +468,9 @@ frontend/
 | `GET /profile/username-check?username=` | Whether a username is valid and free |
 | `PUT /profile/avatar`, `DELETE` | Set (a square JPEG up to 1 MB) or remove the profile picture |
 | `GET /people/{username}` | Someone's page as you see them, and where you stand (404 for no one, or a block) |
-| `GET /connections`, `GET /connections/count` | Your friends, requests in and out; how many are waiting |
-| `POST /connections`, `POST /connections/{id}/accept`, `DELETE /connections/{id}` | Ask, accept, and cancel, decline or unfriend |
+| `GET /follows` | Your friends, followers and following, with counts |
+| `PUT /follows/{username}`, `DELETE /follows/{username}` | Follow (or follow back) and unfollow; both idempotent |
+| `DELETE /followers/{username}` | Remove a follower |
 | `GET /blocks`, `POST /blocks`, `DELETE /blocks/{username}` | Blocked people |
 | `GET /leaderboard` | You and your friends who joined it, ranked by the average of each one's latest serves |
 | `GET /conversations`, `POST /conversations`, `GET /conversations/unread` | Your conversations; open one with a friend; the unread total |

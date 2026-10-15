@@ -7,7 +7,8 @@ migrations as the API would at startup, and gives analyses from before History's
 scores (the worker's housekeeping step). Then, signed in as each account (a short-lived session
 made directly, so no passwords are needed, and removed afterwards):
 
-- /auth/me, the profile (and its picture), friends, requests, blocks, each friend's page,
+- /auth/me, the profile (and its picture), friends, followers and following (counts matching
+  the lists), blocks, each of their pages,
   conversations and their messages, and the leaderboard;
 - the data download;
 - that suspended accounts appear nowhere anyone else looks (and are skipped, since they
@@ -75,7 +76,7 @@ class Check:
 
 def check_hidden(c: Check, client: TestClient, who: str, hidden_names: set[str]) -> None:
     """Suspended accounts appear nowhere another account looks."""
-    for path in ("/connections", "/conversations", "/notifications", "/leaderboard"):
+    for path in ("/follows", "/conversations", "/notifications", "/leaderboard"):
         res = client.get(path)
         if res.status_code == 200:
             for name in hidden_names:
@@ -96,8 +97,7 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
             path = parts.path.removeprefix(settings.public_base.rstrip("/"))
             c.get(client, f"{path}?{parts.query}", f"{who} profile picture")
         c.counts["profile pictures"] += 1
-    links = c.get(client, "/connections", f"{who} friends")
-    c.get(client, "/connections/count", f"{who} request count")
+    links = c.get(client, "/follows", f"{who} friends, followers and following")
     notes = c.get(client, "/notifications", f"{who} notifications")
     c.get(client, "/notifications/unread", f"{who} notification count")
     if notes.status_code == 200:
@@ -122,9 +122,11 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
     if board.status_code == 200:
         c.counts["leaderboard places"] += len(board.json()["ranked"]) + len(board.json()["not_ranked"])
     if links.status_code == 200:
-        for group, items in links.json().items():
-            for item in items:
-                c.counts[f"connections ({group})"] += 1
+        lists = links.json()
+        for group in ("friends", "followers", "following"):
+            c.expect(lists["counts"][group] == len(lists[group]), f"{who}: {group} count doesn't match the list")
+            for item in lists[group]:
+                c.counts[f"follows ({group})"] += 1
                 if name := item["person"]["username"]:
                     c.get(client, f"/people/{name}", f"{who} sees @{name}")
 

@@ -103,10 +103,15 @@ export function PrivacyPage() {
         <ul className={list}>
           <li>
             Until you choose a username, nobody can find you. Once you have one, anyone signed in who types it exactly sees
-            your display name, username and picture. Nobody is listed or suggested to anyone.
+            your display name, username, picture, and how many followers, following and friends you have. Nobody is
+            listed or suggested to anyone.
           </li>
           <li>
-            Friends (people whose request you accepted, or who accepted yours) also see your bio. They see your serve stats
+            Anyone who can see you can follow you, unless you turn that off in Settings; people you follow can always
+            follow you back. Following is one-way. Two people who follow each other are friends.
+          </li>
+          <li>
+            Friends also see your bio. They see your serve stats
             (how many, average, best, trend), your key-position averages and your place on the friends leaderboard only if
             you turn each one on in Settings; all are off to start with. Nobody sees your email or notes, and turning a
             setting off hides it straight away.
@@ -119,10 +124,11 @@ export function PrivacyPage() {
             their screen, so only send serves to people you trust with them.
           </li>
           <li>
-            You can stop people sending you friend requests, remove a friend, or block someone in Settings or on their page.
-            Someone you block can't find you or send you requests, and isn't told.
+            You can stop new people following you, unfollow someone, remove a follower, or block someone, in Settings or
+            on their page. Blocking removes the follows both ways; someone you block can't find you or follow you, and
+            isn't told.
           </li>
-          <li>We record friend requests, friendships and blocks, with when they happened. They're in your data download.</li>
+          <li>We record who you follow, who follows you and who you've blocked, with when. They're in your data download.</li>
           <li>
             <strong>Messages</strong> go only between friends, and only the two of you can read them. We don't read
             them, except a message someone reports to us: a copy of it is kept with the report so we can look into it.
@@ -196,7 +202,7 @@ export function PrivacyPage() {
             you; deleting your account deletes every message you sent, while the other person keeps their own.
           </li>
           <li>
-            <strong>Notifications</strong> (a friend request, an accepted request, a serve sent to you): 90 days.
+            <strong>Notifications</strong> (a new follower, a follow back, a serve sent to you): 90 days.
           </li>
           <li>
             <strong>A username you give up</strong> (by changing it, or deleting your account) is held for 30 days, so

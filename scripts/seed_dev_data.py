@@ -25,7 +25,7 @@ Deliberately awkward rows, the kind real data accumulates:
   recorded; an account with nothing in it;
 - profiles: one with a name, bio and picture, ones without a picture or name, and one that
   has never set one (like every account from before profiles existed);
-- friends: a friendship, a request waiting for an answer, a block, and different choices of
+- follows: a friendship (mutual follows), a one-way follow, a block, and different choices of
   what to share with friends; a conversation with an unread reply, a deleted message and a
   serve sent to a friend; a report; notifications; a suspended account that was the player's
   friend (it must stay hidden from everyone).
@@ -300,11 +300,11 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
     seeder.profile(newbie, username="seed_newbie")
     made["new"] = 0
 
-    # Friends: the player and the lefty are friends; the newcomer has asked the player; the
+    # Friends: the player and the lefty follow each other; the newcomer follows the player; the
     # lefty has blocked a fifth account, which has a username but nothing else.
-    friendship = seeder.db.request_connection(lefty, player)
-    seeder.db.accept_connection(friendship["id"], player)
-    seeder.db.request_connection(newbie, player)
+    seeder.db.follow(lefty, player)  # friends: each follows the other
+    seeder.db.follow(player, lefty)
+    seeder.db.follow(newbie, player)  # a follower the player hasn't followed back
     pest = seeder.user("blocked", age_days=20)
     seeder.profile(pest, username="seed_blocked", display_name="Blocked Ben")
     seeder.db.block(lefty, pest)
@@ -338,18 +338,18 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
                                message_id=None, message_body=None, reason="spam", note="Kept sending requests.")
 
     # Notifications, as the API would have made them.
-    seeder.db.notify(player, "request_received", newbie)
-    seeder.db.notify(lefty, "request_accepted", player)
+    seeder.db.notify(player, "new_follower", newbie)
+    seeder.db.notify(lefty, "followed_back", player)
     seeder.db.notify(lefty, "serve_received", player, conv["id"])
 
     # A suspended account that was the player's friend and messaged them: hidden from everyone now.
     banned = seeder.user("suspended", age_days=60)
     seeder.profile(banned, username="seed_suspended", display_name="Sus Pended")
-    link = seeder.db.request_connection(banned, player)
-    seeder.db.accept_connection(link["id"], player)
+    seeder.db.follow(banned, player)
+    seeder.db.follow(player, banned)
     banned_chat = seeder.db.conversation_with(banned, player, create=True)
     seeder.db.add_message(banned_chat["id"], banned, "buy followers at …")
-    seeder.db.notify(player, "request_accepted", banned)
+    seeder.db.notify(player, "followed_back", banned)
     seeder.db.save_user_report(reporter_id=player, reported_id=banned, reported_username="seed_suspended",
                                message_id=None, message_body="buy followers at …", reason="spam", note=None)
     seeder.db.suspend(banned, "Spam (seed data)")

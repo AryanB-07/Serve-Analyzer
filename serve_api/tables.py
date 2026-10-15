@@ -8,6 +8,7 @@ from sqlalchemy import (
     JSON,
     BigInteger,
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
@@ -112,28 +113,26 @@ profiles = Table(
     # Storage key of the current profile picture (keys.avatar_key), or none.
     Column("avatar_key", String(255)),
     Column("updated_at", UTCDateTime, nullable=False),
-    # Privacy: whether anyone who knows your username can send you a friend request.
-    Column("accept_requests", Boolean, nullable=False, server_default=true()),
+    # Privacy: whether anyone who knows your username can follow you. Someone you follow can
+    # always follow you back.
+    Column("allow_follows", Boolean, nullable=False, server_default=true()),
     # What friends may see of your serves; all off until you turn them on.
     Column("share_stats", Boolean, nullable=False, server_default=false()),
     Column("share_positions", Boolean, nullable=False, server_default=false()),
     Column("on_leaderboard", Boolean, nullable=False, server_default=false()),
 )
 
-connections = Table(
-    "connections",
+follows = Table(
+    "follows",
     metadata,
-    # A friend request, and once accepted, a friendship. One per pair of people, whichever of
-    # them asked: `pair` is both ids in sorted order, under a unique index.
-    Column("id", String(32), primary_key=True),
-    Column("requester_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-    Column("addressee_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-    Column("pair", String(65), nullable=False, unique=True),
-    Column("status", String(16), nullable=False),  # "pending" | "accepted"
+    # One-way: the follower follows the followee. Two people are friends when each follows the
+    # other; that's worked out from these rows (Database.are_friends), never stored, so it can't
+    # drift out of step.
+    Column("follower_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("followee_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("created_at", UTCDateTime, nullable=False),
-    Column("accepted_at", UTCDateTime),
-    Index("connections_addressee", "addressee_id", "status"),
-    Index("connections_requester", "requester_id", "status"),
+    CheckConstraint("follower_id <> followee_id", name="follows_not_self"),
+    Index("follows_followee", "followee_id"),
 )
 
 conversations = Table(
@@ -195,10 +194,10 @@ user_reports = Table(
 notifications = Table(
     "notifications",
     metadata,
-    # "Ann accepted your friend request", "Bob sent you a serve". Deleted with either account.
+    # "Ann followed you back", "Bob sent you a serve". Deleted with either account.
     Column("id", String(32), primary_key=True),
     Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-    Column("kind", String(32), nullable=False),  # request_received | request_accepted | serve_received
+    Column("kind", String(32), nullable=False),  # new_follower | followed_back | serve_received
     Column("actor_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("conversation_id", String(32), ForeignKey("conversations.id", ondelete="CASCADE")),
     Column("created_at", UTCDateTime, nullable=False),

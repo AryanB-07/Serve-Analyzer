@@ -2,7 +2,7 @@ import { useId, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import { ApiError } from "../../api/client";
-import { useAcceptRequest, useBlock, usePerson, useRemoveConnection, useSendRequest } from "../../api/friends";
+import { useBlock, useFollow, usePerson, useRemoveFollower, useUnfollow } from "../../api/friends";
 import { useStartConversation } from "../../api/messages";
 import type { Person } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
@@ -19,71 +19,98 @@ const secondary = "rounded-lg border border-border px-4 py-2 text-sm font-semibo
 const when = (iso: string) => new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
 
 function Actions({ person }: { person: Person }) {
-  const send = useSendRequest();
-  const accept = useAcceptRequest();
-  const remove = useRemoveConnection();
-  const [confirmUnfriend, setConfirmUnfriend] = useState(false);
+  const follow = useFollow();
+  const unfollow = useUnfollow();
+  const removeFollower = useRemoveFollower();
   const start = useStartConversation();
   const navigate = useNavigate();
-  const busy = send.isPending || accept.isPending || remove.isPending;
-  const error = send.error ?? accept.error ?? remove.error ?? start.error;
-  const message = () => start.mutate(person.username!, { onSuccess: (c) => navigate(`/messages/${c.id}`) });
+  const [confirming, setConfirming] = useState<null | "unfollow" | "remove">(null);
+  const busy = follow.isPending || unfollow.isPending || removeFollower.isPending;
+  const error = follow.error ?? unfollow.error ?? removeFollower.error ?? start.error;
   const name = displayName(person);
+  const username = person.username!;
+  const done = { onSuccess: () => setConfirming(null) };
+  const message = () => start.mutate(username, { onSuccess: (c) => navigate(`/messages/${c.id}`) });
 
   let actions;
-  switch (person.relationship) {
-    case "self":
-      actions = <Link to="/profile" className={secondary}>This is you: open your profile</Link>;
-      break;
-    case "none":
-      actions = person.can_request ? (
-        <button type="button" disabled={busy} onClick={() => send.mutate(person.username!)} className={primary}>
-          {send.isPending ? "Sending…" : "Add friend"}
+  if (confirming) {
+    actions = (
+      <>
+        <p className="w-full text-sm">
+          {confirming === "remove" ? `Remove ${name} from your followers? They won't be told.`
+            : person.relationship === "friends" ? `Unfollow ${name}? You won't be friends any more, and they won't be told.`
+              : `Unfollow ${name}?`}
+        </p>
+        <button type="button" disabled={busy} className={secondary}
+          onClick={() => (confirming === "remove" ? removeFollower.mutate(username, done) : unfollow.mutate(username, done))}>
+          {confirming === "remove" ? "Remove follower" : "Unfollow"}
         </button>
-      ) : (
-        <p className="text-sm text-ink-muted">{name} isn't accepting friend requests.</p>
-      );
-      break;
-    case "requested":
-      actions = (
-        <>
-          <p className="text-sm text-ink-muted">Request sent.</p>
-          <button type="button" disabled={busy} onClick={() => remove.mutate(person.connection_id!)} className={secondary}>Cancel request</button>
-        </>
-      );
-      break;
-    case "incoming":
-      actions = (
-        <>
-          <p className="w-full text-sm">{name} wants to be friends.</p>
-          <button type="button" disabled={busy} onClick={() => accept.mutate(person.connection_id!)} className={primary}>Accept</button>
-          <button type="button" disabled={busy} onClick={() => remove.mutate(person.connection_id!)} className={secondary}>Decline</button>
-        </>
-      );
-      break;
-    case "friends":
-      actions = confirmUnfriend ? (
-        <>
-          <p className="w-full text-sm">Remove {name} from your friends? They won't be told.</p>
-          <button type="button" disabled={busy} onClick={() => remove.mutate(person.connection_id!)} className={secondary}>Remove friend</button>
-          <button type="button" onClick={() => setConfirmUnfriend(false)} className="px-2 text-sm text-ink-muted hover:text-ink">Cancel</button>
-        </>
-      ) : (
-        <>
-          <button type="button" disabled={start.isPending} onClick={message} className={primary}>
-            {start.isPending ? "Opening…" : "Message"}
+        <button type="button" onClick={() => setConfirming(null)} className="px-2 text-sm text-ink-muted hover:text-ink">Cancel</button>
+      </>
+    );
+  } else {
+    switch (person.relationship) {
+      case "self":
+        actions = <Link to="/profile" className={secondary}>This is you: open your profile</Link>;
+        break;
+      case "none":
+        actions = person.can_follow ? (
+          <button type="button" disabled={busy} onClick={() => follow.mutate(username)} className={primary}>
+            {follow.isPending ? "Following…" : "Follow"}
           </button>
-          <p className="text-sm text-good">Friends{person.friends_since ? ` since ${when(person.friends_since)}` : ""}</p>
-          <button type="button" onClick={() => setConfirmUnfriend(true)} className="text-sm text-ink-muted hover:text-ink">Remove friend…</button>
-        </>
-      );
-      break;
+        ) : (
+          <p className="text-sm text-ink-muted">{name} isn't accepting new followers.</p>
+        );
+        break;
+      case "follows_you":
+        actions = (
+          <>
+            <p className="w-full text-sm">{name} follows you. Follow back to be friends.</p>
+            <button type="button" disabled={busy} onClick={() => follow.mutate(username)} className={primary}>Follow back</button>
+            <button type="button" onClick={() => setConfirming("remove")} className="text-sm text-ink-muted hover:text-ink">Remove follower…</button>
+          </>
+        );
+        break;
+      case "following":
+        actions = (
+          <>
+            <p className="text-sm text-ink-muted">You follow {name}. You'll be friends if they follow you back.</p>
+            <button type="button" onClick={() => setConfirming("unfollow")} className={secondary}>Unfollow</button>
+          </>
+        );
+        break;
+      case "friends":
+        actions = (
+          <>
+            <button type="button" disabled={start.isPending} onClick={message} className={primary}>
+              {start.isPending ? "Opening…" : "Message"}
+            </button>
+            <p className="text-sm text-good">Friends{person.friends_since ? ` since ${when(person.friends_since)}` : ""}</p>
+            <button type="button" onClick={() => setConfirming("unfollow")} className="text-sm text-ink-muted hover:text-ink">Unfriend…</button>
+          </>
+        );
+        break;
+    }
   }
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">{actions}</div>
       {error && <p role="alert" className="text-sm text-bad">{friendsErrorMessage(error)}</p>}
     </div>
+  );
+}
+
+function Counts({ person }: { person: Person }) {
+  const { followers, following, friends } = person.counts;
+  const item = (n: number, one: string, many: string) => (
+    <span><span className="tabular font-semibold text-ink">{n}</span> {n === 1 ? one : many}</span>
+  );
+  return (
+    <p className="flex flex-wrap justify-center gap-x-4 text-sm text-ink-muted sm:justify-start">
+      {item(followers, "follower", "followers")}
+      {item(following, "following", "following")}
+      {item(friends, "friend", "friends")}
+    </p>
   );
 }
 
@@ -186,7 +213,7 @@ function BlockControl({ person, onBlocked }: { person: Person; onBlocked: (name:
   return open ? (
     <div role="group" aria-labelledby={id} className="space-y-2 rounded-xl border border-bad/40 p-4">
       <p id={id} className="text-sm">
-        Block {name}? Any request or friendship between you ends. They won't be able to find you, and won't be told.
+        Block {name}? Neither of you will follow the other any more. They won't be able to find you, and won't be told.
       </p>
       {block.error && <p role="alert" className="text-sm text-bad">{friendsErrorMessage(block.error)}</p>}
       <div className="flex gap-2">
@@ -246,9 +273,10 @@ export function PersonPage() {
               <h1 className="break-words text-2xl font-semibold tracking-tight">{displayName(p)}</h1>
               {p.display_name && <p className="text-ink-muted">@{p.username}</p>}
             </div>
+            <Counts person={p} />
             {p.bio && <p className="whitespace-pre-line break-words">{p.bio}</p>}
             {p.relationship !== "friends" && p.relationship !== "self" && (
-              <p className="text-xs text-ink-muted">Friends see more of each other's profile.</p>
+              <p className="text-xs text-ink-muted">Friends (people who follow each other) see more of each other's profile.</p>
             )}
             <Actions person={p} />
           </div>

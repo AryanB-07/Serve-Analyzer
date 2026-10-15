@@ -32,7 +32,7 @@ from .purge import analysis_prefixes, run_purges
 from .schemas import (
     ChangePasswordRequest,
     ExportedBlock,
-    ExportedConnection,
+    ExportedFollow,
     ExportedConversation,
     ExportedMessage,
     ExportedNotification,
@@ -187,10 +187,10 @@ class Auth:
                 files=files,
             ))
         profile = self.db.get_profile(user.id)
-        links = self.db.connections_of(user.id)
+        lists = self.db.follow_lists(user.id)
         blocked = self.db.blocked_by(user.id)
-        others = self.db.profiles_of([c["addressee_id"] if c["requester_id"] == user.id else c["requester_id"]
-                                      for c in links] + [b["blocked_id"] for b in blocked])
+        others = self.db.profiles_of([f["user_id"] for f in lists["followers"] + lists["following"]]
+                                     + [b["blocked_id"] for b in blocked])
         chats = self.db.conversations_of(user.id)
         others.update(self.db.profiles_of([c["other_id"] for c in chats if c["other_id"]]))
         name_of = lambda uid: (others.get(uid) or {}).get("username")  # noqa: E731
@@ -211,14 +211,12 @@ class Auth:
                 terms_version=row.get("terms_version"), terms_accepted_at=row.get("terms_accepted_at")),
             profile=ExportedProfile(
                 username=profile["username"], display_name=profile["display_name"], bio=profile["bio"],
-                accept_requests=profile["accept_requests"], share_stats=profile["share_stats"],
+                allow_follows=profile["allow_follows"], share_stats=profile["share_stats"],
                 share_positions=profile["share_positions"], on_leaderboard=profile["on_leaderboard"],
                 avatar=url_for(profile["avatar_key"]) if profile["avatar_key"] else None) if profile else None,
             analyses=items,
-            connections=[ExportedConnection(
-                username=name_of(c["addressee_id"] if c["requester_id"] == user.id else c["requester_id"]),
-                status=c["status"], direction="outgoing" if c["requester_id"] == user.id else "incoming",
-                created_at=c["created_at"], accepted_at=c["accepted_at"]) for c in links],
+            following=[ExportedFollow(username=name_of(f["user_id"]), since=f["since"]) for f in lists["following"]],
+            followers=[ExportedFollow(username=name_of(f["user_id"]), since=f["since"]) for f in lists["followers"]],
             blocks=[ExportedBlock(username=name_of(b["blocked_id"]), blocked_at=b["created_at"]) for b in blocked],
             conversations=conversations,
             reports_made=reports_made,

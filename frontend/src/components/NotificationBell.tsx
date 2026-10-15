@@ -6,14 +6,13 @@ import type { Notification } from "../api/types";
 import { Avatar } from "./Avatar";
 
 const TEXT: Record<Notification["kind"], string> = {
-  request_received: "sent you a friend request",
-  request_accepted: "accepted your friend request",
+  new_follower: "started following you",
+  followed_back: "followed you back. You're friends now",
   serve_received: "sent you a serve",
 };
 
 function linkFor(n: Notification): string {
   if (n.kind === "serve_received" && n.conversation_id) return `/messages/${n.conversation_id}`;
-  if (n.kind === "request_received") return "/friends";
   return n.person?.username ? `/u/${n.person.username}` : "/friends";
 }
 
@@ -90,7 +89,7 @@ export function NotificationBell() {
           ) : list.isError ? (
             <p role="alert" className="px-3 py-2 text-sm text-bad">We couldn't load your notifications.</p>
           ) : items.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-ink-muted">Nothing new. Friend requests and serves sent to you show here.</p>
+            <p className="px-3 py-2 text-sm text-ink-muted">Nothing new. New followers and serves sent to you show here.</p>
           ) : (
             <ul className="max-h-96 overflow-y-auto">
               {items.map((n) => (

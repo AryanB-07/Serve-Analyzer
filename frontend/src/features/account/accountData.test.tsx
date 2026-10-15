@@ -38,7 +38,8 @@ const EXPORT: DataExport = {
   analyses: [
     { id: "a1", filename: "serve.mp4", hand: "right", status: "succeeded", created_at: "2026-10-01T10:00:00Z", files: {} },
     { id: "a2", filename: "two.mov", hand: "right", status: "failed", created_at: "2026-10-02T10:00:00Z", files: {} },
-  ],  connections: [],
+  ],  following: [],
+  followers: [],
   blocks: [],
   conversations: [],
   reports_made: [],

@@ -3,13 +3,12 @@ import type {
   AnalysisResult,
   AnalysisSummary,
   BlockedPerson,
-  Connection,
-  ConnectionList,
   ConversationSummary,
   CreateAnalysisRequest,
   CreateAnalysisResponse,
   Credentials,
   DataExport,
+  FollowLists,
   FramesPayload,
   Leaderboard,
   Message,
@@ -80,14 +79,14 @@ export interface ApiClient {
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
   /** Someone's page by username; 404 if there's no one (or a block either way). */
   getPerson(username: string): Promise<Person>;
-  listConnections(): Promise<ConnectionList>;
-  /** Friend requests waiting for you. */
-  countRequests(): Promise<number>;
-  /** Send a friend request (or accept theirs, if they'd already asked you). */
-  sendRequest(username: string): Promise<Person>;
-  acceptRequest(connectionId: string): Promise<Connection>;
-  /** Cancel, decline or unfriend. */
-  removeConnection(connectionId: string): Promise<void>;
+  /** Your friends (people who follow each other with you), followers and following. */
+  listFollows(): Promise<FollowLists>;
+  /** Follow someone, or follow them back. Doing it twice is harmless. */
+  follow(username: string): Promise<Person>;
+  /** Stop following; ends a friendship. Harmless if you weren't following. */
+  unfollow(username: string): Promise<void>;
+  /** Remove someone from your followers. */
+  removeFollower(username: string): Promise<void>;
   listBlocks(): Promise<BlockedPerson[]>;
   /** You and your friends who joined it, ranked. */
   getLeaderboard(): Promise<Leaderboard>;
@@ -232,11 +231,10 @@ export const httpClient: ApiClient = {
   setAvatar: (jpeg) => request("/profile/avatar", { method: "PUT", body: jpeg, headers: { "Content-Type": "image/jpeg" } }),
   removeAvatar: () => request("/profile/avatar", { method: "DELETE" }),
   getPerson: (username) => request(`/people/${encodeURIComponent(username)}`),
-  listConnections: () => request("/connections"),
-  countRequests: async () => (await request<{ incoming: number }>("/connections/count")).incoming,
-  sendRequest: (username) => request("/connections", { method: "POST", body: JSON.stringify({ username }) }),
-  acceptRequest: (id) => request(`/connections/${encodeURIComponent(id)}/accept`, { method: "POST" }),
-  removeConnection: (id) => request(`/connections/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  listFollows: () => request("/follows"),
+  follow: (username) => request(`/follows/${encodeURIComponent(username)}`, { method: "PUT" }),
+  unfollow: (username) => request(`/follows/${encodeURIComponent(username)}`, { method: "DELETE" }),
+  removeFollower: (username) => request(`/followers/${encodeURIComponent(username)}`, { method: "DELETE" }),
   listBlocks: () => request("/blocks"),
   getLeaderboard: () => request("/leaderboard"),
   listConversations: () => request("/conversations"),

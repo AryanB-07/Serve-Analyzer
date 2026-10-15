@@ -3,20 +3,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from ".";
 
 export const friendsKeys = {
-  connections: ["connections"] as const,
-  count: ["connections", "count"] as const,
+  follows: ["follows"] as const,
   person: (username: string) => ["person", username.toLowerCase()] as const,
   blocks: ["blocks"] as const,
   leaderboard: ["leaderboard"] as const,
 };
 
-export function useConnections() {
-  return useQuery({ queryKey: friendsKeys.connections, queryFn: () => api.listConnections() });
-}
-
-/** Requests waiting for you, for the navigation's badge: checked every minute and on focus. */
-export function useRequestCount(enabled = true) {
-  return useQuery({ queryKey: friendsKeys.count, queryFn: () => api.countRequests(), enabled, refetchInterval: 60_000 });
+/** Your friends, followers and following, with counts. */
+export function useFollows() {
+  return useQuery({ queryKey: friendsKeys.follows, queryFn: () => api.listFollows() });
 }
 
 /** Someone's page. A 404 (no one, or a block) isn't retried. */
@@ -43,7 +38,7 @@ function useFriendsMutation<T>(run: (arg: T) => Promise<unknown>) {
     mutationFn: run,
     onSettled: () =>
       Promise.all([
-        queryClient.invalidateQueries({ queryKey: friendsKeys.connections }),
+        queryClient.invalidateQueries({ queryKey: friendsKeys.follows }),
         queryClient.invalidateQueries({ queryKey: ["person"] }),
         queryClient.invalidateQueries({ queryKey: friendsKeys.blocks }),
         queryClient.invalidateQueries({ queryKey: friendsKeys.leaderboard }),
@@ -51,8 +46,8 @@ function useFriendsMutation<T>(run: (arg: T) => Promise<unknown>) {
   });
 }
 
-export const useSendRequest = () => useFriendsMutation((username: string) => api.sendRequest(username));
-export const useAcceptRequest = () => useFriendsMutation((id: string) => api.acceptRequest(id));
-export const useRemoveConnection = () => useFriendsMutation((id: string) => api.removeConnection(id));
+export const useFollow = () => useFriendsMutation((username: string) => api.follow(username));
+export const useUnfollow = () => useFriendsMutation((username: string) => api.unfollow(username));
+export const useRemoveFollower = () => useFriendsMutation((username: string) => api.removeFollower(username));
 export const useBlock = () => useFriendsMutation((username: string) => api.block(username));
 export const useUnblock = () => useFriendsMutation((username: string) => api.unblock(username));

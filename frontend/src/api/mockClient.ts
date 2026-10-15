@@ -72,10 +72,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   const notes = new Map<string, string | null>();
   let pendingEmail: string | null = null;
   let profile: {
-    username: string | null; display_name: string | null; bio: string | null; avatar_url: string | null; accept_requests: boolean;
+    username: string | null; display_name: string | null; bio: string | null; avatar_url: string | null; allow_follows: boolean;
     share_stats: boolean; share_positions: boolean; on_leaderboard: boolean;
   } = {
-    username: null, display_name: null, bio: null, avatar_url: null, accept_requests: true,
+    username: null, display_name: null, bio: null, avatar_url: null, allow_follows: true,
     share_stats: false, share_positions: false, on_leaderboard: false,
   };
   // The pretend friend shares everything, so friends' stats and the leaderboard show in mock mode.
@@ -98,10 +98,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     ["serve_queen", { display_name: "Serena Q", bio: "Coach. Ask me about the trophy position." }],
     ["taken", { display_name: "Tay Ken", bio: "" }],
   ]);
-  const links = new Map<string, { id: string; status: "pending" | "accepted"; direction: "incoming" | "outgoing"; created_at: string; accepted_at: string | null }>([
-    ["ace", { id: "c-ace", status: "accepted", direction: "outgoing", created_at: "2026-09-01T10:00:00Z", accepted_at: "2026-09-02T10:00:00Z" }],
-    ["serve_queen", { id: "c-queen", status: "pending", direction: "incoming", created_at: "2026-10-10T10:00:00Z", accepted_at: null }],
-  ]);
+  // Who follows whom in mock mode (username -> since): Ace and you follow each other (friends);
+  // Serena follows you and you haven't followed back.
+  const iFollow = new Map<string, string>([["ace", "2026-09-01T10:00:00Z"]]);
+  const followsMe = new Map<string, string>([["ace", "2026-09-02T10:00:00Z"], ["serve_queen", "2026-10-10T10:00:00Z"]]);
   const blocked = new Map<string, string>();
   let notificationsRead = false;
   // Mock conversations, keyed by the other person's username.
@@ -123,7 +123,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     if (!entry || blocked.has(entry[0])) throw new ApiError(404, "Conversation not found");
     return entry;
   };
-  const isFriend = (username: string) => links.get(username)?.status === "accepted";
+  const isFriend = (username: string) => iFollow.has(username) && followsMe.has(username);
   function conversationSummary(username: string) {
     const chat = chats.get(username)!;
     const last = chat.messages[chat.messages.length - 1];
@@ -135,16 +135,22 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     };
   }
   const summaryOf = (username: string) => ({ username, display_name: people.get(username)?.display_name ?? null, avatar_url: null });
+  const mockCounts = (username: string) => ({ followers: username === "ace" ? 14 : 3, following: username === "ace" ? 11 : 2, friends: username === "ace" ? 6 : 1 });
   function personOf(username: string): Person {
-    if (username === profile.username) return { ...summaryOf(username), display_name: profile.display_name, relationship: "self", can_request: false, bio: profile.bio };
-    const link = links.get(username);
-    const relationship = !link ? "none" : link.status === "accepted" ? "friends" : link.direction === "outgoing" ? "requested" : "incoming";
+    if (username === profile.username) {
+      return { ...summaryOf(username), display_name: profile.display_name, relationship: "self", can_follow: false, bio: profile.bio,
+        counts: { followers: followsMe.size, following: iFollow.size, friends: [...iFollow.keys()].filter(isFriend).length } };
+    }
+    const you = iFollow.has(username);
+    const them = followsMe.has(username);
+    const relationship = you && them ? "friends" : you ? "following" : them ? "follows_you" : "none";
+    const friends = relationship === "friends";
     return {
-      ...summaryOf(username), relationship, connection_id: link?.id ?? null, can_request: relationship === "none",
-      bio: relationship === "friends" ? people.get(username)?.bio || null : null,
-      friends_since: relationship === "friends" ? link!.accepted_at : null,
-      stats: relationship === "friends" && username === "ace" ? aceStats() : null,
-      positions: relationship === "friends" && username === "ace" ? acePositions : null,
+      ...summaryOf(username), relationship, counts: mockCounts(username), can_follow: !you,
+      bio: friends ? people.get(username)?.bio || null : null,
+      friends_since: friends ? [iFollow.get(username)!, followsMe.get(username)!].sort()[1]! : null,
+      stats: friends && username === "ace" ? aceStats() : null,
+      positions: friends && username === "ace" ? acePositions : null,
     };
   }
   function findPerson(username: string): string {
@@ -152,7 +158,6 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     if ((!people.has(name) && name !== profile.username) || blocked.has(name)) throw new ApiError(404, "No one has that username.");
     return name;
   }
-  const usernameOfLink = (id: string) => [...links.entries()].find(([, l]) => l.id === id)?.[0];
   // Pretend someone else has these, so "taken" can be tried in mock mode.
   const takenUsernames = new Set(["taken", "ace", "serve_queen"]);
 
@@ -285,7 +290,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         exported_at: ts.toISOString(),
         links_expire_at: new Date(ts.getTime() + 6 * 3600_000).toISOString(),
         account: { email: user.email, email_verified: user.email_verified ?? false, created_at: user.created_at },
-        connections: [...links.entries()].map(([username, l]) => ({ username, status: l.status, direction: l.direction, created_at: l.created_at, accepted_at: l.accepted_at })),
+        following: [...iFollow.entries()].map(([username, since]) => ({ username, since })),
+        followers: [...followsMe.entries()].map(([username, since]) => ({ username, since })),
         blocks: [...blocked.entries()].map(([username, at]) => ({ username, blocked_at: at })),
         conversations: [...chats.entries()].map(([username, c]) => ({
           with_username: username,
@@ -338,7 +344,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       if ("display_name" in body) next.display_name = body.display_name?.trim().replace(/\s+/g, " ") || null;
       if ("bio" in body) next.bio = body.bio?.trim() || null;
-      for (const key of ["accept_requests", "share_stats", "share_positions", "on_leaderboard"] as const) {
+      for (const key of ["allow_follows", "share_stats", "share_positions", "on_leaderboard"] as const) {
         if (body[key] != null) next[key] = body[key];
       }
       profile = next;
@@ -371,58 +377,41 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return personOf(findPerson(username));
     },
 
-    async listConnections() {
+    async listFollows() {
       await delay();
-      const all = [...links.entries()].map(([username, l]) => ({ ...l, person: summaryOf(username) }));
-      return {
-        friends: all.filter((c) => c.status === "accepted"),
-        incoming: all.filter((c) => c.status === "pending" && c.direction === "incoming"),
-        outgoing: all.filter((c) => c.status === "pending" && c.direction === "outgoing"),
-      };
+      const entry = (username: string, since: string) => ({ person: summaryOf(username), since, you_follow: iFollow.has(username), follows_you: followsMe.has(username) });
+      const newest = <T extends { since: string }>(xs: T[]) => xs.sort((a, b) => b.since.localeCompare(a.since));
+      const friends = newest([...iFollow.keys()].filter(isFriend).map((u) => entry(u, [iFollow.get(u)!, followsMe.get(u)!].sort()[1]!)));
+      const followers = newest([...followsMe.entries()].map(([u, since]) => entry(u, since)));
+      const following = newest([...iFollow.entries()].map(([u, since]) => entry(u, since)));
+      return { counts: { friends: friends.length, followers: followers.length, following: following.length }, friends, followers, following };
     },
 
-    async countRequests() {
+    async follow(username) {
       await delay();
-      return [...links.values()].filter((l) => l.status === "pending" && l.direction === "incoming").length;
-    },
-
-    async sendRequest(username) {
-      await delay();
-      if (!profile.username) throw new ApiError(409, "Choose a username first, so people know who's asking. You can set one in Settings.");
       const name = findPerson(username);
-      if (name === profile.username) throw new ApiError(400, "That's you.");
-      const link = links.get(name);
-      if (link?.status === "pending" && link.direction === "incoming") {
-        links.set(name, { ...link, status: "accepted", accepted_at: new Date(now()).toISOString() });
-      } else if (link) {
-        throw new ApiError(409, link.status === "accepted" ? "You're already friends." : "You've already sent them a request.");
-      } else {
-        links.set(name, { id: `c-${name}-${now()}`, status: "pending", direction: "outgoing", created_at: new Date(now()).toISOString(), accepted_at: null });
+      if (name === profile.username) throw new ApiError(400, "You can't follow yourself.");
+      if (!iFollow.has(name)) {
+        if (!profile.username) throw new ApiError(409, "Choose a username first, so people can see who's following them. You can set one in Settings.");
+        iFollow.set(name, new Date(now()).toISOString());
       }
       return personOf(name);
     },
 
-    async acceptRequest(id) {
+    async unfollow(username) {
       await delay();
-      const name = usernameOfLink(id);
-      const link = name ? links.get(name) : undefined;
-      if (!name || !link || link.status !== "pending" || link.direction !== "incoming") throw new ApiError(404, "Friend request not found");
-      const accepted = { ...link, status: "accepted" as const, accepted_at: new Date(now()).toISOString() };
-      links.set(name, accepted);
-      return { ...accepted, person: summaryOf(name) };
+      iFollow.delete(findPerson(username));
     },
 
-    async removeConnection(id) {
+    async removeFollower(username) {
       await delay();
-      const name = usernameOfLink(id);
-      if (!name) throw new ApiError(404, "Not found");
-      links.delete(name);
+      followsMe.delete(findPerson(username));
     },
 
     async getLeaderboard() {
       await delay();
       const entries = [];
-      if (links.get("ace")?.status === "accepted") {
+      if (isFriend("ace")) {
         const ace = aceStats();
         entries.push({ person: summaryOf("ace"), is_you: false, average_score: ace.average_score, scored_serves: ace.serves, needed: 0 });
       }
@@ -515,8 +504,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async listNotifications() {
       await delay();
       const out: Notification[] = [];
-      if (links.get("serve_queen")?.status === "pending") {
-        out.push({ id: "n1", kind: "request_received", person: summaryOf("serve_queen"), conversation_id: null,
+      if (followsMe.has("serve_queen") && !iFollow.has("serve_queen")) {
+        out.push({ id: "n1", kind: "new_follower", person: summaryOf("serve_queen"), conversation_id: null,
           created_at: "2026-10-10T10:00:00Z", read: notificationsRead });
       }
       return out;
@@ -539,7 +528,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async block(username) {
       await delay();
       const name = findPerson(username);
-      links.delete(name);
+      iFollow.delete(name);
+      followsMe.delete(name);
       blocked.set(name, new Date(now()).toISOString());
     },
 

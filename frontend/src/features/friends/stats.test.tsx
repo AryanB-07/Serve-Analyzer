@@ -12,12 +12,11 @@ import type { Leaderboard, Person, Profile, User } from "../../api/types";
 const ALICE: User = { id: "u1", email: "alice@example.com", created_at: "2026-03-02T10:00:00Z", email_verified: true };
 const PROFILE: Profile = {
   username: "alice", display_name: "Alice", bio: null, avatar_url: null, member_since: ALICE.created_at,
-  stats: { serves: 12, average_score: 71, averaged_over: 10, best_score: 88 }, accept_requests: true,
+  stats: { serves: 12, average_score: 71, averaged_over: 10, best_score: 88 }, allow_follows: true,
   share_stats: false, share_positions: false, on_leaderboard: false,
 };
 const BOB_FRIEND: Person = {
-  username: "bob", display_name: "Bob B", avatar_url: null, relationship: "friends", connection_id: "c1",
-  can_request: false, bio: null, friends_since: "2026-09-02T10:00:00Z",
+  username: "bob", display_name: "Bob B", avatar_url: null, relationship: "friends", can_follow: false, counts: { followers: 3, following: 2, friends: 1 }, bio: null, friends_since: "2026-09-02T10:00:00Z",
   stats: {
     serves: 14, average_score: 76, averaged_over: 10, best_score: 91, change: 6,
     trend: [55, 60, 64, 70, 76].map((score, i) => ({ at: `2026-10-0${i + 1}T10:00:00Z`, score })),
@@ -46,8 +45,7 @@ const fake = vi.hoisted(() => ({
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
   getPerson: vi.fn(),
-  listConnections: vi.fn(),
-  countRequests: vi.fn(),
+  listFollows: vi.fn(),
   getLeaderboard: vi.fn(),
   listBlocks: vi.fn(),
   checkUsername: vi.fn(),
@@ -73,12 +71,11 @@ beforeEach(() => {
   fake.getProfile.mockReset().mockImplementation(async () => fake.profile);
   fake.updateProfile.mockReset().mockImplementation(async (body: Partial<Profile>) => (fake.profile = { ...fake.profile, ...body }));
   fake.getPerson.mockReset().mockImplementation(async () => fake.person);
-  fake.listConnections.mockReset().mockResolvedValue({
-    friends: [{ id: "c1", person: { username: "bob", display_name: "Bob B", avatar_url: null }, status: "accepted", direction: "outgoing",
-      created_at: "2026-09-01T10:00:00Z", accepted_at: "2026-09-02T10:00:00Z" }],
-    incoming: [], outgoing: [],
+  fake.listFollows.mockReset().mockResolvedValue({
+    counts: { friends: 1, followers: 1, following: 1 },
+    friends: [{ person: { username: "bob", display_name: "Bob B", avatar_url: null }, since: "2026-09-02T10:00:00Z", you_follow: true, follows_you: true }],
+    followers: [], following: [],
   });
-  fake.countRequests.mockReset().mockResolvedValue(0);
   fake.getLeaderboard.mockReset().mockImplementation(async () => fake.board);
   fake.listBlocks.mockReset().mockResolvedValue([]);
 });
@@ -133,9 +130,9 @@ describe("a friend's serves", () => {
   });
 
   it("shows nothing about serves for someone who isn't a friend", async () => {
-    fake.person = { ...BOB_FRIEND, relationship: "none", connection_id: null, can_request: true, stats: null, positions: null };
+    fake.person = { ...BOB_FRIEND, relationship: "none", can_follow: true, counts: { followers: 3, following: 2, friends: 1 }, stats: null, positions: null };
     renderAt("/u/bob");
-    await screen.findByRole("button", { name: "Add friend" });
+    await screen.findByRole("button", { name: "Follow" });
     expect(screen.queryByText(/serves/)).not.toBeInTheDocument();
   });
 });

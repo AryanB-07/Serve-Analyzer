@@ -1,4 +1,4 @@
-/** Friends: the list, requests, someone's page, blocking, the navigation badge and Settings' privacy. */
+/** Friends as mutual follows: the lists, someone's page, following, blocking, and Settings' privacy. */
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -7,35 +7,46 @@ import { createMemoryRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ConnectionList, Person, PersonSummary, Profile, User } from "../../api/types";
+import type { FollowEntry, FollowLists, Person, PersonSummary, Profile, User } from "../../api/types";
 
 const ALICE: User = { id: "u1", email: "alice@example.com", created_at: "2026-03-02T10:00:00Z", email_verified: true };
 const PROFILE: Profile = {
   username: "alice", display_name: "Alice", bio: null, avatar_url: null, member_since: ALICE.created_at,
-  stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null }, accept_requests: true,
+  stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null }, allow_follows: true,
   share_stats: false, share_positions: false, on_leaderboard: false,
 };
-const BOB = { username: "bob", display_name: "Bob B", avatar_url: null };
-const CAROL = { username: "carol", display_name: null, avatar_url: null };
+const BOB: PersonSummary = { username: "bob", display_name: "Bob B", avatar_url: null };
+const CAROL: PersonSummary = { username: "carol", display_name: null, avatar_url: null };
+const DAVE: PersonSummary = { username: "dave", display_name: "Dave D", avatar_url: null };
+const COUNTS = { followers: 4, following: 3, friends: 2 };
+
+const entry = (person: PersonSummary, you_follow: boolean, follows_you: boolean): FollowEntry =>
+  ({ person, since: "2026-10-10T10:00:00Z", you_follow, follows_you });
+const person = (relationship: Person["relationship"], extra: Partial<Person> = {}): Person =>
+  ({ ...BOB, relationship, can_follow: relationship === "none" || relationship === "follows_you", counts: COUNTS,
+    bio: null, friends_since: null, stats: null, positions: null, ...extra });
 
 const fake = vi.hoisted(() => ({
   profile: null as unknown as Profile,
-  list: null as unknown as ConnectionList,
+  lists: null as unknown as FollowLists,
   person: null as unknown as Person | Error,
   getMe: vi.fn(),
   logOut: vi.fn(),
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
-  listConnections: vi.fn(),
-  countRequests: vi.fn(),
+  listFollows: vi.fn(),
   getPerson: vi.fn(),
-  sendRequest: vi.fn(),
-  acceptRequest: vi.fn(),
-  removeConnection: vi.fn(),
+  follow: vi.fn(),
+  unfollow: vi.fn(),
+  removeFollower: vi.fn(),
   listBlocks: vi.fn(),
   block: vi.fn(),
   unblock: vi.fn(),
   checkUsername: vi.fn(),
+  getLeaderboard: vi.fn(),
+  startConversation: vi.fn(),
+  countUnread: vi.fn(async () => 0),
+  countNotifications: vi.fn(async () => 0),
 }));
 
 vi.mock("../../api", async () => {
@@ -50,42 +61,42 @@ const { SettingsPage } = await import("../account/AccountPages");
 const { FriendsPage } = await import("./FriendsPage");
 const { PersonPage } = await import("./PersonPage");
 
-const pending = (id: string, person: PersonSummary, direction: "incoming" | "outgoing") => ({
-  id, person, status: "pending" as const, direction, created_at: "2026-10-10T10:00:00Z", accepted_at: null,
-});
-
 beforeEach(() => {
   fake.profile = PROFILE;
-  fake.list = { friends: [], incoming: [pending("c1", BOB, "incoming")], outgoing: [pending("c2", CAROL, "outgoing")] };
-  fake.person = { ...BOB, relationship: "none", connection_id: null, can_request: true, bio: null, friends_since: null };
+  fake.lists = {
+    counts: { friends: 1, followers: 2, following: 2 },
+    friends: [entry(BOB, true, true)],
+    followers: [entry(BOB, true, true), entry(CAROL, false, true)],
+    following: [entry(BOB, true, true), entry(DAVE, true, false)],
+  };
+  fake.person = person("none");
   fake.getMe.mockReset().mockResolvedValue(ALICE);
   fake.getProfile.mockReset().mockImplementation(async () => fake.profile);
   fake.updateProfile.mockReset().mockImplementation(async (body: Partial<Profile>) => (fake.profile = { ...fake.profile, ...body }));
-  fake.listConnections.mockReset().mockImplementation(async () => fake.list);
-  fake.countRequests.mockReset().mockImplementation(async () => fake.list.incoming.length);
+  fake.listFollows.mockReset().mockImplementation(async () => fake.lists);
   fake.getPerson.mockReset().mockImplementation(async () => {
     if (fake.person instanceof Error) throw fake.person;
     return fake.person;
   });
-  fake.sendRequest.mockReset().mockImplementation(async () => {
-    fake.person = { ...(fake.person as Person), relationship: "requested", connection_id: "c9", can_request: false };
+  fake.follow.mockReset().mockImplementation(async () => {
+    const p = fake.person as Person;
+    fake.person = { ...p, relationship: p.relationship === "follows_you" ? "friends" : "following", can_follow: false };
     return fake.person;
   });
-  fake.acceptRequest.mockReset().mockImplementation(async (id: string) => {
-    const item = fake.list.incoming.find((c) => c.id === id)!;
-    fake.list = { ...fake.list, incoming: fake.list.incoming.filter((c) => c.id !== id),
-      friends: [{ ...item, status: "accepted", accepted_at: "2026-10-15T10:00:00Z" }] };
-    return fake.list.friends[0];
+  fake.unfollow.mockReset().mockImplementation(async (username: string) => {
+    fake.lists = { ...fake.lists, friends: fake.lists.friends.filter((e) => e.person.username !== username),
+      following: fake.lists.following.filter((e) => e.person.username !== username) };
   });
-  fake.removeConnection.mockReset().mockImplementation(async (id: string) => {
-    fake.list = { friends: fake.list.friends.filter((c) => c.id !== id), incoming: fake.list.incoming.filter((c) => c.id !== id),
-      outgoing: fake.list.outgoing.filter((c) => c.id !== id) };
+  fake.removeFollower.mockReset().mockImplementation(async (username: string) => {
+    fake.lists = { ...fake.lists, followers: fake.lists.followers.filter((e) => e.person.username !== username) };
   });
   fake.listBlocks.mockReset().mockResolvedValue([]);
   fake.block.mockReset().mockImplementation(async () => {
     fake.person = new ApiError(404, "No one has that username.");
   });
   fake.unblock.mockReset().mockResolvedValue(undefined);
+  fake.getLeaderboard.mockReset().mockResolvedValue({ window_days: 90, min_serves: 5, averaged_over: 10, you_are_on_it: false, ranked: [], not_ranked: [] });
+  fake.startConversation.mockReset().mockResolvedValue({ id: "conv1", person: BOB, unread: 0, can_send: true, why_not: null, last_message: null });
 });
 
 function renderAt(path: string) {
@@ -96,6 +107,7 @@ function renderAt(path: string) {
         { path: "/friends", element: <FriendsPage /> },
         { path: "/u/:username", element: <PersonPage /> },
         { path: "/settings", element: <SettingsPage /> },
+        { path: "/messages/:id", element: <h1>Conversation</h1> },
         { path: "/", element: <h1>Upload page</h1> },
       ],
     }],
@@ -109,25 +121,44 @@ function renderAt(path: string) {
   return router;
 }
 
+const tab = (name: RegExp) => screen.findByRole("tab", { name });
+
 describe("the Friends page", () => {
-  it("lists requests, friends and sent requests", async () => {
+  it("has friends, followers and following, with counts", async () => {
     renderAt("/friends");
-    const requests = await screen.findByRole("region", { name: /Requests/ });
-    expect(within(requests).getByRole("link", { name: "Bob B" })).toHaveAttribute("href", "/u/bob");
-    expect(screen.getByRole("region", { name: /Your friends/ })).toHaveTextContent("No friends yet");
-    expect(within(screen.getByRole("region", { name: /Sent/ })).getByRole("link", { name: "@carol" })).toBeInTheDocument();
+    expect(await tab(/Friends 1/)).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /Followers 2/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Following 2/ })).toBeInTheDocument();
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).getByRole("link", { name: "Bob B" })).toHaveAttribute("href", "/u/bob");
+    expect(within(panel).getByText(/Friends since/)).toBeInTheDocument();
   });
 
-  it("accepts and declines requests, and cancels sent ones", async () => {
+  it("follows a follower back, and removes one after confirming", async () => {
     renderAt("/friends");
-    await userEvent.click(await screen.findByRole("button", { name: "Accept Bob B's request" }));
-    expect(fake.acceptRequest).toHaveBeenCalledWith("c1");
-    const friends = await screen.findByRole("region", { name: /Your friends \(1\)/ });
-    expect(within(friends).getByText(/Friends since/)).toBeInTheDocument();
-    expect(screen.queryByRole("region", { name: /Requests/ })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Cancel your request to @carol" }));
-    expect(fake.removeConnection).toHaveBeenCalledWith("c2");
-    await vi.waitFor(() => expect(screen.queryByRole("region", { name: /Sent/ })).not.toBeInTheDocument());
+    await userEvent.click(await tab(/Followers/));
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).queryByRole("button", { name: "Follow Bob B back" })).not.toBeInTheDocument(); // already
+    await userEvent.click(within(panel).getByRole("button", { name: "Follow @carol back" }));
+    expect(fake.follow).toHaveBeenCalledWith("carol");
+    await userEvent.click(within(panel).getByRole("button", { name: "Remove @carol from your followers" }));
+    expect(within(panel).getByText(/They won't be told/)).toBeInTheDocument();
+    await userEvent.click(within(panel).getByRole("button", { name: "Remove" }));
+    expect(fake.removeFollower).toHaveBeenCalledWith("carol");
+  });
+
+  it("unfollows from Following, and unfriends from Friends, after confirming", async () => {
+    renderAt("/friends");
+    await userEvent.click(await tab(/Following/));
+    await userEvent.click(within(screen.getByRole("tabpanel")).getByRole("button", { name: "Unfollow Dave D" }));
+    await userEvent.click(within(screen.getByRole("tabpanel")).getByRole("button", { name: "Unfollow" }));
+    expect(fake.unfollow).toHaveBeenCalledWith("dave");
+    await userEvent.click(screen.getByRole("tab", { name: /Friends/ }));
+    await userEvent.click(within(screen.getByRole("tabpanel")).getByRole("button", { name: "Unfriend Bob B" }));
+    expect(screen.getByText(/You won't be friends any more/)).toBeInTheDocument();
+    await userEvent.click(within(screen.getByRole("tabpanel")).getByRole("button", { name: "Unfollow" }));
+    expect(fake.unfollow).toHaveBeenCalledWith("bob");
+    expect(await within(screen.getByRole("tabpanel")).findByText(/No friends yet/)).toBeInTheDocument();
   });
 
   it("finds someone by username", async () => {
@@ -145,104 +176,96 @@ describe("the Friends page", () => {
   it("asks for a username first when you don't have one", async () => {
     fake.profile = { ...PROFILE, username: null };
     renderAt("/friends");
-    expect(await screen.findByText("Choose a username to send friend requests")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Choose one in Settings" })).toHaveAttribute("href", "/settings#profile");
+    expect(await screen.findByText("Choose a username to follow people")).toBeInTheDocument();
   });
 });
 
 describe("someone's page", () => {
-  it("sends a friend request and can cancel it", async () => {
+  it("shows their counts, and a Follow button for a stranger", async () => {
     renderAt("/u/bob");
     expect(await screen.findByRole("heading", { level: 1, name: "Bob B" })).toBeInTheDocument();
-    expect(screen.getByText("@bob")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Add friend" }));
-    expect(fake.sendRequest).toHaveBeenCalledWith("bob");
-    expect(await screen.findByText("Request sent.")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Cancel request" }));
-    expect(fake.removeConnection).toHaveBeenCalledWith("c9");
+    expect(screen.getByText("followers", { exact: false })).toHaveTextContent("4 followers");
+    await userEvent.click(screen.getByRole("button", { name: "Follow" }));
+    expect(fake.follow).toHaveBeenCalledWith("bob");
+    expect(await screen.findByText(/You'll be friends if they follow you back/)).toBeInTheDocument();
   });
 
-  it("shows a friend's bio, and asks before removing them", async () => {
-    fake.person = { ...BOB, relationship: "friends", connection_id: "c5", can_request: false, bio: "Lefty.", friends_since: "2026-09-02T10:00:00Z" };
+  it("offers Follow back to someone who follows you, which makes you friends", async () => {
+    fake.person = person("follows_you");
     renderAt("/u/bob");
+    expect(await screen.findByText("Bob B follows you. Follow back to be friends.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Follow back" }));
+    expect(await screen.findByRole("button", { name: "Message" })).toBeInTheDocument();
+  });
+
+  it("lets you unfollow someone you follow", async () => {
+    fake.person = person("following");
+    renderAt("/u/bob");
+    await userEvent.click(await screen.findByRole("button", { name: "Unfollow" }));
+    expect(screen.getByText("Unfollow Bob B?")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Unfollow" }));
+    expect(fake.unfollow).toHaveBeenCalledWith("bob");
+  });
+
+  it("shows a friend's bio, messages them, and unfriends after confirming", async () => {
+    fake.person = person("friends", { bio: "Lefty.", friends_since: "2026-09-02T10:00:00Z" });
+    const router = renderAt("/u/bob");
     expect(await screen.findByText("Lefty.")).toBeInTheDocument();
     expect(screen.getByText(/^Friends since/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Remove friend…" }));
-    expect(screen.getByText(/They won't be told/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Remove friend" }));
-    expect(fake.removeConnection).toHaveBeenCalledWith("c5");
+    await userEvent.click(screen.getByRole("button", { name: "Unfriend…" }));
+    expect(screen.getByText(/You won't be friends any more, and they won't be told/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await userEvent.click(screen.getByRole("button", { name: "Message" }));
+    await vi.waitFor(() => expect(fake.startConversation).toHaveBeenCalledWith("bob"));
+    await vi.waitFor(() => expect(router.state.location.pathname).toBe("/messages/conv1"));
   });
 
-  it("accepts a request from their page", async () => {
-    fake.person = { ...BOB, relationship: "incoming", connection_id: "c1", can_request: false, bio: null, friends_since: null };
+  it("says when someone isn't accepting new followers", async () => {
+    fake.person = person("none", { can_follow: false });
     renderAt("/u/bob");
-    expect(await screen.findByText("Bob B wants to be friends.")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Accept" }));
-    expect(fake.acceptRequest).toHaveBeenCalledWith("c1");
+    expect(await screen.findByText("Bob B isn't accepting new followers.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Follow" })).not.toBeInTheDocument();
   });
 
-  it("says when someone isn't accepting requests", async () => {
-    fake.person = { ...BOB, relationship: "none", connection_id: null, can_request: false, bio: null, friends_since: null };
+  it("shows the server's reason when a follow is refused", async () => {
+    fake.follow.mockRejectedValueOnce(new ApiError(409, "Choose a username first, so people can see who's following them."));
     renderAt("/u/bob");
-    expect(await screen.findByText("Bob B isn't accepting friend requests.")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Add friend" })).not.toBeInTheDocument();
-  });
-
-  it("shows the server's reason when a request is refused", async () => {
-    fake.sendRequest.mockRejectedValueOnce(new ApiError(409, "Choose a username first, so people know who's asking."));
-    renderAt("/u/bob");
-    await userEvent.click(await screen.findByRole("button", { name: "Add friend" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Follow" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Choose a username first");
   });
 
   it("blocks after confirming, and says so instead of 'no one has that username'", async () => {
     renderAt("/u/bob");
     await userEvent.click(await screen.findByRole("button", { name: "Block Bob B…" }));
-    expect(screen.getByText(/won't be told/)).toBeInTheDocument();
+    expect(screen.getByText(/Neither of you will follow the other any more/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Block Bob B" }));
     expect(fake.block).toHaveBeenCalledWith("bob");
     expect(await screen.findByRole("heading", { name: "You've blocked Bob B" })).toBeInTheDocument();
-    expect(screen.queryByText("No one has that username")).not.toBeInTheDocument();
   });
 
   it("explains a username nobody has", async () => {
     fake.person = new ApiError(404, "No one has that username.");
     renderAt("/u/ghost");
     expect(await screen.findByRole("heading", { name: "No one has that username" })).toBeInTheDocument();
-    expect(screen.getByText("Check the spelling of @ghost.")).toBeInTheDocument();
     expect(fake.getPerson).toHaveBeenCalledTimes(1); // a 404 isn't retried
   });
 
   it("points you to your own profile", async () => {
-    fake.person = { username: "alice", display_name: "Alice", avatar_url: null, relationship: "self", connection_id: null, can_request: false, bio: null, friends_since: null };
+    fake.person = { ...person("self"), username: "alice", display_name: "Alice" };
     renderAt("/u/alice");
     expect(await screen.findByRole("link", { name: "This is you: open your profile" })).toHaveAttribute("href", "/profile");
     expect(screen.queryByRole("button", { name: /Block/ })).not.toBeInTheDocument();
   });
 });
 
-describe("the navigation", () => {
-  it("has Friends with a badge for waiting requests", async () => {
-    renderAt("/");
-    const link = await screen.findByRole("link", { name: "Friends, 1 new request" });
-    expect(link).toHaveAttribute("href", "/friends");
-  });
-
-  it("has no badge when nothing is waiting", async () => {
-    fake.list = { friends: [], incoming: [], outgoing: [] };
-    renderAt("/");
-    expect(await screen.findByRole("link", { name: "Friends" })).toBeInTheDocument();
-  });
-});
-
 describe("Settings: friends and privacy", () => {
-  it("turns friend requests off and on", async () => {
+  it("turns new followers off and on", async () => {
     renderAt("/settings");
-    const toggle = await screen.findByRole("checkbox", { name: /Let people send me friend requests/ });
+    const toggle = await screen.findByRole("checkbox", { name: /Let people follow me/ });
     expect(toggle).toBeChecked();
     await userEvent.click(toggle);
-    expect(fake.updateProfile).toHaveBeenCalledWith({ accept_requests: false });
-    expect(await screen.findByText(/Nobody can send you one/)).toBeInTheDocument();
+    expect(fake.updateProfile).toHaveBeenCalledWith({ allow_follows: false });
+    expect(await screen.findByText(/Only people you follow can follow you/)).toBeInTheDocument();
   });
 
   it("lists blocked people and unblocks them", async () => {

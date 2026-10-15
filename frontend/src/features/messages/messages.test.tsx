@@ -12,7 +12,7 @@ import type { ConversationSummary, Message, Person, Profile, User } from "../../
 const ALICE: User = { id: "u1", email: "alice@example.com", created_at: "2026-03-02T10:00:00Z", email_verified: true };
 const PROFILE: Profile = {
   username: "alice", display_name: "Alice", bio: null, avatar_url: null, member_since: ALICE.created_at,
-  stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null }, accept_requests: true,
+  stats: { serves: 0, average_score: null, averaged_over: 0, best_score: null }, allow_follows: true,
   share_stats: false, share_positions: false, on_leaderboard: false,
 };
 const BOB = { username: "bob", display_name: "Bob B", avatar_url: null };
@@ -30,7 +30,6 @@ const fake = vi.hoisted(() => ({
   seen: null as string | null,
   getMe: vi.fn(),
   getProfile: vi.fn(),
-  countRequests: vi.fn(),
   countUnread: vi.fn(),
   listConversations: vi.fn(),
   getConversation: vi.fn(),
@@ -67,7 +66,6 @@ beforeEach(() => {
   fake.seen = null;
   fake.getMe.mockReset().mockResolvedValue(ALICE);
   fake.getProfile.mockReset().mockResolvedValue(PROFILE);
-  fake.countRequests.mockReset().mockResolvedValue(0);
   fake.countUnread.mockReset().mockImplementation(async () => fake.conversations.reduce((n, c) => n + c.unread, 0));
   fake.listConversations.mockReset().mockImplementation(async () => fake.conversations);
   fake.getConversation.mockReset().mockImplementation(async () => fake.conversation);
@@ -83,7 +81,7 @@ beforeEach(() => {
   });
   fake.report.mockReset().mockResolvedValue(undefined);
   fake.block.mockReset().mockResolvedValue(undefined);
-  fake.getPerson.mockReset().mockResolvedValue({ ...BOB, relationship: "friends", connection_id: "f1", can_request: false, bio: null,
+  fake.getPerson.mockReset().mockResolvedValue({ ...BOB, relationship: "friends", can_follow: false, counts: { followers: 3, following: 2, friends: 1 }, bio: null,
     friends_since: "2026-09-01T10:00:00Z", stats: null, positions: null } satisfies Person);
   fake.startConversation.mockReset().mockResolvedValue(CONV);
 });

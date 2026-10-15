@@ -10,7 +10,7 @@ from serve_api import keys
 from serve_api.storage import LocalStorage
 from serve_api.tables import analyses
 from tests.test_account import PASSWORD, app, client, create_analysis, db_of, mailer, signup  # noqa: F401
-from tests.test_connections import befriend, person
+from tests.test_follows import befriend, person
 from tests.test_existing_data import schema_2_results
 from tests.test_messages import chat
 
@@ -145,8 +145,7 @@ def test_deleting_the_message_stops_sharing(app, ann, bob, shared):
 
 def test_unfriending_stops_sharing_and_refriending_restores_it(app, ann, bob, shared):
     analysis_id, conv, _ = shared
-    friendship = bob.get("/connections").json()["friends"][0]["id"]
-    bob.delete(f"/connections/{friendship}")
+    bob.delete("/follows/ann")  # unfollowing ends the friendship
     assert not can_open(bob, analysis_id)
     assert bob.get(f"/conversations/{conv}/messages").json()["items"][0]["serve"] == {
         "analysis_id": None, "available": False, "overall_score": None, "recorded_at": None, "thumbnail_url": None}

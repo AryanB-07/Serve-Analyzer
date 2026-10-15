@@ -8,7 +8,7 @@ from sqlalchemy import update
 from serve_api.db import now
 from serve_api.tables import analyses
 from tests.test_account import app, client, create_analysis, db_of, mailer, settings, signup  # noqa: F401
-from tests.test_connections import befriend, person
+from tests.test_follows import befriend, person
 
 
 def serves(app, client, scores, *, days_ago=None, positions=None):
@@ -90,9 +90,9 @@ def test_strangers_and_ex_friends_see_no_stats(app, ann, bob):
     serves(app, bob, [70])
     bob.patch("/profile", json={"share_stats": True, "share_positions": True})
     assert ann.get("/people/bob").json()["stats"] is None  # not friends
-    friendship = befriend(ann, bob, "bob")
+    befriend(ann, bob, "bob")
     assert ann.get("/people/bob").json()["stats"] is not None
-    ann.delete(f"/connections/{friendship}")
+    ann.delete("/follows/bob")  # unfollowing ends the friendship
     assert ann.get("/people/bob").json()["stats"] is None
 
 

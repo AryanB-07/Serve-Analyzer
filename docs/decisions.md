@@ -223,7 +223,7 @@ and what would change the decision. Numbers link to the reports and docs they co
 - **Trade-off (pictures):** the server doesn't prove the image data decodes, only that the file is a well-formed, square, metadata-free JPEG. A broken one would just fail to show, and only its uploader could send it.
 - **Trade-off:** a username someone gives up is free for anyone straight away. Once profiles are public, that allows impersonation; a cool-off period would fix it.
 
-### 16e. Friends: mutual, found only by exact username, and blocks you can't detect
+### 16e. Friends: mutual, found only by exact username, and blocks you can't detect (requests replaced by follows in 16j)
 
 - **Chosen:**
   - mutual friendships (request, then accept), not one-way follows. A follow model makes everyone's data a broadcast; mutual means both people chose it.
@@ -283,9 +283,21 @@ and what would change the decision. Numbers link to the reports and docs they co
   - suspending an account (`python -m serve_api.moderate suspend`) ends its sessions, refuses sign-in, and hides it from everyone else. The check that hides blocked people (`hidden_between`) also hides suspended accounts, so every place that respects blocks (finding someone, conversations, shared serves, notifications) respects suspensions with no change. Friend lists, request counts and the leaderboard leave suspended accounts out too. Nothing is deleted, so unsuspending puts everything back.
   - sign-in tells a suspended person their account is suspended, but only after the password checks out, so a guesser learns nothing.
   - a username someone gives up is held for 30 days, and only they can take it back. Without that, renaming or deleting an account would let anyone take the old name and pose as that person to their friends.
-  - notifications only for things with no badge of their own: a request received, a request accepted, a serve received. Messages already count on the Messages tab. Notifications about a request that's been cancelled or declined are deleted with it.
+  - notifications only for things with no badge of their own: a new follower, a follow back (now friends), a serve received. Messages already count on the Messages tab. Notifications about a request that's been cancelled or declined are deleted with it.
 - **Considered:** deleting abusive accounts outright (what the checklist said before). It's irreversible, loses the evidence, and gives the person no way to appeal.
 - **Trade-off:** there's no moderation screen yet, just a script on the server. That's fine for one operator; a dashboard is the next step if reports grow.
+
+### 16j. Follows replace friend requests; friendship is derived
+
+- **Chosen:**
+  - one-way follows that need no approval. Two people are friends when each follows the other. It's worked out from the `follows` rows whenever it's needed (`Database.are_friends`), never stored, so it can't drift out of step: unfollowing someone who follows you ends the friendship, and removing a follower does too.
+  - every access rule that said "friends" keeps saying it: messages, stats sharing, the leaderboard and sent serves all ask `are_friends`, now answered from follows. Shared serves stop opening the moment either side unfollows.
+  - follows are idempotent. The primary key (follower, followee) makes a double tap a no-op, a check constraint refuses following yourself, and `PUT /follows/{username}` returns the same answer however many times it's sent.
+  - "let people follow me" (off means only people you follow can follow you, i.e. back) replaces "let people send me requests". You still need a username to follow, so people can see who follows them.
+  - existing data was converted by the migration: a friendship became a follow each way, and a pending request a follow from the person who asked. The downgrade rebuilds requests from the follows.
+  - your own lists (friends, followers, following) are viewable with their counts; on someone else's page you see their counts but not who's in them.
+- **Why:** the product needs follows for feeds (following someone you don't know, as with any public profile), and one model for both avoids two relationships that could disagree.
+- **Trade-off:** following needs no consent, so it's easier to attach yourself to a stranger than with requests. Following alone grants nothing beyond public posts: the bio, stats, messages and shared serves all need the follow back. Blocking and "let people follow me" are the controls.
 
 ### 17. Accessibility as a test, not a review
 

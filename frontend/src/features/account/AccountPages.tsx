@@ -707,7 +707,7 @@ const SHARING: { key: "share_stats" | "share_positions" | "on_leaderboard"; labe
   { key: "on_leaderboard", label: "Put me on the leaderboard", hint: "Your friends see your rank and average among the friends who joined." },
 ];
 
-type Switch = "accept_requests" | "share_stats" | "share_positions" | "on_leaderboard";
+type Switch = "allow_follows" | "share_stats" | "share_positions" | "on_leaderboard";
 
 /**
  * A setting switched on the server. The new value shows from the click itself (a mutation's
@@ -761,10 +761,10 @@ function SharingSettings() {
   );
 }
 
-function FriendRequestsSetting() {
+function FollowSetting() {
   const id = useId();
   const switches = useSwitches();
-  const on = switches.value("accept_requests", true);
+  const on = switches.value("allow_follows", true);
   return (
     <div className="space-y-1">
       <label className="flex cursor-pointer items-start gap-3 text-sm">
@@ -772,14 +772,14 @@ function FriendRequestsSetting() {
           type="checkbox"
           checked={on}
           disabled={!switches.ready}
-          onChange={(e) => switches.set("accept_requests", e.target.checked)}
+          onChange={(e) => switches.set("allow_follows", e.target.checked)}
           aria-describedby={`${id}-hint`}
           className="mt-0.5 size-4 accent-[var(--accent)]"
         />
         <span>
-          <span className="font-medium">Let people send me friend requests</span>
+          <span className="font-medium">Let people follow me</span>
           <span id={`${id}-hint`} className="block text-ink-muted">
-            {on ? "Anyone who knows your username can ask." : "Nobody can send you one. You can still send requests yourself."}
+            {on ? "Anyone who knows your username can follow you." : "Only people you follow can follow you (back). You can still follow anyone."}
           </span>
         </span>
       </label>
@@ -830,7 +830,7 @@ function FriendsSettings() {
   return (
     <section aria-labelledby={`${id}-title`} className="space-y-4 rounded-xl border border-border bg-surface p-5">
       <h2 id={`${id}-title`} className="font-semibold">Friends and privacy</h2>
-      <FriendRequestsSetting />
+      <FollowSetting />
       <SharingSettings />
       <BlockedPeople />
     </section>

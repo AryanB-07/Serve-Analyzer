@@ -28,7 +28,7 @@ const fake = vi.hoisted(() => ({
   getFrames: vi.fn(),
   getReport: vi.fn(),
   listAnalyses: vi.fn(),
-  listConnections: vi.fn(),
+  listFollows: vi.fn(),
   startConversation: vi.fn(),
   sendMessage: vi.fn(),
   getConversation: vi.fn(),
@@ -60,9 +60,9 @@ beforeEach(() => {
     phases: result.phases, landmarks: { raw: {}, smoothed: {} }, series: {} });
   fake.getReport.mockReset().mockResolvedValue(null);
   fake.listAnalyses.mockReset().mockResolvedValue({ items: [MINE, { ...MINE, id: "mine2", filename: "monday.mp4" }], next_cursor: null });
-  fake.listConnections.mockReset().mockResolvedValue({
-    friends: [{ id: "f1", person: BOB, status: "accepted", direction: "outgoing", created_at: "2026-09-01T10:00:00Z", accepted_at: "2026-09-02T10:00:00Z" }],
-    incoming: [], outgoing: [],
+  fake.listFollows.mockReset().mockResolvedValue({
+    counts: { friends: 1, followers: 1, following: 1 },
+    friends: [{ person: BOB, since: "2026-09-02T10:00:00Z", you_follow: true, follows_you: true }], followers: [], following: [],
   });
   fake.startConversation.mockReset().mockResolvedValue(CONV);
   fake.sendMessage.mockReset().mockImplementation(async (_id: string, message: { body?: string | null; analysis_id?: string | null }) => {

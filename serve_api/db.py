@@ -33,7 +33,7 @@ from .tables import (
     analyses,
     auth_attempts,
     blocks,
-    connections,
+    follows,
     conversation_members,
     conversations,
     email_tokens,
@@ -478,8 +478,7 @@ class Database:
             # Explicit deletes rather than relying on ON DELETE CASCADE alone.
             for table in (result_reports, analyses, sessions, email_tokens, profiles):
                 conn.execute(delete(table).where(table.c.user_id == user_id))
-            conn.execute(delete(connections).where(or_(connections.c.requester_id == user_id,
-                                                       connections.c.addressee_id == user_id)))
+            conn.execute(delete(follows).where(or_(follows.c.follower_id == user_id, follows.c.followee_id == user_id)))
             conn.execute(delete(blocks).where(or_(blocks.c.blocker_id == user_id, blocks.c.blocked_id == user_id)))
             # Messages they sent go; the other person keeps their side of the conversation.
             conn.execute(delete(messages).where(messages.c.sender_id == user_id))
@@ -751,72 +750,80 @@ class Database:
         conn.execute(delete(released_usernames).where(released_usernames.c.username == username))
         conn.execute(insert(released_usernames).values(username=username, user_id=user_id, released_at=now()))
 
-    def connection_between(self, a: str, b: str) -> dict[str, Any] | None:
-        with self.engine.connect() as conn:
-            row = conn.execute(select(connections).where(connections.c.pair == self.pair_of(a, b))).mappings().first()
-        return dict(row) if row else None
-
-    def get_connection(self, connection_id: str, user_id: str) -> dict[str, Any] | None:
-        """One of ``user_id``'s connections (either side), or None."""
-        with self.engine.connect() as conn:
-            row = conn.execute(select(connections).where(
-                connections.c.id == connection_id,
-                or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id))).mappings().first()
-        return dict(row) if row else None
-
-    def request_connection(self, requester_id: str, addressee_id: str) -> dict[str, Any] | Literal["exists"]:
-        """A friend request, or "exists" if the two already have one (either way) or are friends."""
-        row = {"id": uuid.uuid4().hex, "requester_id": requester_id, "addressee_id": addressee_id,
-               "pair": self.pair_of(requester_id, addressee_id), "status": "pending",
-               "created_at": now(), "accepted_at": None}
+    def follow(self, follower_id: str, followee_id: str) -> bool:
+        """Follow someone; True if it's new. Following twice is a no-op (and two taps at once are
+        settled by the primary key), and nobody can follow themselves (the check constraint)."""
+        if follower_id == followee_id:
+            raise ValueError("can't follow yourself")
         try:
             with self.engine.begin() as conn:
-                conn.execute(insert(connections).values(**row))
-        except IntegrityError:
-            return "exists"
-        return row
+                exists = conn.execute(select(func.count()).select_from(follows).where(
+                    follows.c.follower_id == follower_id, follows.c.followee_id == followee_id)).scalar_one()
+                if exists:
+                    return False
+                conn.execute(insert(follows).values(follower_id=follower_id, followee_id=followee_id, created_at=now()))
+        except IntegrityError:  # the other tap won
+            return False
+        return True
 
-    def accept_connection(self, connection_id: str, addressee_id: str) -> dict[str, Any] | None:
-        """Accept a pending request sent to ``addressee_id``; None if there's no such request."""
+    def unfollow(self, follower_id: str, followee_id: str) -> bool:
+        """Stop following (also how a follower is removed: unfollow(them, you)). True if it did."""
         with self.engine.begin() as conn:
-            done = conn.execute(update(connections).where(
-                connections.c.id == connection_id, connections.c.addressee_id == addressee_id,
-                connections.c.status == "pending").values(status="accepted", accepted_at=now())).rowcount
-        return self.get_connection(connection_id, addressee_id) if done else None
+            return conn.execute(delete(follows).where(
+                follows.c.follower_id == follower_id, follows.c.followee_id == followee_id)).rowcount > 0
 
-    def delete_connection(self, connection_id: str, user_id: str) -> bool:
-        """Cancel, decline or end a connection; either person can."""
-        with self.engine.begin() as conn:
-            return conn.execute(delete(connections).where(
-                connections.c.id == connection_id,
-                or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id))).rowcount > 0
-
-    def connections_of(self, user_id: str) -> list[dict[str, Any]]:
-        """Every request and friendship ``user_id`` is part of, newest first, leaving out
-        suspended accounts."""
-        gone = self.suspended_ids()
+    def follow_row(self, follower_id: str, followee_id: str) -> dict[str, Any] | None:
         with self.engine.connect() as conn:
-            rows = conn.execute(select(connections).where(
-                or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id),
-                connections.c.requester_id.not_in(gone), connections.c.addressee_id.not_in(gone))
-                .order_by(func.coalesce(connections.c.accepted_at, connections.c.created_at).desc())).mappings().all()
-        return [dict(r) for r in rows]
+            row = conn.execute(select(follows).where(
+                follows.c.follower_id == follower_id, follows.c.followee_id == followee_id)).mappings().first()
+        return dict(row) if row else None
+
+    def are_friends(self, a: str, b: str | None) -> bool:
+        """Friends: each follows the other."""
+        if not b or a == b:
+            return False
+        with self.engine.connect() as conn:
+            return conn.execute(select(func.count()).select_from(follows).where(or_(
+                and_(follows.c.follower_id == a, follows.c.followee_id == b),
+                and_(follows.c.follower_id == b, follows.c.followee_id == a)))).scalar_one() == 2
+
+    def _followers_query(self, user_id: str):
+        """People following ``user_id``, leaving out suspended accounts."""
+        return select(follows.c.follower_id.label("user_id"), follows.c.created_at).where(
+            follows.c.followee_id == user_id, follows.c.follower_id.not_in(self.suspended_ids()))
+
+    def _following_query(self, user_id: str):
+        return select(follows.c.followee_id.label("user_id"), follows.c.created_at).where(
+            follows.c.follower_id == user_id, follows.c.followee_id.not_in(self.suspended_ids()))
+
+    def follow_lists(self, user_id: str) -> dict[str, list[dict[str, Any]]]:
+        """``user_id``'s followers, following and friends, each newest first as {user_id, since}.
+        A friend's ``since`` is when the second of the two follows happened."""
+        with self.engine.connect() as conn:
+            followers = {r.user_id: r.created_at for r in conn.execute(self._followers_query(user_id))}
+            following = {r.user_id: r.created_at for r in conn.execute(self._following_query(user_id))}
+        newest = lambda d: sorted(({"user_id": k, "since": v} for k, v in d.items()), key=lambda x: x["since"], reverse=True)  # noqa: E731
+        friends = {uid: max(at, following[uid]) for uid, at in followers.items() if uid in following}
+        return {"followers": newest(followers), "following": newest(following), "friends": newest(friends)}
+
+    def follow_counts(self, user_id: str) -> dict[str, int]:
+        lists = self.follow_lists(user_id)
+        return {k: len(v) for k, v in lists.items()}
 
     def friend_ids(self, user_id: str) -> list[str]:
-        return [c["addressee_id"] if c["requester_id"] == user_id else c["requester_id"]
-                for c in self.connections_of(user_id) if c["status"] == "accepted"]
+        return [f["user_id"] for f in self.follow_lists(user_id)["friends"]]
 
-    def incoming_requests(self, user_id: str) -> int:
-        with self.engine.connect() as conn:
-            return conn.execute(select(func.count()).select_from(connections).where(
-                connections.c.addressee_id == user_id, connections.c.status == "pending",
-                connections.c.requester_id.not_in(self.suspended_ids()))).scalar_one()
+    def friends_since(self, a: str, b: str) -> datetime | None:
+        one, other = self.follow_row(a, b), self.follow_row(b, a)
+        return max(one["created_at"], other["created_at"]) if one and other else None
 
     def block(self, blocker_id: str, blocked_id: str) -> None:
-        """Block someone, ending any request or friendship between the two."""
+        """Block someone: neither follows the other any more (so any friendship ends)."""
         self.forget_notifications_between(blocker_id, blocked_id)
         with self.engine.begin() as conn:
-            conn.execute(delete(connections).where(connections.c.pair == self.pair_of(blocker_id, blocked_id)))
+            conn.execute(delete(follows).where(or_(
+                and_(follows.c.follower_id == blocker_id, follows.c.followee_id == blocked_id),
+                and_(follows.c.follower_id == blocked_id, follows.c.followee_id == blocker_id))))
             exists = conn.execute(select(func.count()).select_from(blocks).where(
                 blocks.c.blocker_id == blocker_id, blocks.c.blocked_id == blocked_id)).scalar_one()
             if not exists:
@@ -947,8 +954,7 @@ class Database:
                 .limit(1)).scalar_one_or_none()
         if owner is None or self.hidden_between(owner, viewer_id):
             return None
-        conn_row = self.connection_between(owner, viewer_id)
-        return owner if conn_row and conn_row["status"] == "accepted" else None
+        return owner if self.are_friends(owner, viewer_id) else None
 
     def analyses_by_id(self, ids: list[str]) -> dict[str, dict[str, Any]]:
         if not ids:

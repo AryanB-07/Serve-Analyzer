@@ -1,9 +1,13 @@
-"""Friends: finding someone by username, requests, friendships and blocks.
+"""Following, friends (people who follow each other) and blocks.
 
-Everyone is private by default. Someone who isn't your friend sees only your display name,
-username and picture; a friend also sees your bio. A block hides each person from the other
-completely: to the blocked person, the blocker simply doesn't exist (404, the same as a
-username nobody has), so a block can't be detected.
+Following is one-way and needs no approval, unless someone turns "let people follow me" off.
+Two people are friends when each follows the other; friendship is worked out from the follows,
+never stored. Unfollowing a friend ends the friendship. You can also remove a follower.
+
+Someone who isn't your friend sees your display name, username, picture and follow counts; a
+friend also sees your bio, and whatever serve stats you share. A block removes the follows
+both ways and hides each person from the other completely: to the blocked person, the blocker
+simply doesn't exist (404, the same as a username nobody has), so a block can't be detected.
 """
 
 from __future__ import annotations
@@ -16,14 +20,14 @@ from .auth import Auth, RateLimiter, _too_many
 from .db import Database, now
 from .schemas import (
     BlockedPerson,
-    Connection,
-    ConnectionList,
     ErrorResponse,
+    FollowCounts,
+    FollowEntry,
+    FollowLists,
     Leaderboard,
     LeaderboardEntry,
     Person,
     PersonSummary,
-    RequestCount,
     SharedStats,
     User,
     UsernameRequest,
@@ -37,13 +41,14 @@ NOT_FOUND = "No one has that username."
 LEADERBOARD_DAYS = 90
 LEADERBOARD_MIN = 5
 LEADERBOARD_AVERAGED = 10
-NEED_USERNAME = "Choose a username first, so people know who's asking. You can set one in Settings."
+NEED_USERNAME = "Choose a username first, so people can see who's following them. You can set one in Settings."
+NOT_ALLOWED = "They aren't accepting new followers."
 
 
 def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
     router = APIRouter(tags=["friends"])
     signed_in = Depends(auth.current_user)
-    requests_sent = RateLimiter(db, "friend-request", limit=30, window=timedelta(hours=1))
+    new_follows = RateLimiter(db, "follow", limit=60, window=timedelta(hours=1))
     lookups = RateLimiter(db, "person-lookup", limit=120, window=timedelta(minutes=10))
     errors = {401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}}
 
@@ -54,45 +59,35 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
                              avatar_url=storage.presign("GET", avatar)[0] if avatar else None)
 
     def visible(username: str, user: User) -> dict:
-        """The person with ``username``, unless there's none or a block either way (both 404)."""
+        """The person with ``username``, unless there's none or they're hidden (a block either way,
+        or a suspension). Both are 404."""
         person = db.person_by_username(normalise_username(username)[:40])
         if person is None or (person["user_id"] != user.id and db.hidden_between(user.id, person["user_id"])):
             raise HTTPException(status.HTTP_404_NOT_FOUND, NOT_FOUND)
         return person
 
-    def as_connection(row: dict, user: User, profiles: dict[str, dict]) -> Connection:
-        other = row["addressee_id"] if row["requester_id"] == user.id else row["requester_id"]
-        return Connection(id=row["id"], person=summary(profiles.get(other)), status=row["status"],
-                          direction="outgoing" if row["requester_id"] == user.id else "incoming",
-                          created_at=row["created_at"], accepted_at=row["accepted_at"])
+    def relationship(user_id: str, other_id: str) -> str:
+        you_follow = db.follow_row(user_id, other_id) is not None
+        follows_you = db.follow_row(other_id, user_id) is not None
+        return {(True, True): "friends", (True, False): "following", (False, True): "follows_you"}.get(
+            (you_follow, follows_you), "none")
 
     def person_view(person: dict, user: User) -> Person:
+        counts = FollowCounts(**db.follow_counts(person["user_id"]))
         if person["user_id"] == user.id:
-            return Person(**summary(person).model_dump(), relationship="self", bio=person["bio"])
-        conn = db.connection_between(user.id, person["user_id"])
-        if conn is None:
-            relationship = "none"
-        elif conn["status"] == "accepted":
-            relationship = "friends"
-        else:
-            relationship = "requested" if conn["requester_id"] == user.id else "incoming"
-        friends = relationship == "friends"
+            return Person(**summary(person).model_dump(), relationship="self", counts=counts, bio=person["bio"])
+        rel = relationship(user.id, person["user_id"])
+        friends = rel == "friends"
         shared = db.serve_summary(person["user_id"]) if friends and (person["share_stats"] or person["share_positions"]) else None
         return Person(
-            **summary(person).model_dump(), relationship=relationship,
-            connection_id=conn["id"] if conn else None,
-            can_request=relationship == "none" and bool(person["accept_requests"]),
+            **summary(person).model_dump(), relationship=rel, counts=counts,
+            can_follow=rel in ("none", "follows_you") and (bool(person["allow_follows"]) or rel == "follows_you"),
             bio=person["bio"] if friends else None,
-            friends_since=conn["accepted_at"] if friends else None,
+            friends_since=db.friends_since(user.id, person["user_id"]) if friends else None,
             # Read when asked, so turning a setting off hides it at once.
             stats=SharedStats(**shared) if shared and person["share_stats"] else None,
             positions=shared["positions"] if shared and person["share_positions"] else None,
         )
-
-    def accepted(requester_id: str, accepter_id: str) -> None:
-        """Tell the person who asked; their "sent you a request" is done with."""
-        db.forget_notifications_between(requester_id, accepter_id, ("request_received",))
-        db.notify(requester_id, "request_accepted", accepter_id)
 
     def limited(limiter: RateLimiter, user: User) -> None:
         if wait := limiter.retry_after(user.id):
@@ -105,74 +100,55 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         limited(lookups, user)
         return person_view(visible(username, user), user)
 
-    @router.get("/connections", response_model=ConnectionList, responses=errors)
-    def list_connections(user: User = signed_in) -> ConnectionList:
-        rows = db.connections_of(user.id)
-        others = [r["addressee_id"] if r["requester_id"] == user.id else r["requester_id"] for r in rows]
-        profiles = db.profiles_of(others)
-        items = [as_connection(r, user, profiles) for r in rows]
-        return ConnectionList(
-            friends=[c for c in items if c.status == "accepted"],
-            incoming=[c for c in items if c.status == "pending" and c.direction == "incoming"],
-            outgoing=[c for c in items if c.status == "pending" and c.direction == "outgoing"],
-        )
+    @router.get("/follows", response_model=FollowLists, responses=errors)
+    def my_lists(user: User = signed_in) -> FollowLists:
+        """Your friends, followers and following, newest first."""
+        lists = db.follow_lists(user.id)
+        followers = {f["user_id"] for f in lists["followers"]}
+        following = {f["user_id"] for f in lists["following"]}
+        profiles = db.profiles_of(list(followers | following))
+        entry = lambda f: FollowEntry(person=summary(profiles.get(f["user_id"])), since=f["since"],  # noqa: E731
+                                      you_follow=f["user_id"] in following, follows_you=f["user_id"] in followers)
+        return FollowLists(counts=FollowCounts(**{k: len(v) for k, v in lists.items()}),
+                           **{k: [entry(f) for f in v] for k, v in lists.items()})
 
-    @router.get("/connections/count", response_model=RequestCount, responses=errors)
-    def count_requests(user: User = signed_in) -> RequestCount:
-        """Friend requests waiting for you, for the navigation's badge."""
-        return RequestCount(incoming=db.incoming_requests(user.id))
-
-    @router.post("/connections", status_code=201, response_model=Person,
-                 responses={**errors, 400: {"model": ErrorResponse}, 403: {"model": ErrorResponse},
-                            409: {"model": ErrorResponse}, 429: {"model": ErrorResponse}})
-    def send_request(body: UsernameRequest, response: Response, user: User = signed_in) -> Person:
-        """Send a friend request. If they'd already asked you, you're friends straight away."""
+    @router.put("/follows/{username}", response_model=Person,
+                responses={**errors, 400: {"model": ErrorResponse}, 403: {"model": ErrorResponse},
+                           409: {"model": ErrorResponse}, 429: {"model": ErrorResponse}})
+    def follow(username: str, user: User = signed_in) -> Person:
+        """Follow someone (or follow them back). Doing it again changes nothing."""
+        person = visible(username, user)
+        if person["user_id"] == user.id:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "You can't follow yourself.")
+        if db.follow_row(user.id, person["user_id"]):
+            return person_view(person, user)  # already following: a double tap
         if not (db.get_profile(user.id) or {}).get("username"):
             raise HTTPException(status.HTTP_409_CONFLICT, NEED_USERNAME)
-        person = visible(body.username, user)
-        if person["user_id"] == user.id:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That's you.")
-        existing = db.connection_between(user.id, person["user_id"])
-        if existing and existing["status"] == "pending" and existing["addressee_id"] == user.id:
-            db.accept_connection(existing["id"], user.id)
-            accepted(existing["requester_id"], user.id)
-            response.status_code = status.HTTP_200_OK
-            return person_view(person, user)
-        if existing:
-            raise HTTPException(status.HTTP_409_CONFLICT, "You're already friends." if existing["status"] == "accepted"
-                                else "You've already sent them a request.")
-        if not person["accept_requests"]:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "They aren't accepting friend requests.")
-        limited(requests_sent, user)
-        if db.request_connection(user.id, person["user_id"]) == "exists":
-            # They asked at the same moment: the two requests meet, and that's a yes from both.
-            crossed = db.connection_between(user.id, person["user_id"])
-            if crossed and crossed["status"] == "pending" and crossed["addressee_id"] == user.id:
-                db.accept_connection(crossed["id"], user.id)
-                accepted(crossed["requester_id"], user.id)
-            response.status_code = status.HTTP_200_OK
-        else:
-            db.notify(person["user_id"], "request_received", user.id)
+        follows_you = db.follow_row(person["user_id"], user.id) is not None
+        if not person["allow_follows"] and not follows_you:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, NOT_ALLOWED)
+        limited(new_follows, user)
+        if db.follow(user.id, person["user_id"]):
+            # One notification per follow: an unfollow and follow again doesn't pile them up.
+            db.forget_notifications_between(user.id, person["user_id"], ("new_follower", "followed_back"))
+            db.notify(person["user_id"], "followed_back" if follows_you else "new_follower", user.id)
         return person_view(person, user)
 
-    @router.post("/connections/{connection_id}/accept", response_model=Connection, responses=errors)
-    def accept_request(connection_id: str, user: User = signed_in) -> Connection:
-        """Accept a request someone sent you."""
-        row = db.accept_connection(connection_id, user.id)
-        if row is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Friend request not found")
-        other = row["requester_id"]
-        accepted(other, user.id)
-        return as_connection(row, user, db.profiles_of([other]))
+    @router.delete("/follows/{username}", status_code=204, responses=errors)
+    def unfollow(username: str, user: User = signed_in) -> Response:
+        """Stop following someone; if you were friends, you aren't any more. Already not
+        following is fine."""
+        person = visible(username, user)
+        if db.unfollow(user.id, person["user_id"]):
+            db.forget_notifications_between(user.id, person["user_id"], ("new_follower", "followed_back"))
+        return Response(status_code=204)
 
-    @router.delete("/connections/{connection_id}", status_code=204, responses=errors)
-    def remove_connection(connection_id: str, user: User = signed_in) -> Response:
-        """Cancel a request you sent, decline one you received, or end a friendship."""
-        row = db.get_connection(connection_id, user.id)
-        if row is None or not db.delete_connection(connection_id, user.id):
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-        # A request that's gone shouldn't still be announced.
-        db.forget_notifications_between(row["requester_id"], row["addressee_id"], ("request_received", "request_accepted"))
+    @router.delete("/followers/{username}", status_code=204, responses=errors)
+    def remove_follower(username: str, user: User = signed_in) -> Response:
+        """Remove someone from your followers (they aren't told). Ends a friendship too."""
+        person = visible(username, user)
+        if db.unfollow(person["user_id"], user.id):
+            db.forget_notifications_between(user.id, person["user_id"], ("new_follower", "followed_back"))
         return Response(status_code=204)
 
     @router.get("/leaderboard", response_model=Leaderboard, responses=errors)
@@ -208,7 +184,7 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
 
     @router.post("/blocks", status_code=204, responses={**errors, 400: {"model": ErrorResponse}})
     def block(body: UsernameRequest, user: User = signed_in) -> Response:
-        """Block someone. Any request or friendship between you ends, and they can't find you."""
+        """Block someone. Neither of you follows the other any more, and they can't find you."""
         person = visible(body.username, user)
         if person["user_id"] == user.id:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "That's you.")

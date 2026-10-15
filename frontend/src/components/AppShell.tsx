@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 
 import { USE_MOCKS } from "../api";
-import { useRequestCount } from "../api/friends";
 import { useUnreadCount } from "../api/messages";
 import { useProfile } from "../api/profile";
 import { useLogOut, useSession } from "../api/session";
@@ -109,12 +108,11 @@ const ICONS = {
 
 /** The main sections: in the header on wide screens, a tab bar along the bottom on phones. */
 function MainNav({ phone }: { phone: boolean }) {
-  const requests = useRequestCount().data ?? 0;
   const unread = useUnreadCount().data ?? 0;
   const items = [
     { to: "/", label: "Analyze", end: true, icon: ICONS.analyze, badge: 0, unit: "" },
     { to: "/serves", label: "My Serves", end: false, icon: ICONS.serves, badge: 0, unit: "" },
-    { to: "/friends", label: "Friends", end: false, icon: ICONS.friends, badge: requests, unit: "request" },
+    { to: "/friends", label: "Friends", end: false, icon: ICONS.friends, badge: 0, unit: "" },
     { to: "/messages", label: "Messages", end: false, icon: ICONS.messages, badge: unread, unit: "message" },
   ];
   const badge = (n: number) =>
