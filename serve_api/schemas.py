@@ -344,6 +344,7 @@ class DataExport(BaseModel):
     blocks: list[ExportedBlock] = []
     conversations: list[ExportedConversation] = []
     reports_made: list[ExportedUserReport] = []
+    notifications: list[ExportedNotification] = []
 
 
 # --- profiles ---------------------------------------------------------------------------------
@@ -668,6 +669,25 @@ class ExportedUserReport(BaseModel):
     note: str | None = None
     message: str | None = None
     created_at: datetime
+
+
+NotificationKind = Literal["request_received", "request_accepted", "serve_received"]
+
+
+class Notification(BaseModel):
+    id: str
+    kind: NotificationKind
+    person: PersonSummary | None = None  # who did it
+    conversation_id: str | None = None  # for a serve: the conversation it's in
+    created_at: datetime
+    read: bool
+
+
+class ExportedNotification(BaseModel):
+    kind: NotificationKind
+    username: str | None = None
+    created_at: datetime
+    read: bool
 
 
 class ExportedConnection(BaseModel):

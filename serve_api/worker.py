@@ -27,7 +27,7 @@ from serve_analyzer.score import key_scores
 
 from . import keys, migrate
 from .convert import counts_from_labels, public_message
-from .db import Database, now
+from .db import USERNAME_HELD_FOR, Database, now
 from .error_reporting import init_error_reporting
 from .purge import analysis_prefixes, run_purges
 from .settings import Settings
@@ -42,6 +42,7 @@ SWEEP_EVERY_S = 30.0
 HOUSEKEEPING_EVERY_S = 3600.0
 # Reports of people and messages are kept a year for spotting repeat abuse (Privacy Policy).
 REPORTS_KEPT = timedelta(days=365)
+NOTIFICATIONS_KEPT = timedelta(days=90)
 ABANDONED_AFTER = timedelta(days=1)   # an upload that never arrived
 ATTEMPTS_KEPT = timedelta(days=1)     # longer than any rate-limit window
 
@@ -179,6 +180,8 @@ def housekeeping(db: Database, storage: Storage, upload_retention_days: int = 0)
     backfill_scores(db, storage)
     if old := db.delete_old_user_reports(now() - REPORTS_KEPT):
         log.info("deleted %d reports of people older than a year", old)
+    db.delete_old_notifications(now() - NOTIFICATIONS_KEPT)
+    db.delete_old_username_holds(now() - USERNAME_HELD_FOR)
     sessions, attempts = db.delete_expired(attempts_before=now() - ATTEMPTS_KEPT)
     if sessions or attempts:
         log.info("deleted %d expired sessions and %d old sign-in attempts", sessions, attempts)

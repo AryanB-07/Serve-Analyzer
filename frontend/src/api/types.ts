@@ -38,6 +38,7 @@ export type LeaderboardEntry = Schemas["LeaderboardEntry"];
 export type Message = Schemas["Message"];
 export type SharedServe = Schemas["SharedServe"];
 export type SendMessage = Schemas["SendMessage"];
+export type Notification = Schemas["Notification"];
 export type MessagePage = Schemas["MessagePage"];
 export type ConversationSummary = Schemas["ConversationSummary"];
 export type UserReportRequest = Schemas["UserReportRequest"];

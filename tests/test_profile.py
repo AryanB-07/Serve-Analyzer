@@ -97,9 +97,9 @@ def test_usernames_are_unique_ignoring_case(app, me):
     # Your own username counts as available to you; a free one is available to anyone.
     assert me.get("/profile/username-check", params={"username": "ace"}).json()["available"] is True
     assert other.get("/profile/username-check", params={"username": "ace2"}).json()["available"] is True
-    # Once given up, it's free again.
+    # Once given up, it's held for its owner for a while (tests/test_moderation.py), not free.
     me.patch("/profile", json={"username": "renamed"})
-    assert other.patch("/profile", json={"username": "ace"}).status_code == 200
+    assert other.patch("/profile", json={"username": "ace"}).status_code == 409
 
 
 def test_long_names_and_bios_are_refused(me):
@@ -218,8 +218,8 @@ def test_the_profile_is_in_the_data_download_and_deleted_with_the_account(app, s
     assert me.request("DELETE", "/auth/me", json={"password": PASSWORD}).status_code == 204
     assert db_of(app).get_profile(user_id) is None
     assert not (settings.data_dir / "objects" / keys.avatar_prefix(user_id)).exists()
-    # The username is free for someone else.
-    assert stranger(app).patch("/profile", json={"username": "leaving"}).status_code == 200
+    # The username is held, so nobody can take it to pose as them (tests/test_moderation.py).
+    assert stranger(app).patch("/profile", json={"username": "leaving"}).status_code == 409
 
 
 # --- changing the password -----------------------------------------------------------------------

@@ -15,7 +15,7 @@ from fastapi.concurrency import run_in_threadpool
 from . import keys
 from .auth import Auth, RateLimiter, _too_many
 from .avatars import MAX_BYTES, AvatarError, clean
-from .db import Database
+from .db import USERNAME_HELD_FOR, Database, now
 from .purge import run_purges
 from .schemas import (
     ErrorResponse,
@@ -30,6 +30,7 @@ from .schemas import (
 from .storage import Storage
 
 TAKEN = "That username is taken."
+HELD = "Someone used that username recently, so it's held for them for a while. Try another."
 SHARING = ("share_stats", "share_positions", "on_leaderboard")
 
 
@@ -65,9 +66,11 @@ def profile_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         """Change the fields sent; leave the rest as they are."""
         fields = body.model_dump(include=body.model_fields_set)
         if fields:
-            saved = db.save_profile(user.id, **fields)
+            saved = db.save_profile(user.id, held_for=USERNAME_HELD_FOR, **fields)
             if saved == "username_taken":
                 raise HTTPException(status.HTTP_409_CONFLICT, TAKEN)
+            if saved == "username_held":
+                raise HTTPException(status.HTTP_409_CONFLICT, HELD)
         return profile_of(user)
 
     @router.get("/username-check", response_model=UsernameCheck,
@@ -81,6 +84,9 @@ def profile_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         owner = db.username_owner(name)
         if owner not in (None, user.id):
             return UsernameCheck(username=name, available=False, problem=TAKEN)
+        hold = db.username_hold(name)
+        if hold and hold["user_id"] != user.id and hold["released_at"] > now() - USERNAME_HELD_FOR:
+            return UsernameCheck(username=name, available=False, problem=HELD)
         return UsernameCheck(username=name, available=True)
 
     @router.put("/avatar", response_model=Profile,

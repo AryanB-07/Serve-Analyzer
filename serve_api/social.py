@@ -56,7 +56,7 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
     def visible(username: str, user: User) -> dict:
         """The person with ``username``, unless there's none or a block either way (both 404)."""
         person = db.person_by_username(normalise_username(username)[:40])
-        if person is None or (person["user_id"] != user.id and db.blocked_between(user.id, person["user_id"])):
+        if person is None or (person["user_id"] != user.id and db.hidden_between(user.id, person["user_id"])):
             raise HTTPException(status.HTTP_404_NOT_FOUND, NOT_FOUND)
         return person
 
@@ -88,6 +88,11 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
             stats=SharedStats(**shared) if shared and person["share_stats"] else None,
             positions=shared["positions"] if shared and person["share_positions"] else None,
         )
+
+    def accepted(requester_id: str, accepter_id: str) -> None:
+        """Tell the person who asked; their "sent you a request" is done with."""
+        db.forget_notifications_between(requester_id, accepter_id, ("request_received",))
+        db.notify(requester_id, "request_accepted", accepter_id)
 
     def limited(limiter: RateLimiter, user: User) -> None:
         if wait := limiter.retry_after(user.id):
@@ -130,6 +135,7 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         existing = db.connection_between(user.id, person["user_id"])
         if existing and existing["status"] == "pending" and existing["addressee_id"] == user.id:
             db.accept_connection(existing["id"], user.id)
+            accepted(existing["requester_id"], user.id)
             response.status_code = status.HTTP_200_OK
             return person_view(person, user)
         if existing:
@@ -143,7 +149,10 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
             crossed = db.connection_between(user.id, person["user_id"])
             if crossed and crossed["status"] == "pending" and crossed["addressee_id"] == user.id:
                 db.accept_connection(crossed["id"], user.id)
+                accepted(crossed["requester_id"], user.id)
             response.status_code = status.HTTP_200_OK
+        else:
+            db.notify(person["user_id"], "request_received", user.id)
         return person_view(person, user)
 
     @router.post("/connections/{connection_id}/accept", response_model=Connection, responses=errors)
@@ -153,13 +162,17 @@ def social_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         if row is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Friend request not found")
         other = row["requester_id"]
+        accepted(other, user.id)
         return as_connection(row, user, db.profiles_of([other]))
 
     @router.delete("/connections/{connection_id}", status_code=204, responses=errors)
     def remove_connection(connection_id: str, user: User = signed_in) -> Response:
         """Cancel a request you sent, decline one you received, or end a friendship."""
-        if not db.delete_connection(connection_id, user.id):
+        row = db.get_connection(connection_id, user.id)
+        if row is None or not db.delete_connection(connection_id, user.id):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+        # A request that's gone shouldn't still be announced.
+        db.forget_notifications_between(row["requester_id"], row["addressee_id"], ("request_received", "request_accepted"))
         return Response(status_code=204)
 
     @router.get("/leaderboard", response_model=Leaderboard, responses=errors)

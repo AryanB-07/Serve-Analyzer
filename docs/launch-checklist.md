@@ -129,11 +129,11 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 - [x] Sending serves to friends (read-only, ends with the message or the friendship), and comparing with a friend's serve.
 - [ ] **After launch, weekly:** review reports of people and messages
   (`docker compose -f deploy/docker-compose.yml exec api python -m serve_api.reports --people`), and act
-  on them: there's no in-app moderation tool yet, so suspending an account means deleting it.
+  on them with `python -m serve_api.moderate show|suspend|unsuspend <username>`.
 - [ ] **Before leaning on ranks:** validate the reference ranges. The leaderboard makes the scores
   more visible, and every score shown to friends says the ranges aren't validated yet.
-- [ ] **Before profiles are public:** hold a released username for a while before anyone else can
-  take it, so nobody can impersonate a renamed player.
+- [x] A released username is held for its owner for 30 days, so nobody can impersonate a renamed player.
+- [x] Notifications (requests, accepted requests, serves sent to you) and account suspension.
 - [x] History (now My Serves): score cards with upload time, optional notes, key-position details, and
       server-side filters by time, score and key position.
 

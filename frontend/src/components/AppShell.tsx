@@ -9,6 +9,7 @@ import { useLogOut, useSession } from "../api/session";
 import { SIGNING_OUT } from "../features/auth/AuthPages";
 import { HelpButton, HelpProvider } from "../features/help/HelpProvider";
 import { Avatar } from "./Avatar";
+import { NotificationBell } from "./NotificationBell";
 import { useMediaQuery } from "../lib/useMediaQuery";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -212,6 +213,7 @@ function Shell() {
             )}
             <HelpButton />
             <ThemeToggle />
+            {signedIn && <NotificationBell />}
             <AccountMenu />
           </div>
         </div>

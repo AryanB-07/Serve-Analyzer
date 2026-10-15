@@ -27,7 +27,8 @@ Deliberately awkward rows, the kind real data accumulates:
   has never set one (like every account from before profiles existed);
 - friends: a friendship, a request waiting for an answer, a block, and different choices of
   what to share with friends; a conversation with an unread reply, a deleted message and a
-  serve sent to a friend; a report.
+  serve sent to a friend; a report; notifications; a suspended account that was the player's
+  friend (it must stay hidden from everyone).
 """
 
 from __future__ import annotations
@@ -335,6 +336,24 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
     seeder.db.mark_read(conv["id"], lefty)
     seeder.db.save_user_report(reporter_id=lefty, reported_id=pest, reported_username="seed_blocked",
                                message_id=None, message_body=None, reason="spam", note="Kept sending requests.")
+
+    # Notifications, as the API would have made them.
+    seeder.db.notify(player, "request_received", newbie)
+    seeder.db.notify(lefty, "request_accepted", player)
+    seeder.db.notify(lefty, "serve_received", player, conv["id"])
+
+    # A suspended account that was the player's friend and messaged them: hidden from everyone now.
+    banned = seeder.user("suspended", age_days=60)
+    seeder.profile(banned, username="seed_suspended", display_name="Sus Pended")
+    link = seeder.db.request_connection(banned, player)
+    seeder.db.accept_connection(link["id"], player)
+    banned_chat = seeder.db.conversation_with(banned, player, create=True)
+    seeder.db.add_message(banned_chat["id"], banned, "buy followers at …")
+    seeder.db.notify(player, "request_accepted", banned)
+    seeder.db.save_user_report(reporter_id=player, reported_id=banned, reported_username="seed_suspended",
+                               message_id=None, message_body="buy followers at …", reason="spam", note=None)
+    seeder.db.suspend(banned, "Spam (seed data)")
+    made["suspended"] = 0
     seeder.user("unverified", verified=False, terms=None, age_days=200)  # before the Terms were recorded
     made["unverified"] = 0
     return made

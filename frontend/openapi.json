@@ -2127,6 +2127,98 @@
         }
       }
     },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "List Notifications",
+        "description": "Your latest 50, newest first.",
+        "operationId": "list_notifications_notifications_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Notification"
+                  },
+                  "type": "array",
+                  "title": "Response List Notifications Notifications Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/unread": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Count Unread",
+        "operationId": "count_unread_notifications_unread_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCount"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/read": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Mark Read",
+        "description": "Mark them all read (done when you open the list).",
+        "operationId": "mark_read_notifications_read_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/analyses": {
       "post": {
         "summary": "Create Analysis",
@@ -3742,6 +3834,14 @@
             "type": "array",
             "title": "Reports Made",
             "default": []
+          },
+          "notifications": {
+            "items": {
+              "$ref": "#/components/schemas/ExportedNotification"
+            },
+            "type": "array",
+            "title": "Notifications",
+            "default": []
           }
         },
         "type": "object",
@@ -4113,6 +4213,46 @@
           "created_at"
         ],
         "title": "ExportedMessage"
+      },
+      "ExportedNotification": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "request_received",
+              "request_accepted",
+              "serve_received"
+            ],
+            "title": "Kind"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "read": {
+            "type": "boolean",
+            "title": "Read"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "created_at",
+          "read"
+        ],
+        "title": "ExportedNotification"
       },
       "ExportedProfile": {
         "properties": {
@@ -5303,6 +5443,61 @@
         "type": "object",
         "title": "NoteRequest",
         "description": "The person's own note on an analysis; empty or null clears it."
+      },
+      "Notification": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "request_received",
+              "request_accepted",
+              "serve_received"
+            ],
+            "title": "Kind"
+          },
+          "person": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "read": {
+            "type": "boolean",
+            "title": "Read"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "created_at",
+          "read"
+        ],
+        "title": "Notification"
       },
       "PasswordResetConfirm": {
         "properties": {

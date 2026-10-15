@@ -10,6 +10,8 @@ made directly, so no passwords are needed, and removed afterwards):
 - /auth/me, the profile (and its picture), friends, requests, blocks, each friend's page,
   conversations and their messages, and the leaderboard;
 - the data download;
+- that suspended accounts appear nowhere anyone else looks (and are skipped, since they
+  can't sign in);
 - History, every page, with each kind of filter;
 - each analysis's summary, report, and for finished ones the result, the frames, and the
   thumbnail and video files the result links to;
@@ -71,6 +73,17 @@ class Check:
         return res
 
 
+def check_hidden(c: Check, client: TestClient, who: str, hidden_names: set[str]) -> None:
+    """Suspended accounts appear nowhere another account looks."""
+    for path in ("/connections", "/conversations", "/notifications", "/leaderboard"):
+        res = client.get(path)
+        if res.status_code == 200:
+            for name in hidden_names:
+                c.expect(f'"{name}"' not in res.text, f"{who}: suspended @{name} shows in {path}")
+    for name in hidden_names:
+        c.expect(client.get(f"/people/{name}").status_code == 404, f"{who}: suspended @{name} can be looked up")
+
+
 def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> None:
     who = user["email"]
     me = c.get(client, "/auth/me", who)
@@ -85,6 +98,10 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
         c.counts["profile pictures"] += 1
     links = c.get(client, "/connections", f"{who} friends")
     c.get(client, "/connections/count", f"{who} request count")
+    notes = c.get(client, "/notifications", f"{who} notifications")
+    c.get(client, "/notifications/unread", f"{who} notification count")
+    if notes.status_code == 200:
+        c.counts["notifications"] += len(notes.json())
     c.get(client, "/blocks", f"{who} blocked people")
     chats = c.get(client, "/conversations", f"{who} conversations")
     c.get(client, "/conversations/unread", f"{who} unread count")
@@ -184,13 +201,19 @@ def main() -> int:
         orphans = conn.execute(select(analyses.c.id).where(
             analyses.c.user_id.not_in(select(users.c.id)))).scalars().all()
     c.expect(not orphans, f"{len(orphans)} analyses belong to no account")
+    suspended = {u["id"] for u in everyone if u.get("suspended_at")}
+    hidden_names = {p["username"] for p in db.profiles_of(list(suspended)).values() if p["username"]}
     for user in everyone:
+        if user["id"] in suspended:  # can't sign in; checked below to be hidden from the rest
+            c.counts["suspended accounts"] += 1
+            continue
         token = secrets.token_urlsafe(32)
         db.create_session(user["id"], hash_token(token), now() + timedelta(minutes=10))
         try:
             client = TestClient(app, base_url="http://testserver", raise_server_exceptions=False)
             client.cookies.set(SESSION_COOKIE, token)
             check_user(c, client, user, settings)
+            check_hidden(c, client, user["email"], hidden_names)
         finally:
             with db.engine.begin() as conn:
                 conn.execute(delete(sessions).where(sessions.c.token_hash == hash_token(token)))

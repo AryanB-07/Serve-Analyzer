@@ -14,6 +14,7 @@ import type {
   Leaderboard,
   Message,
   MessagePage,
+  Notification,
   Person,
   Profile,
   ProfileUpdate,
@@ -103,6 +104,9 @@ export interface ApiClient {
   deleteMessage(messageId: string): Promise<void>;
   /** Report a person, or one of their messages to you. */
   report(body: UserReportRequest): Promise<void>;
+  listNotifications(): Promise<Notification[]>;
+  countNotifications(): Promise<number>;
+  markNotificationsRead(): Promise<void>;
   block(username: string): Promise<void>;
   unblock(username: string): Promise<void>;
 }
@@ -246,6 +250,9 @@ export const httpClient: ApiClient = {
   markRead: (id) => request(`/conversations/${encodeURIComponent(id)}/read`, { method: "POST" }),
   deleteMessage: (id) => request(`/messages/${encodeURIComponent(id)}`, { method: "DELETE" }),
   report: (body) => request("/reports", { method: "POST", body: JSON.stringify(body) }),
+  listNotifications: () => request("/notifications"),
+  countNotifications: async () => (await request<{ unread: number }>("/notifications/unread")).unread,
+  markNotificationsRead: () => request("/notifications/read", { method: "POST" }),
   block: (username) => request("/blocks", { method: "POST", body: JSON.stringify({ username }) }),
   unblock: (username) => request(`/blocks/${encodeURIComponent(username)}`, { method: "DELETE" }),
   changePassword: (currentPassword, newPassword) =>

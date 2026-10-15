@@ -35,6 +35,7 @@ from .schemas import (
     ExportedConnection,
     ExportedConversation,
     ExportedMessage,
+    ExportedNotification,
     ExportedProfile,
     ExportedUserReport,
     ChangeEmailRequest,
@@ -59,6 +60,7 @@ SESSION_COOKIE = "serve_session"
 SESSION_TTL = timedelta(days=30)
 EXTEND_AFTER = timedelta(days=1)
 BAD_CREDENTIALS = "Incorrect email or password."
+SUSPENDED = "This account is suspended. If you think that's a mistake, contact us (see the Privacy Policy)."
 # The date of the current Terms of Service and Privacy Policy (frontend/src/features/legal).
 # Change it whenever either document changes materially.
 TERMS_VERSION = "2026-10-15"
@@ -220,6 +222,9 @@ class Auth:
             blocks=[ExportedBlock(username=name_of(b["blocked_id"]), blocked_at=b["created_at"]) for b in blocked],
             conversations=conversations,
             reports_made=reports_made,
+            notifications=[ExportedNotification(kind=n["kind"], username=(self.db.profiles_of([n["actor_id"]]).get(n["actor_id"]) or {}).get("username"),
+                                                created_at=n["created_at"], read=n["read_at"] is not None)
+                           for n in self.db.notifications_for(user.id, limit=10_000)],
         )
 
     def _send(self, tasks: BackgroundTasks, message: m.Email) -> None:
@@ -259,6 +264,9 @@ class Auth:
         session = self.db.get_session(hash_token(token)) if token else None
         if session is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in to continue.")
+        if session["user_suspended_at"] is not None:  # suspending ends sessions; this covers a race
+            self.db.delete_session(session["token_hash"])
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, SUSPENDED)
         if session["last_seen_at"] < now() - EXTEND_AFTER:
             self.db.extend_session(session["id"], now() + SESSION_TTL)
             self._set_cookie(response, token)
@@ -297,6 +305,9 @@ class Auth:
             if not verify_password(password_hash, body.password) or row is None:
                 self.failures_per_email.hit(email)
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED, BAD_CREDENTIALS)
+            # Only after the password checks out, so a suspension says nothing to a guesser.
+            if row.get("suspended_at") is not None:
+                raise HTTPException(status.HTTP_403_FORBIDDEN, SUSPENDED)
             if _hasher.check_needs_rehash(row["password_hash"]):
                 self.db.set_password_hash(row["id"], _hasher.hash(body.password))
             self._start_session(request, response, row["id"])

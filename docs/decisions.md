@@ -277,6 +277,16 @@ and what would change the decision. Numbers link to the reports and docs they co
   - public links: easy to forward to anyone, which is exactly what a 13+ product with videos of people shouldn't do.
 - **Trade-off:** the access check costs a join per request on shared analyses. That's indexed (`messages_analysis`) and only runs when the viewer isn't the owner. And nothing stops a friend recording their screen, which the Privacy Policy says plainly.
 
+### 16i. Suspension as "hidden from everyone", and usernames held after they're given up
+
+- **Chosen:**
+  - suspending an account (`python -m serve_api.moderate suspend`) ends its sessions, refuses sign-in, and hides it from everyone else. The check that hides blocked people (`hidden_between`) also hides suspended accounts, so every place that respects blocks (finding someone, conversations, shared serves, notifications) respects suspensions with no change. Friend lists, request counts and the leaderboard leave suspended accounts out too. Nothing is deleted, so unsuspending puts everything back.
+  - sign-in tells a suspended person their account is suspended, but only after the password checks out, so a guesser learns nothing.
+  - a username someone gives up is held for 30 days, and only they can take it back. Without that, renaming or deleting an account would let anyone take the old name and pose as that person to their friends.
+  - notifications only for things with no badge of their own: a request received, a request accepted, a serve received. Messages already count on the Messages tab. Notifications about a request that's been cancelled or declined are deleted with it.
+- **Considered:** deleting abusive accounts outright (what the checklist said before). It's irreversible, loses the evidence, and gives the person no way to appeal.
+- **Trade-off:** there's no moderation screen yet, just a script on the server. That's fine for one operator; a dashboard is the next step if reports grow.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

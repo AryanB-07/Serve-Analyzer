@@ -73,7 +73,7 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
     def mine(conversation_id: str, user: User) -> dict:
         """``user``'s side of the conversation; 404 if they aren't in it or there's a block."""
         member = db.membership(conversation_id, user.id)
-        if member is None or (member["other_id"] and db.blocked_between(user.id, member["other_id"])):
+        if member is None or (member["other_id"] and db.hidden_between(user.id, member["other_id"])):
             raise HTTPException(status.HTTP_404_NOT_FOUND, NOT_FOUND)
         return member
 
@@ -114,7 +114,7 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
 
     def visible_conversations(user: User) -> list[dict]:
         return [c for c in db.conversations_of(user.id)
-                if not (c["other_id"] and db.blocked_between(user.id, c["other_id"]))]
+                if not (c["other_id"] and db.hidden_between(user.id, c["other_id"]))]
 
     @router.get("/conversations", response_model=list[ConversationSummary], responses=errors)
     def list_conversations(user: User = signed_in) -> list[ConversationSummary]:
@@ -131,7 +131,7 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
     def start_conversation(body: StartConversation, user: User = signed_in) -> ConversationSummary:
         """Open your conversation with a friend, making it the first time."""
         person = db.person_by_username(normalise_username(body.username)[:40])
-        if person is None or person["user_id"] == user.id or db.blocked_between(user.id, person["user_id"]):
+        if person is None or person["user_id"] == user.id or db.hidden_between(user.id, person["user_id"]):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No one has that username.")
         existing = db.conversation_with(user.id, person["user_id"])
         if existing is None and not friends(user.id, person["user_id"]):
@@ -173,6 +173,8 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
             if analysis is None or analysis["status"] != "succeeded":
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "Analysis not found")
         row = db.add_message(conversation_id, user.id, body.body, body.analysis_id)
+        if body.analysis_id and member["other_id"]:
+            db.notify(member["other_id"], "serve_received", user.id, conversation_id)
         return as_message(row, user, serves_for([row], user))
 
     @router.post("/conversations/{conversation_id}/read", status_code=204, responses=errors)

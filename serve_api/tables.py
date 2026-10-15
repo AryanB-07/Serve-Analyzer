@@ -92,6 +92,11 @@ users = Table(
     # Which version of the Terms and Privacy Policy the person agreed to at signup, and when.
     Column("terms_version", String(32)),
     Column("terms_accepted_at", UTCDateTime),
+    # Set by the operator (python -m serve_api.moderate): the account can't sign in, and to
+    # everyone else it's hidden as if it had blocked them. Its data is kept until unsuspended
+    # or deleted.
+    Column("suspended_at", UTCDateTime),
+    Column("suspended_reason", Text),
 )
 
 profiles = Table(
@@ -185,6 +190,31 @@ user_reports = Table(
     Column("note", Text),
     Column("created_at", UTCDateTime, nullable=False),
     Index("user_reports_created", "created_at"),
+)
+
+notifications = Table(
+    "notifications",
+    metadata,
+    # "Ann accepted your friend request", "Bob sent you a serve". Deleted with either account.
+    Column("id", String(32), primary_key=True),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("kind", String(32), nullable=False),  # request_received | request_accepted | serve_received
+    Column("actor_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("conversation_id", String(32), ForeignKey("conversations.id", ondelete="CASCADE")),
+    Column("created_at", UTCDateTime, nullable=False),
+    Column("read_at", UTCDateTime),
+    Index("notifications_user", "user_id", "created_at"),
+    Index("notifications_actor", "actor_id"),
+)
+
+released_usernames = Table(
+    "released_usernames",
+    metadata,
+    # A username someone gave up (renamed, or deleted their account), held for a while so
+    # nobody else can take it to pass themselves off as them. Its previous owner can take it back.
+    Column("username", String(20), primary_key=True),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="SET NULL")),
+    Column("released_at", UTCDateTime, nullable=False),
 )
 
 blocks = Table(

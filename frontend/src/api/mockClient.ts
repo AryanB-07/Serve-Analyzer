@@ -2,6 +2,7 @@ import { ApiError, UploadAbortedError, type ApiClient } from "./client";
 import { normaliseUsername, usernameProblem } from "../lib/username";
 import { DEMO_IDS } from "./demo";
 import type {
+  Notification,
   Person,
   AnalysisList,
   AnalysisResult,
@@ -102,6 +103,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     ["serve_queen", { id: "c-queen", status: "pending", direction: "incoming", created_at: "2026-10-10T10:00:00Z", accepted_at: null }],
   ]);
   const blocked = new Map<string, string>();
+  let notificationsRead = false;
   // Mock conversations, keyed by the other person's username.
   type MockMessage = {
     id: string; from_you: boolean; body: string | null; deleted: boolean; created_at: string;
@@ -290,6 +292,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           messages: c.messages.map(({ from_you, body, deleted, created_at }) => ({ from_you, body, deleted, created_at })),
         })),
         reports_made: [],
+        notifications: [],
         analyses: items.map((a) => ({
           id: a.id,
           filename: a.filename,
@@ -507,6 +510,25 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
 
     async report() {
       await delay();
+    },
+
+    async listNotifications() {
+      await delay();
+      const out: Notification[] = [];
+      if (links.get("serve_queen")?.status === "pending") {
+        out.push({ id: "n1", kind: "request_received", person: summaryOf("serve_queen"), conversation_id: null,
+          created_at: "2026-10-10T10:00:00Z", read: notificationsRead });
+      }
+      return out;
+    },
+
+    async countNotifications() {
+      return notificationsRead ? 0 : (await this.listNotifications()).length;
+    },
+
+    async markNotificationsRead() {
+      await delay();
+      notificationsRead = true;
     },
 
     async listBlocks() {

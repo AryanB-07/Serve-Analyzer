@@ -3,7 +3,7 @@ import type { Browser, Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures";
 
-import { deleteAccount, newEmail, signUpAndVerify } from "./helpers";
+import { deleteAccount, expectAccessible, newEmail, signUpAndVerify } from "./helpers";
 
 async function personWithUsername(browser: Browser, baseURL: string | undefined, username: string, name: string): Promise<Page> {
   const page = await (await browser.newContext({ baseURL, ignoreHTTPSErrors: true })).newPage();
@@ -29,16 +29,21 @@ test("a friend request, accepted, then a block that hides each from the other", 
   await ann.getByRole("button", { name: "Add friend" }).click();
   await expect(ann.getByText("Request sent.")).toBeVisible();
 
-  // Bob sees a badge, and accepts from the Friends page.
+  // Bob sees a badge and a notification, and accepts from the Friends page.
   await bob.goto("/");
   await expect(bob.getByRole("link", { name: "Friends, 1 new request" })).toBeVisible();
+  await bob.getByRole("button", { name: "Notifications, 1 new" }).click();
+  await expect(bob.getByRole("link", { name: /Ann E2E sent you a friend request/ })).toBeVisible();
+  await expectAccessible(bob, "the notifications panel");
+  await bob.keyboard.press("Escape");
   await bob.getByRole("link", { name: /^Friends/ }).click();
   await bob.getByRole("button", { name: "Accept Ann E2E's request" }).click();
   await expect(bob.getByRole("region", { name: /Your friends \(1\)/ })).toContainText("Ann E2E");
   await expect(bob.getByRole("link", { name: "Friends", exact: true })).toBeVisible();
 
-  // Now Ann sees his bio.
+  // Ann is told, and now sees his bio.
   await ann.reload();
+  await expect(ann.getByRole("button", { name: "Notifications, 1 new" })).toBeVisible();
   await expect(ann.getByText("Bob E2E's bio")).toBeVisible();
   await expect(ann.getByText(/^Friends since/)).toBeVisible();
 

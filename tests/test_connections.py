@@ -210,5 +210,5 @@ def test_deleting_an_account_removes_its_friendships_requests_and_blocks(app, an
     assert ann.get("/connections").json() == {"friends": [], "incoming": [], "outgoing": []}
     assert carol.get("/connections").json()["outgoing"] == []
     assert ann.get("/people/bob").status_code == 404
-    # Bob's block went with him, and his username is free again.
-    assert person(app, "bob").get("/people/ann").status_code == 200
+    # Bob's block went with him: a new account (his username is held) can find Ann.
+    assert person(app, "bob2").get("/people/ann").status_code == 200

@@ -116,6 +116,6 @@ def test_the_seed_data_loads_everywhere(tmp_path, monkeypatch):
     # Seeding again replaces the seed accounts instead of failing or doubling them.
     seed_dev_data.main()
     seeder = seed_dev_data.Seeder(Settings())
-    assert len(seeder.seed_user_ids()) == 5
+    assert len(seeder.seed_user_ids()) == 6
     seeder.remove()
     assert seeder.seed_user_ids() == []

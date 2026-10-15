@@ -196,6 +196,13 @@ export function PrivacyPage() {
             you; deleting your account deletes every message you sent, while the other person keeps their own.
           </li>
           <li>
+            <strong>Notifications</strong> (a friend request, an accepted request, a serve sent to you): 90 days.
+          </li>
+          <li>
+            <strong>A username you give up</strong> (by changing it, or deleting your account) is held for 30 days, so
+            nobody else can take it to pass themselves off as you. Only you can take it back in that time.
+          </li>
+          <li>
             <strong>Reports of people or messages:</strong> 1 year, so repeated abuse can be spotted. They stay if either
             account is deleted, without the deleted account's link to it, and include a copy of any reported message.
           </li>
@@ -313,7 +320,11 @@ export function TermsPage() {
           <li>pretend to be someone else with your username, name or picture;</li>
           <li>resell or rebrand the service without our written permission.</li>
         </ul>
-        <p>We may remove content or suspend accounts that break these rules.</p>
+        <p>
+          We may remove content or suspend accounts that break these rules. A suspended account can't sign in and is hidden
+          from everyone else, but nothing in it is deleted; email us if you think a suspension is a mistake, or to have the
+          account deleted.
+        </p>
       </Section>
 
       <Section title="What the analysis is, and isn't">

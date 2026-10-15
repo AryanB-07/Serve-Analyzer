@@ -38,7 +38,9 @@ from .tables import (
     conversations,
     email_tokens,
     messages,
+    notifications,
     profiles,
+    released_usernames,
     result_reports,
     sessions,
     storage_purges,
@@ -47,6 +49,8 @@ from .tables import (
 )
 
 IN_PROGRESS = ("extracting_pose", "analyzing", "rendering")
+# How long a username someone gave up stays theirs to take back, so nobody can pose as them.
+USERNAME_HELD_FOR = timedelta(days=30)
 KEY_POSITIONS = ("front_knee_flexion", "back_knee_flexion", "trunk_tilt", "elbow_angle", "wrist_height")
 
 
@@ -465,6 +469,11 @@ class Database:
         picture) for removal. Returns the purge ids."""
         with self.engine.begin() as conn:
             ids = list(conn.execute(select(analyses.c.id).where(analyses.c.user_id == user_id)).scalars())
+            # Their username is held for a while, so nobody can take it to pose as them.
+            if name := conn.execute(select(profiles.c.username).where(profiles.c.user_id == user_id)).scalar_one_or_none():
+                self._hold(conn, name, None)
+            conn.execute(delete(notifications).where(or_(notifications.c.user_id == user_id,
+                                                         notifications.c.actor_id == user_id)))
             purge_ids = self._queue_purges(conn, [p for i in ids for p in prefixes_for(i)] + (account_prefixes or []))
             # Explicit deletes rather than relying on ON DELETE CASCADE alone.
             for table in (result_reports, analyses, sessions, email_tokens, profiles):
@@ -558,15 +567,29 @@ class Database:
         with self.engine.connect() as conn:
             return conn.execute(select(profiles.c.user_id).where(profiles.c.username == username)).scalar_one_or_none()
 
-    def save_profile(self, user_id: str, **fields: Any) -> dict[str, Any] | Literal["username_taken"]:
+    def save_profile(self, user_id: str, held_for: timedelta | None = None,
+                     **fields: Any) -> dict[str, Any] | Literal["username_taken", "username_held"]:
         """Set some of a profile's fields, creating the row the first time. "username_taken" if
-        someone else has the username (checked by the unique index, so two people can't race to it)."""
+        someone else has the username (checked by the unique index, so two people can't race to
+        it); "username_held" if someone else gave it up less than ``held_for`` ago. A username
+        given up here is held in turn, for its owner to take back."""
         fields["updated_at"] = now()
+        new_name = fields.get("username")
+        if new_name and held_for:
+            hold = self.username_hold(new_name)
+            if hold and hold["user_id"] != user_id and hold["released_at"] > now() - held_for:
+                return "username_held"
         try:
             with self.engine.begin() as conn:
+                old_name = conn.execute(select(profiles.c.username).where(profiles.c.user_id == user_id)).scalar_one_or_none()
                 done = conn.execute(update(profiles).where(profiles.c.user_id == user_id).values(**fields)).rowcount
                 if not done:
                     conn.execute(insert(profiles).values(user_id=user_id, **fields))
+                if new_name and old_name and new_name != old_name:
+                    self._hold(conn, old_name, user_id)
+                if new_name:  # taking a name back (or a fresh one) ends any hold on it
+                    conn.execute(delete(released_usernames).where(released_usernames.c.username == new_name,
+                                                                  released_usernames.c.user_id == user_id))
         except IntegrityError:
             if "username" in fields and self.username_owner(fields["username"]) not in (None, user_id):
                 return "username_taken"
@@ -653,12 +676,80 @@ class Database:
             rows = conn.execute(select(profiles).where(profiles.c.user_id.in_(user_ids))).mappings().all()
         return {r["user_id"]: dict(r) for r in rows}
 
-    def blocked_between(self, a: str, b: str) -> bool:
-        """Whether either has blocked the other."""
+    def hidden_between(self, a: str, b: str) -> bool:
+        """Whether the two are hidden from each other: either has blocked the other, or either
+        account is suspended. Everything that respects blocks (finding someone, conversations,
+        shared serves) respects suspensions through this."""
         with self.engine.connect() as conn:
-            return conn.execute(select(func.count()).select_from(blocks).where(or_(
+            blocked = conn.execute(select(func.count()).select_from(blocks).where(or_(
                 and_(blocks.c.blocker_id == a, blocks.c.blocked_id == b),
                 and_(blocks.c.blocker_id == b, blocks.c.blocked_id == a)))).scalar_one() > 0
+            suspended = conn.execute(select(func.count()).select_from(users).where(
+                users.c.id.in_((a, b)), users.c.suspended_at.is_not(None))).scalar_one() > 0
+        return blocked or suspended
+
+    def suspended_ids(self) -> Any:
+        """A subquery of suspended accounts' ids, for leaving them out of lists."""
+        return select(users.c.id).where(users.c.suspended_at.is_not(None))
+
+    def suspend(self, user_id: str, reason: str) -> None:
+        """Suspend an account: it can't sign in (every session ends) and is hidden from everyone."""
+        with self.engine.begin() as conn:
+            conn.execute(update(users).where(users.c.id == user_id).values(suspended_at=now(), suspended_reason=reason))
+            conn.execute(delete(sessions).where(sessions.c.user_id == user_id))
+
+    def unsuspend(self, user_id: str) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(update(users).where(users.c.id == user_id).values(suspended_at=None, suspended_reason=None))
+
+    # --- notifications ---------------------------------------------------------
+
+    def notify(self, user_id: str, kind: str, actor_id: str, conversation_id: str | None = None) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(insert(notifications).values(
+                id=uuid.uuid4().hex, user_id=user_id, kind=kind, actor_id=actor_id,
+                conversation_id=conversation_id, created_at=now(), read_at=None))
+
+    def notifications_for(self, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        """Newest first, leaving out anyone hidden from ``user_id`` (blocked or suspended)."""
+        hidden = select(blocks.c.blocked_id).where(blocks.c.blocker_id == user_id).union(
+            select(blocks.c.blocker_id).where(blocks.c.blocked_id == user_id), self.suspended_ids())
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(
+                select(notifications).where(notifications.c.user_id == user_id, notifications.c.actor_id.not_in(hidden))
+                .order_by(notifications.c.created_at.desc()).limit(limit)).mappings()]
+
+    def mark_notifications_read(self, user_id: str) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(update(notifications).where(notifications.c.user_id == user_id,
+                                                     notifications.c.read_at.is_(None)).values(read_at=now()))
+
+    def forget_notifications_between(self, a: str, b: str, kinds: tuple[str, ...] | None = None) -> None:
+        """Drop notifications either person got from the other (of ``kinds``, or all)."""
+        cond = or_(and_(notifications.c.user_id == a, notifications.c.actor_id == b),
+                   and_(notifications.c.user_id == b, notifications.c.actor_id == a))
+        with self.engine.begin() as conn:
+            conn.execute(delete(notifications).where(cond, notifications.c.kind.in_(kinds) if kinds else true()))
+
+    def delete_old_notifications(self, before: datetime) -> int:
+        with self.engine.begin() as conn:
+            return conn.execute(delete(notifications).where(notifications.c.created_at < before)).rowcount
+
+    # --- usernames people gave up ----------------------------------------------
+
+    def username_hold(self, username: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(released_usernames).where(released_usernames.c.username == username)).mappings().first()
+        return dict(row) if row else None
+
+    def delete_old_username_holds(self, before: datetime) -> int:
+        with self.engine.begin() as conn:
+            return conn.execute(delete(released_usernames).where(released_usernames.c.released_at < before)).rowcount
+
+    @staticmethod
+    def _hold(conn: Connection, username: str, user_id: str | None) -> None:
+        conn.execute(delete(released_usernames).where(released_usernames.c.username == username))
+        conn.execute(insert(released_usernames).values(username=username, user_id=user_id, released_at=now()))
 
     def connection_between(self, a: str, b: str) -> dict[str, Any] | None:
         with self.engine.connect() as conn:
@@ -701,10 +792,13 @@ class Database:
                 or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id))).rowcount > 0
 
     def connections_of(self, user_id: str) -> list[dict[str, Any]]:
-        """Every request and friendship ``user_id`` is part of, newest first."""
+        """Every request and friendship ``user_id`` is part of, newest first, leaving out
+        suspended accounts."""
+        gone = self.suspended_ids()
         with self.engine.connect() as conn:
             rows = conn.execute(select(connections).where(
-                or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id))
+                or_(connections.c.requester_id == user_id, connections.c.addressee_id == user_id),
+                connections.c.requester_id.not_in(gone), connections.c.addressee_id.not_in(gone))
                 .order_by(func.coalesce(connections.c.accepted_at, connections.c.created_at).desc())).mappings().all()
         return [dict(r) for r in rows]
 
@@ -715,10 +809,12 @@ class Database:
     def incoming_requests(self, user_id: str) -> int:
         with self.engine.connect() as conn:
             return conn.execute(select(func.count()).select_from(connections).where(
-                connections.c.addressee_id == user_id, connections.c.status == "pending")).scalar_one()
+                connections.c.addressee_id == user_id, connections.c.status == "pending",
+                connections.c.requester_id.not_in(self.suspended_ids()))).scalar_one()
 
     def block(self, blocker_id: str, blocked_id: str) -> None:
         """Block someone, ending any request or friendship between the two."""
+        self.forget_notifications_between(blocker_id, blocked_id)
         with self.engine.begin() as conn:
             conn.execute(delete(connections).where(connections.c.pair == self.pair_of(blocker_id, blocked_id)))
             exists = conn.execute(select(func.count()).select_from(blocks).where(
@@ -849,7 +945,7 @@ class Database:
                                                  conversation_members.c.user_id == viewer_id))
                 .where(analyses.c.id == analysis_id, messages.c.deleted_at.is_(None), analyses.c.user_id != viewer_id)
                 .limit(1)).scalar_one_or_none()
-        if owner is None or self.blocked_between(owner, viewer_id):
+        if owner is None or self.hidden_between(owner, viewer_id):
             return None
         conn_row = self.connection_between(owner, viewer_id)
         return owner if conn_row and conn_row["status"] == "accepted" else None
@@ -903,7 +999,8 @@ class Database:
         query = (
             select(sessions, users.c.email.label("user_email"),
                    users.c.created_at.label("user_created_at"),
-                   users.c.email_verified_at.label("user_email_verified_at"))
+                   users.c.email_verified_at.label("user_email_verified_at"),
+                   users.c.suspended_at.label("user_suspended_at"))
             .join(users, users.c.id == sessions.c.user_id)
             .where(sessions.c.token_hash == token_hash, sessions.c.expires_at > now())
         )

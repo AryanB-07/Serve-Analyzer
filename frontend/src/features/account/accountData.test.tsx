@@ -42,6 +42,7 @@ const EXPORT: DataExport = {
   blocks: [],
   conversations: [],
   reports_made: [],
+  notifications: [],
 };
 
 beforeEach(() => {

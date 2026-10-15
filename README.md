@@ -53,6 +53,10 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
 - **Sending serves:** send one of your analyses in a message, or with "Send to a friend" from its
   results page. The friend opens it read-only (no note, filename or original video) and can
   compare it with one of their own, until the message is deleted or the friendship ends.
+- **Notifications and safety:** a bell for friend requests, accepted requests and serves sent
+  to you. A username someone gives up is held for them for 30 days, so it can't be taken to
+  impersonate them. `python -m serve_api.moderate` shows the reports about an account and
+  suspends it (it can't sign in, and is hidden from everyone) or lifts the suspension.
 - **My Serves and compare:** every serve as a card with its score out of 100 (coloured by band),
   upload time and an optional note; the five key positions' scores behind "Show details"; a
   sidebar filtering by upload time, overall score and any key position's band (kept in the URL,
@@ -470,6 +474,7 @@ frontend/
 | `GET`/`POST /conversations/{id}/messages`, `POST /conversations/{id}/read` | Read (paged, newest first) and send text and/or one of your serves; mark as read |
 | `DELETE /messages/{id}` | Delete your message for everyone |
 | `POST /reports` | Report a person, or one of their messages to you |
+| `GET /notifications`, `GET /notifications/unread`, `POST /notifications/read` | Your notifications, how many are new, and marking them read |
 | `DELETE /auth/me` | Delete the account and everything in it (needs the password) |
 
 Interactive docs are at http://localhost:8000/docs while the API is running. Failures carry
