@@ -30,6 +30,7 @@ const person = (relationship: Person["relationship"], extra: Partial<Person> = {
     positions: null, ...extra });
 
 const fake = vi.hoisted(() => ({
+  listPostsBy: vi.fn(async () => ({ items: [], next_cursor: null })),
   profile: null as unknown as Profile,
   lists: null as unknown as Lists,
   pageSize: 100,

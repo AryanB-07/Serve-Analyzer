@@ -12,6 +12,7 @@ import { METRIC_INFO } from "../../lib/metricInfo";
 import { bandOf } from "../../lib/score";
 import { ScoreBar, SCORE_TEXT } from "../results/MetricCards";
 import { ReportForm } from "../messages/ReportForm";
+import { PostsSection } from "../posts/CreatePost";
 import { displayName, FollowTabs, friendsErrorMessage } from "./FriendsPage";
 
 const primary = "rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-50";
@@ -283,6 +284,10 @@ export function PersonPage() {
         </div>
       </section>
       <FriendServes person={p} />
+      {p.username && p.relationship !== "self" && (
+        <PostsSection username={p.username} title="Posts"
+          empty={p.relationship === "friends" ? `${displayName(p)} hasn't posted yet.` : `${displayName(p)} hasn't posted anything public.`} />
+      )}
       {p.can_see_lists && p.relationship === "friends" && p.username && (
         <FollowTabs username={p.username} counts={p.counts} own={false} name={displayName(p)} />
       )}

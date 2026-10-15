@@ -28,7 +28,8 @@ Deliberately awkward rows, the kind real data accumulates:
 - follows: a friendship (mutual follows), a one-way follow, a block, and different choices of
   what to share with friends; a conversation with an unread reply, a deleted message and a
   serve sent to a friend; a report; notifications; a suspended account that was the player's
-  friend (it must stay hidden from everyone).
+  friend (it must stay hidden from everyone); a public and a friends-only post with a like
+  and comments.
 """
 
 from __future__ import annotations
@@ -336,6 +337,27 @@ def seed(seeder: Seeder, outputs: dict[str | None, Path], rnd: random.Random) ->
     seeder.db.mark_read(conv["id"], lefty)
     seeder.db.save_user_report(reporter_id=lefty, reported_id=pest, reported_username="seed_blocked",
                                message_id=None, message_body=None, reason="spam", note="Kept sending requests.")
+
+    # Posts: the player posts their best serve publicly and another for friends; the lefty likes
+    # and comments on both. Each post has its own copy of the video, as the API makes it.
+    for visibility, caption in (("public", "Finally getting the trophy position right. 🎾"), ("friends", None)):
+        with seeder.db.engine.connect() as conn:
+            row = conn.execute(select(analyses).where(analyses.c.user_id == player, analyses.c.status == "succeeded",
+                                                      analyses.c.overall_score.is_not(None))
+                               .order_by(analyses.c.overall_score.desc()).offset(0 if visibility == "public" else 1).limit(1)).mappings().one()
+        post_id = uuid.uuid4().hex
+        with tempfile.TemporaryDirectory() as tmp:
+            for source, target in ((keys.ANNOTATED, keys.POST_VIDEO), (keys.THUMBNAIL, keys.POST_THUMBNAIL)):
+                (Path(tmp) / target).write_bytes(seeder.storage.read_bytes(keys.output_key(row["id"], source)))
+            seeder.storage.publish(Path(tmp), keys.post_prefix(post_id))
+        ts = row["created_at"] + timedelta(minutes=5)
+        seeder.db.create_post({"id": post_id, "user_id": player, "analysis_id": row["id"], "caption": caption,
+                               "visibility": visibility, "hand": row["hand"], "overall_score": row["overall_score"],
+                               "key_scores": row["key_scores"], "recorded_at": row["created_at"],
+                               "created_at": ts, "updated_at": ts})
+        seeder.db.like(post_id, lefty)
+        seeder.db.add_comment(post_id, lefty, "That knee bend! What changed?")
+        seeder.db.add_comment(post_id, player, "Sitting lower before the toss. Thanks!")
 
     # Notifications, as the API would have made them.
     seeder.db.notify(player, "new_follower", newbie)

@@ -24,6 +24,7 @@ const msg = (id: string, from_you: boolean, body: string | null, at: string): Me
   ({ id, from_you, body, deleted: body === null, created_at: at });
 
 const fake = vi.hoisted(() => ({
+  listPostsBy: vi.fn(async () => ({ items: [], next_cursor: null })),
   conversations: [] as ConversationSummary[],
   conversation: null as unknown as ConversationSummary,
   messages: [] as Message[],
@@ -199,7 +200,8 @@ describe("a conversation", () => {
     await userEvent.type(within(form).getByLabelText(/Anything to add/), "Not the first time");
     await userEvent.click(within(form).getByLabelText("Also block Bob B"));
     await userEvent.click(send);
-    expect(fake.report).toHaveBeenCalledWith({ username: "bob", message_id: "m3", reason: "harassment", note: "Not the first time" });
+    expect(fake.report).toHaveBeenCalledWith({ username: "bob", message_id: "m3", post_id: null, comment_id: null,
+      reason: "harassment", note: "Not the first time" });
     expect(fake.block).toHaveBeenCalledWith("bob");
     expect(await screen.findByText(/you've blocked Bob B/)).toBeInTheDocument();
   });
@@ -241,7 +243,8 @@ describe("starting a conversation", () => {
     const form = screen.getByRole("form", { name: "Report Bob B" });
     await userEvent.click(within(form).getByLabelText("Pretending to be someone else"));
     await userEvent.click(within(form).getByRole("button", { name: "Send report" }));
-    expect(fake.report).toHaveBeenCalledWith({ username: "bob", message_id: null, reason: "impersonation", note: null });
+    expect(fake.report).toHaveBeenCalledWith({ username: "bob", message_id: null, post_id: null, comment_id: null,
+      reason: "impersonation", note: null });
     expect(await screen.findByText(/We'll look at it/)).toBeInTheDocument();
   });
 });

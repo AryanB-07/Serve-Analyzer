@@ -356,6 +356,9 @@ class DataExport(BaseModel):
     conversations: list[ExportedConversation] = []
     reports_made: list[ExportedUserReport] = []
     notifications: list[ExportedNotification] = []
+    posts: list[ExportedPost] = []
+    comments: list[ExportedComment] = []
+    likes: list[str] = []  # ids of the posts you liked
 
 
 # --- profiles ---------------------------------------------------------------------------------
@@ -587,6 +590,121 @@ class BlockedPerson(BaseModel):
     blocked_at: datetime
 
 
+# --- posts ------------------------------------------------------------------------------------
+
+MAX_CAPTION = 500
+MAX_COMMENT = 1000
+Visibility = Literal["public", "friends"]
+
+
+def _clean_body(value: str | None, limit: int, empty: str | None) -> str | None:
+    """Trimmed text without control characters (newlines and tabs kept), at most ``limit``."""
+    if value is None:
+        return None
+    cleaned = "".join(ch for ch in value.replace("\r\n", "\n") if ch not in _CONTROL or ch in "\n\t").strip()
+    if len(cleaned) > limit:
+        raise ValueError(f"That's over {limit:,} characters.")
+    if not cleaned and empty:
+        raise ValueError(empty)
+    return cleaned or None
+
+
+class Post(BaseModel):
+    """A serve someone posted, as you see it."""
+
+    id: str
+    author: PersonSummary
+    is_yours: bool
+    caption: str | None = None
+    visibility: Visibility
+    hand: Hand
+    overall_score: int | None = Field(default=None, ge=0, le=100)
+    key_scores: KeyScores | None = None  # type: ignore[valid-type]
+    recorded_at: datetime  # when the serve was analysed
+    created_at: datetime
+    video_url: str  # signed and short-lived, like every stored file
+    thumbnail_url: str
+    like_count: int
+    comment_count: int
+    liked_by_you: bool
+
+
+class PostPage(BaseModel):
+    items: list[Post]  # newest first
+    next_cursor: str | None = None
+
+
+class CreatePost(BaseModel):
+    analysis_id: str = Field(min_length=1, max_length=32)
+    caption: str | None = Field(default=None, max_length=MAX_CAPTION * 2)
+    visibility: Visibility = "friends"  # going public is a choice
+
+    @field_validator("caption")
+    @classmethod
+    def _caption(cls, value: str | None) -> str | None:
+        return _clean_body(value, MAX_CAPTION, None)
+
+
+class EditPost(BaseModel):
+    """Only the fields sent change; an empty caption removes it."""
+
+    caption: str | None = Field(default=None, max_length=MAX_CAPTION * 2)
+    visibility: Visibility | None = None
+
+    @field_validator("caption")
+    @classmethod
+    def _caption(cls, value: str | None) -> str | None:
+        return _clean_body(value, MAX_CAPTION, None)
+
+    @field_validator("visibility")
+    @classmethod
+    def _visibility(cls, value: Visibility | None) -> Visibility:
+        if value is None:
+            raise ValueError("Choose who can see it.")
+        return value
+
+
+class LikeState(BaseModel):
+    liked: bool
+    like_count: int
+
+
+class Comment(BaseModel):
+    id: str
+    author: PersonSummary
+    body: str
+    created_at: datetime
+    can_delete: bool  # yours, or on your post
+
+
+class CommentPage(BaseModel):
+    items: list[Comment]  # oldest first
+    next_cursor: str | None = None
+
+
+class NewComment(BaseModel):
+    body: str = Field(min_length=1, max_length=MAX_COMMENT * 2)
+
+    @field_validator("body")
+    @classmethod
+    def _body(cls, value: str) -> str:
+        return _clean_body(value, MAX_COMMENT, "Write a comment first.")  # type: ignore[return-value]
+
+
+class ExportedPost(BaseModel):
+    id: str
+    caption: str | None = None
+    visibility: Visibility
+    created_at: datetime
+    files: dict[str, str] = {}  # download links, like the analyses'
+
+
+class ExportedComment(BaseModel):
+    post_id: str
+    body: str
+    created_at: datetime
+
+
 # --- messages ---------------------------------------------------------------------------------
 
 MAX_MESSAGE = 2000
@@ -668,6 +786,8 @@ class UnreadCount(BaseModel):
 class UserReportRequest(BaseModel):
     username: str = Field(min_length=1, max_length=40)
     message_id: str | None = Field(default=None, max_length=32)
+    post_id: str | None = Field(default=None, max_length=32)  # their post
+    comment_id: str | None = Field(default=None, max_length=32)  # their comment
     reason: ReportReason
     note: str | None = Field(default=None, max_length=1000)
 

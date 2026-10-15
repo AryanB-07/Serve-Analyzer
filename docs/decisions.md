@@ -301,6 +301,18 @@ and what would change the decision. Numbers link to the reports and docs they co
 - **Why:** the product needs follows for feeds (following someone you don't know, as with any public profile), and one model for both avoids two relationships that could disagree.
 - **Trade-off:** following needs no consent, so it's easier to attach yourself to a stranger than with requests. Following alone grants nothing beyond public posts: the bio, stats, messages and shared serves all need the follow back. Blocking and "let people follow me" are the controls.
 
+### 16k. Posts: snapshots of serves, with the audience checked on every request
+
+- **Chosen:**
+  - a post is one of your analysed serves, not an arbitrary video: every post shows real analysis, and the upload, limits, conversion and thumbnails already exist and are tested.
+  - a post is a snapshot. Creating it copies the analysis's skeleton video and thumbnail into the post's own storage (`posts/<id>/`), with its scores. Deleting the post deletes exactly that copy, with its likes and comments, and leaves the serve in My Serves; deleting the analysis later doesn't break the post. The snapshot never includes the note, the filename or the original upload.
+  - two audiences: Friends (the default) and Public, meaning everyone signed in, not the open web. `visible_kinds(viewer, author)` is checked on every read, like and comment: hidden (a block either way, or a suspension) means nothing; friends means public and friends posts; anyone else gets public posts only. Ending a friendship ends access to friends posts at once, and a post you can't see is a 404, the same as one that doesn't exist.
+  - videos and thumbnails go through the same short-lived signed URLs as everything else, so a friends-only video can't be guessed or kept as a link.
+  - likes are one row per (post, person), so liking twice is a no-op; the UI updates at once and puts the like back if the server refuses. Comments come oldest first, cursor-paged; the author or the post's owner can delete one. Posts and comments can be reported, keeping a copy of the text.
+  - the video doesn't load until it's played (`preload="none"` with the thumbnail as poster), so a page of posts doesn't download every video.
+- **Considered:** a post that points at the analysis (no copy): cheaper, but deleting the post would then have to delete or orphan the analysis, and the post would break when the analysis was deleted.
+- **Trade-off:** a copy of a few megabytes per post, made while the request waits. For S3, a server-side copy would avoid the download and re-upload.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

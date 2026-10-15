@@ -45,3 +45,12 @@ def avatar_key(user_id: str, version: str) -> str:
 
 
 AVATAR = "avatar.jpg"
+
+
+def post_prefix(post_id: str) -> str:
+    """A post's own copy of its serve: the skeleton video and the thumbnail."""
+    return f"posts/{post_id}"
+
+
+POST_VIDEO = "video.mp4"
+POST_THUMBNAIL = "thumbnail.jpg"

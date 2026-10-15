@@ -3,20 +3,27 @@ import type {
   AnalysisResult,
   AnalysisSummary,
   BlockedPerson,
+  Comment,
+  CommentPage,
   ConversationSummary,
+  CreatePost,
   CreateAnalysisRequest,
   CreateAnalysisResponse,
   Credentials,
   DataExport,
+  EditPost,
   FollowCounts,
   FollowListKind,
   FollowPage,
   FramesPayload,
   Leaderboard,
+  LikeState,
   Message,
   MessagePage,
   Notification,
   Person,
+  Post,
+  PostPage,
   Profile,
   ProfileUpdate,
   Report,
@@ -109,6 +116,19 @@ export interface ApiClient {
   deleteMessage(messageId: string): Promise<void>;
   /** Report a person, or one of their messages to you. */
   report(body: UserReportRequest): Promise<void>;
+  /** Post one of your finished serves (a snapshot: video, thumbnail and scores). */
+  createPost(body: CreatePost): Promise<Post>;
+  getPost(id: string): Promise<Post>;
+  editPost(id: string, body: EditPost): Promise<Post>;
+  deletePost(id: string): Promise<void>;
+  /** Someone's posts that you can see, newest first. */
+  listPostsBy(username: string, cursor?: string): Promise<PostPage>;
+  like(postId: string): Promise<LikeState>;
+  unlike(postId: string): Promise<LikeState>;
+  /** Oldest first. */
+  listComments(postId: string, cursor?: string): Promise<CommentPage>;
+  addComment(postId: string, body: string): Promise<Comment>;
+  deleteComment(commentId: string): Promise<void>;
   listNotifications(): Promise<Notification[]>;
   countNotifications(): Promise<number>;
   markNotificationsRead(): Promise<void>;
@@ -257,6 +277,19 @@ export const httpClient: ApiClient = {
   markRead: (id) => request(`/conversations/${encodeURIComponent(id)}/read`, { method: "POST" }),
   deleteMessage: (id) => request(`/messages/${encodeURIComponent(id)}`, { method: "DELETE" }),
   report: (body) => request("/reports", { method: "POST", body: JSON.stringify(body) }),
+  createPost: (body) => request("/posts", { method: "POST", body: JSON.stringify(body) }),
+  getPost: (id) => request(`/posts/${encodeURIComponent(id)}`),
+  editPost: (id, body) => request(`/posts/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) }),
+  deletePost: (id) => request(`/posts/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  listPostsBy: (username, cursor) =>
+    request(`/people/${encodeURIComponent(username)}/posts${cursor ? `?${new URLSearchParams({ cursor })}` : ""}`),
+  like: (postId) => request(`/posts/${encodeURIComponent(postId)}/like`, { method: "PUT" }),
+  unlike: (postId) => request(`/posts/${encodeURIComponent(postId)}/like`, { method: "DELETE" }),
+  listComments: (postId, cursor) =>
+    request(`/posts/${encodeURIComponent(postId)}/comments${cursor ? `?${new URLSearchParams({ cursor })}` : ""}`),
+  addComment: (postId, body) =>
+    request(`/posts/${encodeURIComponent(postId)}/comments`, { method: "POST", body: JSON.stringify({ body }) }),
+  deleteComment: (id) => request(`/comments/${encodeURIComponent(id)}`, { method: "DELETE" }),
   listNotifications: () => request("/notifications"),
   countNotifications: async () => (await request<{ unread: number }>("/notifications/unread")).unread,
   markNotificationsRead: () => request("/notifications/read", { method: "POST" }),

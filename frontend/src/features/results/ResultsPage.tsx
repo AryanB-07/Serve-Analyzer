@@ -20,6 +20,7 @@ import { PhaseTimeline } from "./PhaseTimeline";
 import { CurrentPhase, FrameCounter, StatusKey } from "./PlayheadReadout";
 import { ReportProblem } from "./ReportProblem";
 import { SendToFriend, SharedBanner } from "./Sharing";
+import { CreatePost } from "../posts/CreatePost";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { VideoStage, type OverlayOptions } from "./VideoStage";
 
@@ -64,6 +65,7 @@ function ResultsView({
           </p>
           <div className="ml-auto flex flex-wrap items-center gap-3">
             <ModeToggle mode={mode} onChange={setMode} />
+            {owner && <CreatePost summary={summary} />}
             {owner && <SendToFriend summary={summary} />}
             {owner && <DeleteFromHere summary={summary} />}
           </div>

@@ -2,8 +2,10 @@ import { ApiError, UploadAbortedError, type ApiClient } from "./client";
 import { normaliseUsername, usernameProblem } from "../lib/username";
 import { DEMO_IDS } from "./demo";
 import type {
+  Comment,
   Notification,
   Person,
+  Post,
   AnalysisList,
   AnalysisResult,
   AnalysisStatus,
@@ -104,6 +106,26 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   const followsMe = new Map<string, string>([["ace", "2026-09-02T10:00:00Z"], ["serve_queen", "2026-10-10T10:00:00Z"]]);
   const blocked = new Map<string, string>();
   let notificationsRead = false;
+  // Posts in mock mode: Ace has a public one; yours are made from the demo serves.
+  type MockPost = { post: Post; comments: Comment[]; likers: Set<string> };
+  const posts = new Map<string, MockPost>();
+  const acePost: Post = {
+    id: "post-ace", author: { username: "ace", display_name: "Alex Ace", avatar_url: null }, is_yours: false,
+    caption: "Trophy position finally clicking.", visibility: "public", hand: "right", overall_score: 83, key_scores: null,
+    recorded_at: "2026-10-11T10:00:00Z", created_at: "2026-10-11T10:05:00Z",
+    video_url: "/mock/demo-serve-2/annotated.mp4", thumbnail_url: "/mock/demo-serve-2/thumbnail.jpg",
+    like_count: 3, comment_count: 1, liked_by_you: false,
+  };
+  posts.set(acePost.id, { post: acePost, likers: new Set(["serve_queen", "taken", "x"]), comments: [
+    { id: "c-1", author: { username: "serve_queen", display_name: "Serena Q", avatar_url: null }, body: "Much better knee bend!", created_at: "2026-10-11T11:00:00Z", can_delete: false },
+  ] });
+  const me = () => profile.username ?? "you";
+  const view = (m: MockPost): Post => ({ ...m.post, like_count: m.likers.size, comment_count: m.comments.length, liked_by_you: m.likers.has(me()) });
+  function mockPost(id: string): MockPost {
+    const m = posts.get(id);
+    if (!m || (m.post.visibility === "friends" && !m.post.is_yours && !isFriend(m.post.author.username ?? ""))) throw new ApiError(404, "Post not found");
+    return m;
+  }
   // Mock conversations, keyed by the other person's username.
   type MockMessage = {
     id: string; from_you: boolean; body: string | null; deleted: boolean; created_at: string;
@@ -304,6 +326,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         })),
         reports_made: [],
         notifications: [],
+        posts: [...posts.values()].filter((m) => m.post.is_yours).map((m) => ({ id: m.post.id, caption: m.post.caption ?? null, visibility: m.post.visibility, created_at: m.post.created_at, files: {} })),
+        comments: [...posts.values()].flatMap((m) => m.comments.filter((c) => c.author.username === me()).map((c) => ({ post_id: m.post.id, body: c.body, created_at: c.created_at }))),
+        likes: [...posts.values()].filter((m) => m.likers.has(me())).map((m) => m.post.id),
         analyses: items.map((a) => ({
           id: a.id,
           filename: a.filename,
@@ -520,6 +545,94 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
 
     async report() {
       await delay();
+    },
+
+    async createPost({ analysis_id, caption, visibility }) {
+      await delay();
+      const a = (await this.listAnalyses()).items.find((x) => x.id === analysis_id && x.status === "succeeded");
+      if (!a) throw new ApiError(404, "Analysis not found");
+      const ts = new Date(now()).toISOString();
+      const post: Post = {
+        id: `post-${now()}`, author: { username: profile.username, display_name: profile.display_name, avatar_url: profile.avatar_url },
+        is_yours: true, caption: caption?.trim() || null, visibility: visibility ?? "friends", hand: a.hand,
+        overall_score: a.overall_score ?? null, key_scores: a.key_scores ?? null, recorded_at: a.created_at, created_at: ts,
+        video_url: isDemo(a.id) ? `/mock/${a.id}/annotated.mp4` : "/mock/demo-serve-1/annotated.mp4",
+        thumbnail_url: a.thumbnail_url ?? "/mock/demo-serve-1/thumbnail.jpg", like_count: 0, comment_count: 0, liked_by_you: false,
+      };
+      posts.set(post.id, { post, comments: [], likers: new Set() });
+      return view(posts.get(post.id)!);
+    },
+
+    async getPost(id) {
+      await delay();
+      return view(mockPost(id));
+    },
+
+    async editPost(id, body) {
+      await delay();
+      const m = mockPost(id);
+      if (!m.post.is_yours) throw new ApiError(404, "Post not found");
+      if ("caption" in body) m.post = { ...m.post, caption: body.caption?.trim() || null };
+      if (body.visibility) m.post = { ...m.post, visibility: body.visibility };
+      return view(m);
+    },
+
+    async deletePost(id) {
+      await delay();
+      if (!mockPost(id).post.is_yours) throw new ApiError(404, "Post not found");
+      posts.delete(id);
+    },
+
+    async listPostsBy(username) {
+      await delay();
+      const name = findPerson(username);
+      const items = [...posts.values()].filter((m) => (m.post.author.username ?? "") === name)
+        .filter((m) => { try { mockPost(m.post.id); return true; } catch { return false; } })
+        .map(view).sort((a, b) => b.created_at.localeCompare(a.created_at));
+      return { items, next_cursor: null };
+    },
+
+    async like(postId) {
+      await delay();
+      const m = mockPost(postId);
+      m.likers.add(me());
+      return { liked: true, like_count: m.likers.size };
+    },
+
+    async unlike(postId) {
+      await delay();
+      const m = mockPost(postId);
+      m.likers.delete(me());
+      return { liked: false, like_count: m.likers.size };
+    },
+
+    async listComments(postId) {
+      await delay();
+      const m = mockPost(postId);
+      return { items: m.comments.map((c) => ({ ...c, can_delete: c.author.username === me() || m.post.is_yours })), next_cursor: null };
+    },
+
+    async addComment(postId, body) {
+      await delay();
+      const m = mockPost(postId);
+      const text = body.trim();
+      if (!text) throw new ApiError(422, "Write a comment first.");
+      const comment: Comment = { id: `c-${now()}`, author: { username: profile.username, display_name: profile.display_name, avatar_url: profile.avatar_url },
+        body: text, created_at: new Date(now()).toISOString(), can_delete: true };
+      m.comments.push(comment);
+      return comment;
+    },
+
+    async deleteComment(commentId) {
+      await delay();
+      for (const m of posts.values()) {
+        const i = m.comments.findIndex((c) => c.id === commentId && (c.author.username === me() || m.post.is_yours));
+        if (i >= 0) {
+          m.comments.splice(i, 1);
+          return;
+        }
+      }
+      throw new ApiError(404, "Comment not found");
     },
 
     async listNotifications() {

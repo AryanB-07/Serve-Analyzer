@@ -38,6 +38,7 @@ const BOARD: Leaderboard = {
 };
 
 const fake = vi.hoisted(() => ({
+  listPostsBy: vi.fn(async () => ({ items: [], next_cursor: null })),
   profile: null as unknown as Profile,
   person: null as unknown as Person,
   board: null as unknown as Leaderboard,

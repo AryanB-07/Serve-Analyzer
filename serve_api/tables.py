@@ -185,10 +185,56 @@ user_reports = Table(
     Column("reported_username", String(20)),
     Column("message_id", String(32)),
     Column("message_body", Text),  # a copy, so deleting the message doesn't remove the evidence
+    # Or a post or comment that was reported (the comment's or caption's text goes in message_body).
+    Column("post_id", String(32)),
+    Column("comment_id", String(32)),
     Column("reason", String(32), nullable=False),
     Column("note", Text),
     Column("created_at", UTCDateTime, nullable=False),
     Index("user_reports_created", "created_at"),
+)
+
+posts = Table(
+    "posts",
+    metadata,
+    # A serve someone posted. It's a snapshot: the skeleton video, thumbnail and scores are copied
+    # into the post's own storage (keys.post_prefix), so deleting the post deletes exactly its
+    # files, and deleting the analysis later doesn't break it. Never the note or filename.
+    Column("id", String(32), primary_key=True),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("analysis_id", String(32)),  # where it came from (not a foreign key: the post outlives it)
+    Column("caption", Text),
+    Column("visibility", String(16), nullable=False),  # "public" (signed-in users) | "friends"
+    Column("hand", String(8), nullable=False),
+    Column("overall_score", Integer),
+    Column("key_scores", JSONType),
+    Column("recorded_at", UTCDateTime, nullable=False),  # when the serve was analysed
+    Column("created_at", UTCDateTime, nullable=False),
+    Column("updated_at", UTCDateTime, nullable=False),
+    Index("posts_user", "user_id", "created_at"),
+    Index("posts_visibility", "visibility", "created_at"),
+)
+
+post_likes = Table(
+    "post_likes",
+    metadata,
+    # One like per person per post: the primary key makes a second tap a no-op.
+    Column("post_id", String(32), ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("created_at", UTCDateTime, nullable=False),
+    Index("post_likes_user", "user_id"),
+)
+
+post_comments = Table(
+    "post_comments",
+    metadata,
+    Column("id", String(32), primary_key=True),
+    Column("post_id", String(32), ForeignKey("posts.id", ondelete="CASCADE"), nullable=False),
+    Column("user_id", String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("body", Text, nullable=False),
+    Column("created_at", UTCDateTime, nullable=False),
+    Index("post_comments_post", "post_id", "created_at"),
+    Index("post_comments_user", "user_id"),
 )
 
 notifications = Table(

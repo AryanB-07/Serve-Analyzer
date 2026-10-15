@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { AvatarFileError, prepareAvatar } from "../../lib/avatar";
 import { bandOf } from "../../lib/score";
 import { authErrorMessage } from "../auth/AuthForm";
+import { PostsSection } from "../posts/CreatePost";
 import { ScoreBar, SCORE_TEXT } from "../results/MetricCards";
 
 function photoError(error: unknown): string {
@@ -154,6 +155,8 @@ export function ProfilePage() {
             : "Nobody can find you until you choose a username."}
         </p>
       </section>
+
+      {p.username && <PostsSection username={p.username} title="Your posts" empty="No posts yet. Post a serve from its results page." />}
 
       <section aria-labelledby={`${id}-stats`} className="space-y-3">
         <div className="flex items-baseline justify-between gap-3">

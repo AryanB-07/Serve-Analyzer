@@ -9,7 +9,7 @@ made directly, so no passwords are needed, and removed afterwards):
 
 - /auth/me, the profile (and its picture), friends, followers and following (counts matching
   the lists), blocks, each of their pages,
-  conversations and their messages, and the leaderboard;
+  conversations and their messages, their posts (with comments and video), and the leaderboard;
 - the data download;
 - that suspended accounts appear nowhere anyone else looks (and are skipped, since they
   can't sign in);
@@ -119,6 +119,18 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
                         c.counts["serves shared with them"] += 1
                         for part in ("", "/result", "/frames"):
                             c.get(client, f"/analyses/{serve['analysis_id']}{part}", f"{who} opens a shared serve{part}")
+    if me:  # their own posts, each with its comments and video
+        mine = c.get(client, f"/people/{me}/posts", f"{who} posts")
+        for post in mine.json()["items"] if mine.status_code == 200 else []:
+            c.counts["posts"] += 1
+            c.get(client, f"/posts/{post['id']}", f"{who} opens their post")
+            comments = c.get(client, f"/posts/{post['id']}/comments", f"{who} post comments")
+            if comments.status_code == 200:
+                c.counts["comments"] += len(comments.json()["items"])
+            parts = urlsplit(post["video_url"])
+            if parts.netloc in ("", "testserver"):
+                path = parts.path.removeprefix(settings.public_base.rstrip("/"))
+                c.get(client, f"{path}?{parts.query}", f"{who} post video", headers={"Range": "bytes=0-1023"})
     board = c.get(client, "/leaderboard", f"{who} leaderboard")
     if board.status_code == 200:
         c.counts["leaderboard places"] += len(board.json()["ranked"]) + len(board.json()["not_ranked"])

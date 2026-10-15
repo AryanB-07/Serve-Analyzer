@@ -43,6 +43,9 @@ from .tables import (
     email_tokens,
     messages,
     notifications,
+    post_comments,
+    post_likes,
+    posts,
     profiles,
     released_usernames,
     result_reports,
@@ -491,6 +494,14 @@ class Database:
         picture) for removal. Returns the purge ids."""
         with self.engine.begin() as conn:
             ids = list(conn.execute(select(analyses.c.id).where(analyses.c.user_id == user_id)).scalars())
+            post_ids = list(conn.execute(select(posts.c.id).where(posts.c.user_id == user_id)).scalars())
+            if post_ids:
+                conn.execute(delete(post_likes).where(post_likes.c.post_id.in_(post_ids)))
+                conn.execute(delete(post_comments).where(post_comments.c.post_id.in_(post_ids)))
+                conn.execute(delete(posts).where(posts.c.id.in_(post_ids)))
+            conn.execute(delete(post_likes).where(post_likes.c.user_id == user_id))
+            conn.execute(delete(post_comments).where(post_comments.c.user_id == user_id))
+            account_prefixes = (account_prefixes or []) + [f"posts/{pid}" for pid in post_ids]
             # Their username is held for a while, so nobody can take it to pose as them.
             if name := conn.execute(select(profiles.c.username).where(profiles.c.user_id == user_id)).scalar_one_or_none():
                 self._hold(conn, name, None)
@@ -721,6 +732,127 @@ class Database:
     def unsuspend(self, user_id: str) -> None:
         with self.engine.begin() as conn:
             conn.execute(update(users).where(users.c.id == user_id).values(suspended_at=None, suspended_reason=None))
+
+    # --- posts -----------------------------------------------------------------
+
+    def create_post(self, row: dict[str, Any]) -> dict[str, Any]:
+        with self.engine.begin() as conn:
+            conn.execute(insert(posts).values(**row))
+        return row
+
+    def get_post(self, post_id: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(posts).where(posts.c.id == post_id)).mappings().first()
+        return dict(row) if row else None
+
+    def update_post(self, post_id: str, user_id: str, **fields: Any) -> bool:
+        """Change one of ``user_id``'s posts; False if it isn't theirs (or doesn't exist)."""
+        with self.engine.begin() as conn:
+            return conn.execute(update(posts).where(posts.c.id == post_id, posts.c.user_id == user_id)
+                                .values(updated_at=now(), **fields)).rowcount > 0
+
+    def delete_post(self, post_id: str, user_id: str, prefixes: list[str]) -> list[int] | None:
+        """Delete one of ``user_id``'s posts with its likes and comments, and queue its files for
+        removal, in one transaction. None if there was no such post of theirs."""
+        with self.engine.begin() as conn:
+            mine = conn.execute(select(posts.c.id).where(posts.c.id == post_id, posts.c.user_id == user_id)).first()
+            if mine is None:
+                return None
+            conn.execute(delete(post_likes).where(post_likes.c.post_id == post_id))
+            conn.execute(delete(post_comments).where(post_comments.c.post_id == post_id))
+            conn.execute(delete(posts).where(posts.c.id == post_id))
+            return self._queue_purges(conn, prefixes)
+
+    def posts_by(self, user_id: str, visibilities: tuple[str, ...], limit: int,
+                 before: tuple[datetime, str] | None = None) -> list[dict[str, Any]]:
+        """``user_id``'s posts with one of ``visibilities``, newest first."""
+        query = select(posts).where(posts.c.user_id == user_id, posts.c.visibility.in_(visibilities))
+        if before:
+            query = query.where(tuple_(posts.c.created_at, posts.c.id) < tuple_(
+                bindparam("p_at", before[0], UTCDateTime), bindparam("p_id", before[1])))
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(query.order_by(posts.c.created_at.desc(), posts.c.id.desc()).limit(limit)).mappings()]
+
+    def like(self, post_id: str, user_id: str) -> bool:
+        """Like a post; True if it's new. A second like is a no-op (the primary key)."""
+        try:
+            with self.engine.begin() as conn:
+                exists = conn.execute(select(func.count()).select_from(post_likes).where(
+                    post_likes.c.post_id == post_id, post_likes.c.user_id == user_id)).scalar_one()
+                if exists:
+                    return False
+                conn.execute(insert(post_likes).values(post_id=post_id, user_id=user_id, created_at=now()))
+        except IntegrityError:
+            return False
+        return True
+
+    def unlike(self, post_id: str, user_id: str) -> bool:
+        with self.engine.begin() as conn:
+            return conn.execute(delete(post_likes).where(
+                post_likes.c.post_id == post_id, post_likes.c.user_id == user_id)).rowcount > 0
+
+    def post_counts(self, post_ids: list[str], viewer_id: str) -> dict[str, dict[str, Any]]:
+        """For each post: likes and comments (leaving out suspended accounts), and whether
+        ``viewer_id`` liked it."""
+        out = {pid: {"likes": 0, "comments": 0, "liked": False} for pid in post_ids}
+        if not post_ids:
+            return out
+        gone = self.suspended_ids()
+        with self.engine.connect() as conn:
+            for pid, n in conn.execute(select(post_likes.c.post_id, func.count()).where(
+                    post_likes.c.post_id.in_(post_ids), post_likes.c.user_id.not_in(gone)).group_by(post_likes.c.post_id)):
+                out[pid]["likes"] = n
+            for pid, n in conn.execute(select(post_comments.c.post_id, func.count()).where(
+                    post_comments.c.post_id.in_(post_ids), post_comments.c.user_id.not_in(gone)).group_by(post_comments.c.post_id)):
+                out[pid]["comments"] = n
+            for pid in conn.execute(select(post_likes.c.post_id).where(
+                    post_likes.c.post_id.in_(post_ids), post_likes.c.user_id == viewer_id)).scalars():
+                out[pid]["liked"] = True
+        return out
+
+    def add_comment(self, post_id: str, user_id: str, body: str) -> dict[str, Any]:
+        row = {"id": uuid.uuid4().hex, "post_id": post_id, "user_id": user_id, "body": body, "created_at": now()}
+        with self.engine.begin() as conn:
+            conn.execute(insert(post_comments).values(**row))
+        return row
+
+    def get_comment(self, comment_id: str) -> dict[str, Any] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(select(post_comments).where(post_comments.c.id == comment_id)).mappings().first()
+        return dict(row) if row else None
+
+    def delete_comment(self, comment_id: str) -> bool:
+        with self.engine.begin() as conn:
+            return conn.execute(delete(post_comments).where(post_comments.c.id == comment_id)).rowcount > 0
+
+    def comments_page(self, post_id: str, viewer_id: str, limit: int,
+                      after: tuple[datetime, str] | None = None) -> list[dict[str, Any]]:
+        """Oldest first, leaving out suspended accounts and anyone hidden from ``viewer_id``."""
+        hidden = select(blocks.c.blocked_id).where(blocks.c.blocker_id == viewer_id).union(
+            select(blocks.c.blocker_id).where(blocks.c.blocked_id == viewer_id), self.suspended_ids())
+        query = select(post_comments).where(post_comments.c.post_id == post_id, post_comments.c.user_id.not_in(hidden))
+        if after:
+            query = query.where(tuple_(post_comments.c.created_at, post_comments.c.id) > tuple_(
+                bindparam("c_at", after[0], UTCDateTime), bindparam("c_id", after[1])))
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(
+                query.order_by(post_comments.c.created_at, post_comments.c.id).limit(limit)).mappings()]
+
+    def count_since(self, table_name: str, user_id: str, since: datetime) -> int:
+        """How many posts or comments ``user_id`` made since ``since`` (for rate limits)."""
+        table = {"posts": posts, "comments": post_comments}[table_name]
+        with self.engine.connect() as conn:
+            return conn.execute(select(func.count()).select_from(table).where(
+                table.c.user_id == user_id, table.c.created_at >= since)).scalar_one()
+
+    def likes_by(self, user_id: str) -> list[dict[str, Any]]:
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(select(post_likes).where(post_likes.c.user_id == user_id)).mappings()]
+
+    def comments_by(self, user_id: str) -> list[dict[str, Any]]:
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(select(post_comments).where(post_comments.c.user_id == user_id)
+                                                  .order_by(post_comments.c.created_at)).mappings()]
 
     # --- notifications ---------------------------------------------------------
 

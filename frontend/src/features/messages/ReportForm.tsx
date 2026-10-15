@@ -14,10 +14,12 @@ const REASONS: { value: UserReportReason; label: string }[] = [
 ];
 
 /** Report a person, or one of their messages, with the option of blocking them too. */
-export function ReportForm({ username, name, messageId, onDone, onBlocked }: {
+export function ReportForm({ username, name, messageId, postId, commentId, onDone, onBlocked }: {
   username: string;
   name: string;
   messageId?: string;
+  postId?: string;
+  commentId?: string;
   onDone: () => void;
   onBlocked?: () => void;
 }) {
@@ -33,7 +35,8 @@ export function ReportForm({ username, name, messageId, onDone, onBlocked }: {
     event.preventDefault();
     if (!reason) return;
     try {
-      await report.mutateAsync({ username, message_id: messageId ?? null, reason, note: note.trim() || null });
+      await report.mutateAsync({ username, message_id: messageId ?? null, post_id: postId ?? null, comment_id: commentId ?? null,
+        reason, note: note.trim() || null });
       if (alsoBlock) {
         await block.mutateAsync(username);
         onBlocked?.();
@@ -55,7 +58,9 @@ export function ReportForm({ username, name, messageId, onDone, onBlocked }: {
   const error = report.error ?? block.error;
   return (
     <form onSubmit={submit} aria-labelledby={`${id}-title`} className="space-y-3 rounded-xl border border-bad/40 bg-surface p-4">
-      <p id={`${id}-title`} className="font-medium">{messageId ? `Report this message from ${name}` : `Report ${name}`}</p>
+      <p id={`${id}-title`} className="font-medium">
+        {messageId ? `Report this message from ${name}` : postId ? `Report ${name}'s post` : commentId ? `Report ${name}'s comment` : `Report ${name}`}
+      </p>
       <fieldset className="space-y-1.5">
         <legend className="sr-only">Reason</legend>
         {REASONS.map((r) => (
@@ -82,7 +87,7 @@ export function ReportForm({ username, name, messageId, onDone, onBlocked }: {
         </button>
         <button type="button" onClick={onDone} className="px-3 text-sm text-ink-muted hover:text-ink">Cancel</button>
       </div>
-      <p className="text-xs text-ink-muted">They won't be told who reported them. A copy of the message is kept with the report.</p>
+      <p className="text-xs text-ink-muted">They won't be told who reported them. A copy of what they wrote is kept with the report.</p>
     </form>
   );
 }

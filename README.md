@@ -56,6 +56,11 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
 - **Sending serves:** send one of your analyses in a message, or with "Send to a friend" from its
   results page. The friend opens it read-only (no note, filename or original video) and can
   compare it with one of their own, until the message is deleted or the friendship ends.
+- **Posts:** post one of your analysed serves with a caption, for friends (the default) or
+  everyone signed in. A post is a snapshot (its own copy of the skeleton video, thumbnail and
+  scores), so deleting it removes exactly that, and your analysis stays. Likes (one per person),
+  comments in order (yours to delete, or any on your post), editing the caption and audience,
+  and reporting. Who can see a post is checked on every request; videos are signed URLs.
 - **Notifications and safety:** a bell for new followers, follow-backs and serves sent
   to you. A username someone gives up is held for them for 30 days, so it can't be taken to
   impersonate them. `python -m serve_api.moderate` shows the reports about an account and
@@ -481,6 +486,10 @@ frontend/
 | `DELETE /messages/{id}` | Delete your message for everyone |
 | `POST /reports` | Report a person, or one of their messages to you |
 | `GET /notifications`, `GET /notifications/unread`, `POST /notifications/read` | Your notifications, how many are new, and marking them read |
+| `POST /posts`, `GET`/`PATCH`/`DELETE /posts/{id}` | Post a serve (a snapshot); see, edit caption and audience, or delete it |
+| `GET /people/{username}/posts?cursor=` | Someone's posts you can see, newest first |
+| `PUT`/`DELETE /posts/{id}/like` | Like and unlike (idempotent) |
+| `GET`/`POST /posts/{id}/comments`, `DELETE /comments/{id}` | Comments, oldest first; delete yours, or any on your post |
 | `DELETE /auth/me` | Delete the account and everything in it (needs the password) |
 
 Interactive docs are at http://localhost:8000/docs while the API is running. Failures carry

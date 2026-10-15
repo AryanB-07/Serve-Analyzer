@@ -34,10 +34,12 @@ from .schemas import (
     TAKEN,
     ChangePasswordRequest,
     ExportedBlock,
+    ExportedComment,
     ExportedFollow,
     ExportedConversation,
     ExportedMessage,
     ExportedNotification,
+    ExportedPost,
     ExportedProfile,
     ExportedUserReport,
     ChangeEmailRequest,
@@ -226,6 +228,14 @@ class Auth:
             blocks=[ExportedBlock(username=name_of(b["blocked_id"]), blocked_at=b["created_at"]) for b in blocked],
             conversations=conversations,
             reports_made=reports_made,
+            posts=[ExportedPost(
+                id=post["id"], caption=post["caption"], visibility=post["visibility"], created_at=post["created_at"],
+                files={"video": url_for(f"{keys.post_prefix(post['id'])}/{keys.POST_VIDEO}"),
+                       "thumbnail": url_for(f"{keys.post_prefix(post['id'])}/{keys.POST_THUMBNAIL}")})
+                for post in self.db.posts_by(user.id, ("public", "friends"), limit=100_000)],
+            comments=[ExportedComment(post_id=c["post_id"], body=c["body"], created_at=c["created_at"])
+                      for c in self.db.comments_by(user.id)],
+            likes=[like["post_id"] for like in self.db.likes_by(user.id)],
             notifications=[ExportedNotification(kind=n["kind"], username=(self.db.profiles_of([n["actor_id"]]).get(n["actor_id"]) or {}).get("username"),
                                                 created_at=n["created_at"], read=n["read_at"] is not None)
                            for n in self.db.notifications_for(user.id, limit=10_000)],

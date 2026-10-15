@@ -134,6 +134,9 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
   more visible, and every score shown to friends says the ranges aren't validated yet.
 - [x] A released username is held for its owner for 30 days, so nobody can impersonate a renamed player.
 - [x] Notifications (new followers, follow-backs, serves sent to you) and account suspension.
+- [x] Posts: serves posted for friends or everyone signed in, with likes, comments and reports.
+- [ ] **Before public posts go live:** have a plan for moderating them (reports go to the weekly review, and
+  `serve_api.moderate` suspends); public content from 13–17-year-olds needs a faster response than weekly.
 - [x] History (now My Serves): score cards with upload time, optional notes, key-position details, and
       server-side filters by time, score and key position.
 

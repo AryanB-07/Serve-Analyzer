@@ -18,6 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from . import keys
 from .auth import Auth, RateLimiter, _too_many
 from .db import Database, now
+from .posts import visible_kinds
 from .schemas import (
     ConversationSummary,
     ErrorResponse,
@@ -197,6 +198,18 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         if person is None or person["user_id"] == user.id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No one has that username.")
         message_body = None
+        if body.post_id:  # their post, which you can see
+            post = db.get_post(body.post_id)
+            if post is None or post["user_id"] != person["user_id"] or post["visibility"] not in visible_kinds(db, user.id, post["user_id"]):
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
+            message_body = post["caption"]
+        if body.comment_id:  # their comment, on a post you can see
+            comment = db.get_comment(body.comment_id)
+            post = db.get_post(comment["post_id"]) if comment else None
+            if comment is None or post is None or comment["user_id"] != person["user_id"] \
+                    or post["visibility"] not in visible_kinds(db, user.id, post["user_id"]):
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "Comment not found")
+            message_body = comment["body"]
         if body.message_id:
             message = db.get_message(body.message_id)
             ok = (message is not None and message["sender_id"] == person["user_id"]
@@ -209,7 +222,8 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         reports.hit(user.id)
         note = (body.note or "").strip() or None
         db.save_user_report(reporter_id=user.id, reported_id=person["user_id"], reported_username=person["username"],
-                            message_id=body.message_id, message_body=message_body, reason=body.reason, note=note)
+                            message_id=body.message_id, post_id=body.post_id, comment_id=body.comment_id,
+                            message_body=message_body, reason=body.reason, note=note)
         return Response(status_code=201)
 
     return router

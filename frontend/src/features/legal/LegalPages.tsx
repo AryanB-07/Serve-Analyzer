@@ -117,6 +117,13 @@ export function PrivacyPage() {
             setting off hides it straight away.
           </li>
           <li>
+            <strong>A serve you post</strong> is a copy of its skeleton video, thumbnail and scores, with your caption: never
+            your note, the file's name or the original upload. A Friends post (the default) is seen only by your friends; a
+            Public post by everyone signed in to Serve Analyzer, not the open web. Whoever can see a post can see its likes
+            and comments, and like or comment on it. Deleting the post deletes the copy, its likes and its comments; your
+            serve stays in My Serves.
+          </li>
+          <li>
             <strong>A serve you send a friend</strong> in a message lets them watch it and see its results: the video with
             the skeleton, the phases, measurements, scores and feedback. They don't see your note, the file's name or the
             original upload, and can't change or delete anything. They can open it until you delete the message, either of
@@ -128,7 +135,10 @@ export function PrivacyPage() {
             on their page. Blocking removes the follows both ways; someone you block can't find you or follow you, and
             isn't told.
           </li>
-          <li>We record who you follow, who follows you and who you've blocked, with when. They're in your data download.</li>
+          <li>
+            We record who you follow, who follows you and who you've blocked, your posts, the comments you write and the posts
+            you like, with when. They're all in your data download.
+          </li>
           <li>
             <strong>Messages</strong> go only between friends, and only the two of you can read them. We don't read
             them, except a message someone reports to us: a copy of it is kept with the report so we can look into it.
@@ -323,6 +333,7 @@ export function TermsPage() {
           <li>attack, overload, scrape or try to get around the service's security or usage limits;</li>
           <li>access other people's accounts or data;</li>
           <li>harass, threaten or spam anyone, or keep contacting someone who has declined, removed or blocked you;</li>
+          <li>post or comment anything that breaks these rules; you're responsible for what you post, and we may remove it;</li>
           <li>pretend to be someone else with your username, name or picture;</li>
           <li>resell or rebrand the service without our written permission.</li>
         </ul>
