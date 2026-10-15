@@ -174,19 +174,103 @@
       "text": "Hit the ball higher: at contact your wrist is at 1.26 body heights (target 1.30-1.60). Reach up fully and drive up with your legs.",
       "phase": "contact",
       "metric": "wrist_height",
-      "status": "borderline"
+      "status": "borderline",
+      "plain": "Hit the ball higher: reach up fully at contact and drive up with your legs."
     },
     {
       "text": "You sit very deep on your front knee at the trophy (86°, target 50-80°); a slightly shallower bend is easier to push out of quickly.",
       "phase": "trophy",
       "metric": "front_knee_flexion",
-      "status": "borderline"
+      "status": "borderline",
+      "plain": "You sit very deep on your front knee at the trophy. A slightly shallower bend is easier to push out of quickly."
     }
   ],
   "warnings": [
     "Could not detect the racket drop phase.",
-    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left)."
+    "The hitting wrist is highest at the very edge of the clip, so contact may be cut off or the hitting hand may be wrong (try left).",
+    "Your hitting arm was hard to see around the trophy position, so its angles there may be missing or rough."
   ],
+  "camera_view": "front",
+  "quality": {
+    "trophy": {
+      "front_knee_flexion": "approximate",
+      "back_knee_flexion": "approximate",
+      "elbow_angle": "unreadable",
+      "trunk_tilt": "approximate",
+      "wrist_height": null
+    },
+    "racket_drop": {
+      "front_knee_flexion": null,
+      "back_knee_flexion": null,
+      "elbow_angle": "approximate",
+      "trunk_tilt": "measured",
+      "wrist_height": null
+    },
+    "contact": {
+      "front_knee_flexion": "measured",
+      "back_knee_flexion": null,
+      "elbow_angle": "measured",
+      "trunk_tilt": "measured",
+      "wrist_height": "measured"
+    }
+  },
+  "confidence": {
+    "trophy": {
+      "front_knee_flexion": {
+        "visibility": 0.51,
+        "noise": 1.4,
+        "camera_error": 26.1,
+        "camera_view_assumed": false
+      },
+      "back_knee_flexion": {
+        "visibility": 0.3,
+        "noise": null,
+        "camera_error": 25.5,
+        "camera_view_assumed": false
+      },
+      "elbow_angle": {
+        "visibility": 0.08,
+        "noise": null,
+        "camera_error": 43.3,
+        "camera_view_assumed": false
+      },
+      "trunk_tilt": {
+        "visibility": 1.0,
+        "noise": 0.2,
+        "camera_error": 17.1,
+        "camera_view_assumed": false
+      },
+      "wrist_height": null
+    },
+    "racket_drop": null,
+    "contact": {
+      "front_knee_flexion": {
+        "visibility": 0.54,
+        "noise": 19.2,
+        "camera_error": 2.6,
+        "camera_view_assumed": false
+      },
+      "back_knee_flexion": null,
+      "elbow_angle": {
+        "visibility": 0.34,
+        "noise": null,
+        "camera_error": 7.3,
+        "camera_view_assumed": false
+      },
+      "trunk_tilt": {
+        "visibility": 1.0,
+        "noise": 0.6,
+        "camera_error": 1.8,
+        "camera_view_assumed": false
+      },
+      "wrist_height": {
+        "visibility": 0.54,
+        "noise": 0.012,
+        "camera_error": 0.022,
+        "camera_view_assumed": false
+      }
+    }
+  },
   "video_url": "/mock/demo-serve-1/playback.mp4",
   "annotated_video_url": "/mock/demo-serve-1/annotated.mp4",
   "thumbnail_url": "/mock/demo-serve-1/thumbnail.jpg"

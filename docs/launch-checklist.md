@@ -102,6 +102,14 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
   `frontend/src/features/legal/config.ts`, and bump `TERMS_VERSION` and `LAST_UPDATED`.
 - [x] Screenshots of the demo in the README (`docs/images`).
 
+## Results views
+
+- [x] Simple mode (scores out of 100, an overall serve score, plain feedback) and advanced mode
+      (exact angles, tracking confidence, tracking noise, camera error, likely range). The choice
+      is remembered per browser.
+- [ ] **Validate the reference ranges** before leaning on the scores. They're placeholders
+  (`serve_analyzer/data/reference_ranges.json`), and simple mode turns them into grades.
+
 ## Camera position
 
 - [x] Automatic view detection evaluated: it missed its targets (`docs/view-detection.md`), so the

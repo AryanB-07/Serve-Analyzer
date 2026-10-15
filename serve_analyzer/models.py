@@ -70,7 +70,7 @@ Metrics = dict[str, dict[str, float | None]]
 Labels = dict[str, dict[str, str]]
 Ranges = dict[str, dict[str, dict[str, list[float]]]]
 
-RESULTS_SCHEMA_VERSION = 3  # 3: camera_view and quality
+RESULTS_SCHEMA_VERSION = 4  # 3: camera_view and quality; 4: confidence, plain feedback
 
 
 @dataclass
@@ -81,6 +81,7 @@ class FeedbackItem:
     phase: str | None = None
     metric: str | None = None
     status: str | None = None
+    plain: str | None = None  # the same point without numbers, for simple mode
 
 
 @dataclass
@@ -101,6 +102,8 @@ class AnalysisResult:
     # ({phase: {metric: "measured" | "approximate" | "unreadable"}}); None when not given.
     camera_view: str | None = None
     quality: dict[str, dict[str, str]] | None = None
+    # How far each measurement can be trusted (serve_analyzer.confidence), for advanced mode.
+    confidence: dict[str, dict[str, dict]] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -118,5 +121,6 @@ class AnalysisResult:
             "warnings": self.warnings,
             "camera_view": self.camera_view,
             "quality": self.quality,
+            "confidence": self.confidence,
             "outputs": self.outputs,
         }

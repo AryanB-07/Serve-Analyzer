@@ -74,6 +74,49 @@ RULES: dict[tuple[str, str, str], str] = {
         "try to hit up and through the ball rather than falling sideways.",
 }
 
+# The same points without numbers, for the results page's simple mode.
+PLAIN: dict[tuple[str, str, str], str] = {
+    ("contact", "wrist_height", "low"):
+        "Hit the ball higher: reach up fully at contact and drive up with your legs.",
+    ("contact", "wrist_height", "high"):
+        "Your contact point looks unusually high. Check the camera is level and side-on.",
+    ("contact", "elbow_angle", "low"):
+        "Straighten your hitting arm at contact. A bent arm loses height and power.",
+    ("trophy", "front_knee_flexion", "low"):
+        "Bend your front knee more in the trophy position, so you can push up into the ball.",
+    ("trophy", "front_knee_flexion", "high"):
+        "You sit very deep on your front knee at the trophy. A slightly shallower bend is easier "
+        "to push out of quickly.",
+    ("trophy", "back_knee_flexion", "low"):
+        "Load your back leg more at the trophy position.",
+    ("trophy", "back_knee_flexion", "high"):
+        "Your back knee is very bent at the trophy.",
+    ("trophy", "elbow_angle", "low"):
+        "Your hitting elbow is tightly bent at the trophy. Lift the racket up with the elbow near "
+        "shoulder height.",
+    ("trophy", "elbow_angle", "high"):
+        "Your hitting arm is too straight at the trophy. Bend the elbow to set up the racket drop.",
+    ("trophy", "trunk_tilt", "low"):
+        "Tilt your shoulders more at the trophy: the tossing shoulder should be higher than the "
+        "hitting one.",
+    ("trophy", "trunk_tilt", "high"):
+        "You lean a lot at the trophy, which can pull the toss and your balance off line.",
+    ("racket_drop", "elbow_angle", "low"):
+        "Your elbow folds very tightly in the racket drop.",
+    ("racket_drop", "elbow_angle", "high"):
+        "Let the racket drop deeper behind your back. A shallow drop shortens the swing path.",
+    ("racket_drop", "trunk_tilt", "low"):
+        "Keep your trunk tilted through the racket drop.",
+    ("racket_drop", "trunk_tilt", "high"):
+        "You lean too far during the racket drop.",
+    ("contact", "front_knee_flexion", "high"):
+        "Extend your legs fully by contact: your front knee is still bent.",
+    ("contact", "trunk_tilt", "low"):
+        "Your trunk is very upright at contact.",
+    ("contact", "trunk_tilt", "high"):
+        "You lean a lot at contact. Try to hit up and through the ball rather than falling sideways.",
+}
+
 SEVERITY = {"off": 0, "borderline": 1}
 
 ALL_GOOD = "Everything we could measure is within the reference ranges. Nice serve!"
@@ -99,11 +142,12 @@ def generate(assessments: list[Assessment], max_points: int = MAX_POINTS) -> lis
             continue
         lo, hi = a.range.good
         text = template.format(value=a.value, lo=lo, hi=hi)
-        points.append(FeedbackItem(text, a.phase, a.metric, a.status))
+        plain = PLAIN.get((a.phase, a.metric, a.direction), text)
+        points.append(FeedbackItem(text, a.phase, a.metric, a.status, plain))
         if len(points) == max_points:
             break
     if points:
         return points
     if any(a.status == "good" for a in assessments):
-        return [FeedbackItem(ALL_GOOD, status="good")]
-    return [FeedbackItem(NOTHING_MEASURED)]
+        return [FeedbackItem(ALL_GOOD, status="good", plain=ALL_GOOD)]
+    return [FeedbackItem(NOTHING_MEASURED, plain=NOTHING_MEASURED)]

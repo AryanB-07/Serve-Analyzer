@@ -35,6 +35,10 @@ test("signed-out pages", async ({ page }) => {
     await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();
     await expectAccessible(page, path);
   }
+  await page.goto("/demo");
+  await page.getByText("Advanced", { exact: true }).click();
+  await expect(page.getByTestId("confidence").first()).toBeVisible();
+  await expectAccessible(page, "/demo in advanced mode");
   await page.goto("/login?help=filming");
   await expect(page.getByRole("dialog", { name: "Help" })).toBeVisible();
   await expectAccessible(page, "the help dialog");

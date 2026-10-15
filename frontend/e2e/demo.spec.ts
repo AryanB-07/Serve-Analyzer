@@ -16,6 +16,17 @@ test("anyone can open the sample analysis from the sign-in page and play it", as
   await page.keyboard.press("3");
   await expect(page.getByText(/Frame 12\d \/ 125/)).toBeVisible();
 
+  // Simple by default; advanced shows the exact angles and confidence, and is remembered.
+  await expect(page.getByRole("radio", { name: "Simple" })).toBeChecked();
+  await expect(page.getByTestId("overall-score")).toHaveText(/^\d+$/);
+  await expect(page.getByText("Angles over time")).toHaveCount(0);
+  await page.getByText("Advanced", { exact: true }).click();
+  await expect(page.getByText("Angles over time")).toBeVisible();
+  await expect(page.getByTestId("confidence").first()).toContainText("Likely range");
+  await page.reload();
+  await expect(page.getByRole("radio", { name: "Advanced" })).toBeChecked();
+  await page.getByText("Simple", { exact: true }).click();
+
   await expect(page.getByRole("button", { name: /Delete/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "This result looks wrong?" })).toHaveCount(0);
   await page.getByRole("link", { name: "Create a free account" }).click();

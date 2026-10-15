@@ -101,6 +101,15 @@ class MetricRange(BaseModel):
     borderline: tuple[float, float]
 
 
+class MeasurementConfidence(BaseModel):
+    """How far one measurement can be trusted (serve_analyzer.confidence)."""
+
+    visibility: float | None = None    # 0-1: MediaPipe's confidence in the weakest joint it uses
+    noise: float | None = None         # frame-to-frame tracking jitter (degrees; body heights for height)
+    camera_error: float | None = None  # the rig's 90th-percentile error for the camera position
+    camera_view_assumed: bool = False  # true: no position was given, so side-on (hitting side) is assumed
+
+
 MetricValues = _keyed("MetricValues", METRIC_NAMES, float | None)
 MetricLabels = _keyed("MetricLabels", METRIC_NAMES, MetricStatus | None, None)
 MetricRanges = _keyed("MetricRanges", METRIC_NAMES, MetricRange | None, None)
@@ -108,7 +117,10 @@ PhaseMetrics = _keyed("PhaseMetrics", PHASE_NAMES, MetricValues)
 PhaseLabels = _keyed("PhaseLabels", PHASE_NAMES, MetricLabels)
 PhaseRanges = _keyed("PhaseRanges", PHASE_NAMES, MetricRanges)
 MetricQualities = _keyed("MetricQualities", METRIC_NAMES, MeasurementQuality | None, None)
-PhaseQualities = _keyed("PhaseQualities", PHASE_NAMES, MetricQualities, None)
+MetricConfidences = _keyed("MetricConfidences", METRIC_NAMES, MeasurementConfidence | None, None)
+# A phase that wasn't detected has no entry, sent as null.
+PhaseQualities = _keyed("PhaseQualities", PHASE_NAMES, MetricQualities | None, None)
+PhaseConfidences = _keyed("PhaseConfidences", PHASE_NAMES, MetricConfidences | None, None)
 
 
 class FeedbackItem(BaseModel):
@@ -116,6 +128,9 @@ class FeedbackItem(BaseModel):
     phase: PhaseName | None = None
     metric: MetricName | None = None
     status: MetricStatus | None = None
+    # The same point without numbers, for simple mode (absent from results before it existed).
+    plain: str | None = None
+
 
 
 class AnalysisResult(BaseModel):
@@ -134,6 +149,8 @@ class AnalysisResult(BaseModel):
     camera_view: CameraView | None = None
     # What camera_view can read, per phase and measurement; None when it wasn't given.
     quality: PhaseQualities | None = None
+    # How far each measurement can be trusted; None for results from before it existed.
+    confidence: PhaseConfidences | None = None
     video_url: str
     annotated_video_url: str | None = None
     thumbnail_url: str | None = None

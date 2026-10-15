@@ -32,9 +32,12 @@ function Switch({
 export function OverlayToggles({
   options,
   onChange,
+  simple = false,
 }: {
   options: OverlayOptions;
   onChange: (options: OverlayOptions) => void;
+  /** Simple mode: only the skeleton switch (no angle numbers or raw landmarks). */
+  simple?: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2" role="group" aria-label="Overlay options">
@@ -43,6 +46,8 @@ export function OverlayToggles({
         checked={options.showSkeleton}
         onChange={(showSkeleton) => onChange({ ...options, showSkeleton })}
       />
+      {!simple && (
+        <>
       <Switch
         label="Angle labels"
         checked={options.showLabels}
@@ -68,6 +73,8 @@ export function OverlayToggles({
           </button>
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 }

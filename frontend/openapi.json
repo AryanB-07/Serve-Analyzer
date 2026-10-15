@@ -1460,6 +1460,16 @@
               }
             ]
           },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhaseConfidences"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "video_url": {
             "type": "string",
             "title": "Video Url"
@@ -2019,6 +2029,17 @@
               }
             ],
             "title": "Status"
+          },
+          "plain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plain"
           }
         },
         "type": "object",
@@ -2156,6 +2177,107 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "MeasurementConfidence": {
+        "properties": {
+          "visibility": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visibility"
+          },
+          "noise": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Noise"
+          },
+          "camera_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Camera Error"
+          },
+          "camera_view_assumed": {
+            "type": "boolean",
+            "title": "Camera View Assumed",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "MeasurementConfidence",
+        "description": "How far one measurement can be trusted (serve_analyzer.confidence)."
+      },
+      "MetricConfidences": {
+        "properties": {
+          "front_knee_flexion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeasurementConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "back_knee_flexion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeasurementConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "elbow_angle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeasurementConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trunk_tilt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeasurementConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wrist_height": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeasurementConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "MetricConfidences"
       },
       "MetricLabels": {
         "properties": {
@@ -2616,6 +2738,42 @@
         ],
         "title": "PasswordResetRequest"
       },
+      "PhaseConfidences": {
+        "properties": {
+          "trophy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricConfidences"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "racket_drop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricConfidences"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricConfidences"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "PhaseConfidences"
+      },
       "PhaseFrames": {
         "properties": {
           "trophy": {
@@ -2703,13 +2861,34 @@
       "PhaseQualities": {
         "properties": {
           "trophy": {
-            "$ref": "#/components/schemas/MetricQualities"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricQualities"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "racket_drop": {
-            "$ref": "#/components/schemas/MetricQualities"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricQualities"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "contact": {
-            "$ref": "#/components/schemas/MetricQualities"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricQualities"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

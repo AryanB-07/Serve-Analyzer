@@ -20,6 +20,12 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
 - **Metrics and feedback:** knee flexion, hitting-arm extension, trunk tilt and contact height,
   each labelled good, borderline or needs work against reference ranges, with 3–4 ranked
   coaching points.
+- **Simple and advanced results:**
+  - **Simple** (the default): a 0–100 score for each key position on the same slider (80–100 good, 50–79
+    borderline, under 50 needs work), an overall serve score, and coaching in plain words.
+  - **Advanced:** exact angles, MediaPipe's tracking confidence for the joints involved, frame-to-frame
+    tracking noise, the camera position's likely error, and the likely range drawn on the slider.
+  - The choice is remembered per browser; Help explains both.
 - **Interactive results page:**
   - the video with a canvas skeleton overlay, coloured by status, with raw vs smoothed landmarks
   - a phase timeline you can scrub, frame-accurate controls (0.25×–1×) and keyboard shortcuts

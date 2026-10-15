@@ -68,6 +68,7 @@ def result_from_file(analysis_id: str, results: dict[str, Any], url_for: UrlFor)
         # Absent from results written before the camera question existed.
         camera_view=results.get("camera_view"),
         quality=results.get("quality"),
+        confidence=results.get("confidence"),
         video_url=url_for(keys.output_key(analysis_id, keys.PLAYBACK)),
         annotated_video_url=url_for(keys.output_key(analysis_id, keys.ANNOTATED)),
         thumbnail_url=url_for(keys.output_key(analysis_id, keys.THUMBNAIL)),

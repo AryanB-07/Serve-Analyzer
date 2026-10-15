@@ -12,7 +12,7 @@ describe("MetricCard", () => {
     const result = makeResult();
     renderWithPlayhead(<MetricCard reading={readingFor("front_knee_flexion", result)} phases={result.phases} />);
     const card = screen.getByRole("article", { name: "Front knee bend" });
-    expect(within(card).getByText("86°")).toBeInTheDocument();
+    expect(within(card).getByText("86.2°")).toBeInTheDocument();
     expect(within(card).getByText("at trophy")).toBeInTheDocument();
     expect(within(card).getByText(/Good range 50°–80° at trophy/)).toBeInTheDocument();
     expect(within(card).getByTestId("metric-status")).toHaveTextContent("Borderline: a little high");

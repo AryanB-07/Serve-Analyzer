@@ -21,7 +21,18 @@ test("a serve's results show the limits and take a report", async ({ page }) => 
   // What that position can't read is said, and the cards are marked.
   const note = page.getByRole("region", { name: "Filmed from across the net" });
   await expect(note).toContainText("the elbow bend at the trophy position can't be read from one camera");
-  await expect(page.getByRole("article", { name: "Front knee bend" })).toContainText("approximate from this angle");
+  // Simple mode (the default): scores out of 100, rough where the angle is approximate.
+  const knee = page.getByRole("article", { name: "Front knee bend" });
+  await expect(page.getByRole("radio", { name: "Simple" })).toBeChecked();
+  await expect(page.getByRole("region", { name: "Serve score" })).toContainText("/ 100");
+  await expect(knee).toContainText("rough from this angle");
+  await expect(knee.getByRole("meter")).toHaveAttribute("aria-valuenow", /\d+/);
+  // Advanced mode: the exact angle, its likely range and the tracking confidence.
+  await page.getByText("Advanced", { exact: true }).click();
+  await expect(knee).toContainText("approximate from this angle");
+  await expect(knee).toContainText(/\d+\.\d°/);
+  await expect(knee.getByTestId("confidence")).toContainText("Tracking confidence");
+  await expect(knee.getByTestId("confidence")).toContainText("from your camera position");
   await expect(page.getByText("Your hitting arm was hard to see around the trophy position")).toBeVisible();
   await note.getByRole("button", { name: "Where to put the camera" }).click();
   await expect(page.getByRole("tab", { name: "How to film your serve" })).toHaveAttribute("aria-selected", "true");

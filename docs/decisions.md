@@ -178,6 +178,22 @@ and what would change the decision. Numbers link to the reports and docs they co
   - The skeleton is drawn on a canvas synced to the video's clock, and the charts use uPlot, which is small.
 - **Why:** the API contract is enforced by the compiler instead of by hope. Polling backs off while a status is unchanged and speeds up on each stage change.
 
+### 16b. Simple scores and advanced error bars, from the same numbers
+
+- **Chosen:** two views of one analysis.
+  - **Simple mode:** a 0–100 score per key position, mapped piecewise from the reference range
+    so the score always falls in the same band as the label (tested at 180 values for every
+    range).
+  - **Advanced mode:** the exact angle with a likely range: the camera position's rig error
+    plus the tracking noise around that moment, and MediaPipe's confidence in the weakest
+    joint the measurement uses.
+- **Why:** players want "how am I doing?", while coaches and interviewers want "how sure are
+  you?". The error bars make the single-camera limits visible, instead of hiding them behind a
+  precise-looking number. On the sample clip the front knee reads 86.2° with a likely range of
+  58.7–113.7°.
+- **Trade-off:** scores against placeholder reference ranges are only as meaningful as the
+  ranges. The page says so.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

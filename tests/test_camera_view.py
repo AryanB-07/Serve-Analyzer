@@ -220,3 +220,33 @@ def test_nothing_hidden_is_left_unexplained():
             for metric, q in by.items():
                 width = np.subtract(*RANGES[phase][metric]["good"][::-1])
                 assert (q == UNREADABLE) == (table[view][f"{phase}.{metric}"] > width)
+
+
+def test_old_results_without_confidence_or_plain_feedback_still_load(app, client, mailer, settings):
+    verify(client, mailer, signup(client))
+    old = analyze_sequence(_serve(), Hand.RIGHT, AnalysisConfig(), load_ranges()).result.to_dict()
+    old.pop("confidence")
+    for item in old["feedback"]:
+        item.pop("plain")
+    analysis_id = _create(client).json()["analysis"]["id"]
+    path = LocalStorage(settings).path(keys.output_key(analysis_id, keys.RESULTS))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(old))
+    db_of(app).set_status(analysis_id, "succeeded")
+    result = client.get(f"/analyses/{analysis_id}/result").json()
+    assert result["confidence"] is None
+    assert all(item["plain"] is None for item in result["feedback"])
+
+
+def test_new_results_serve_confidence_through_the_api(app, client, mailer, settings):
+    verify(client, mailer, signup(client))
+    new = analyze_sequence(_serve(), Hand.RIGHT, AnalysisConfig(), load_ranges()).result.to_dict()
+    analysis_id = _create(client).json()["analysis"]["id"]
+    path = LocalStorage(settings).path(keys.output_key(analysis_id, keys.RESULTS))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(new))
+    db_of(app).set_status(analysis_id, "succeeded")
+    result = client.get(f"/analyses/{analysis_id}/result").json()
+    knee = result["confidence"]["trophy"]["front_knee_flexion"]
+    assert set(knee) == {"visibility", "noise", "camera_error", "camera_view_assumed"}
+    assert result["feedback"][0]["plain"]

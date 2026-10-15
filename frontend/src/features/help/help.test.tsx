@@ -130,6 +130,8 @@ describe("keyboard use", () => {
     expect(tab("How to film your serve")).toHaveFocus();
     expect(tab("How to film your serve")).toHaveAttribute("aria-selected", "true");
     await userEvent.keyboard("{ArrowRight}");
+    expect(tab("Reading your results")).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}");
     expect(tab("What the analysis can't do")).toHaveFocus();
     await userEvent.keyboard("{End}");
     expect(tab("Keyboard shortcuts")).toHaveFocus();

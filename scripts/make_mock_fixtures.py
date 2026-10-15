@@ -42,7 +42,8 @@ def build(analysis_id: str, video: Path, filename: str, created_at: datetime) ->
 
     dest = OUT / analysis_id
     with tempfile.TemporaryDirectory() as tmp:
-        analyze(video, "right", tmp)
+        # The sample clip was filmed from across the net (tests/fixtures/ATTRIBUTION.md).
+        analyze(video, "right", tmp, camera_view="front")
         results = json.loads((Path(tmp) / keys.RESULTS).read_text())
         dest.mkdir(parents=True, exist_ok=True)
         for name in COPIED:
@@ -50,10 +51,10 @@ def build(analysis_id: str, video: Path, filename: str, created_at: datetime) ->
 
     result = result_from_file(analysis_id, results, url_for)
     row = {
-        "id": analysis_id, "hand": "right", "status": "succeeded", "filename": filename,
+        "id": analysis_id, "hand": "right", "status": "succeeded", "filename": filename, "camera_view": "front",
         "created_at": created_at.isoformat(), "updated_at": created_at.isoformat(),
         "error_code": None, "error_message": None,
-        "counts": json.dumps(counts_from_labels(results["labels"])),
+        "counts": counts_from_labels(results["labels"], results.get("quality")),
     }
     summary = summary_from_row(row, url_for)
     (dest / "result.json").write_text(result.model_dump_json(indent=2) + "\n")

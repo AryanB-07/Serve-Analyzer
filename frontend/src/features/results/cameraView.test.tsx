@@ -45,6 +45,17 @@ describe("the camera note", () => {
     );
   });
 
+  it("leaves the approximate list to the cards in simple mode", () => {
+    const router = createMemoryRouter(
+      [{ path: "*", element: <HelpProvider><CameraNote result={filmed("front", FRONT_QUALITY)} mode="simple" /></HelpProvider> }],
+      { initialEntries: ["/analyses/a1"] },
+    );
+    render(<RouterProvider router={router} />);
+    const note = screen.getByRole("region", { name: "Filmed from across the net" });
+    expect(note).toHaveTextContent("can't be read from one camera");
+    expect(note).not.toHaveTextContent("approximate");
+  });
+
   it("points to the filming guide from a position that loses measurements", async () => {
     const router = renderNote(filmed("front", FRONT_QUALITY));
     await userEvent.click(screen.getByRole("button", { name: "Where to put the camera" }));
@@ -77,7 +88,7 @@ describe("the measurement cards", () => {
     renderWithPlayhead(<MetricCard reading={readingFor("front_knee_flexion", result)} phases={result.phases} />);
     const card = screen.getByRole("article", { name: "Front knee bend" });
     expect(within(card).getByTestId("metric-status")).toHaveTextContent(UNREADABLE_TEXT);
-    expect(within(card).queryByText("86°")).not.toBeInTheDocument();
+    expect(within(card).queryByText(/86/)).not.toBeInTheDocument();
     expect(within(card).queryByText(/Good range/)).not.toBeInTheDocument();
     expect(card).toHaveTextContent("can't see this clearly enough to score it");
   });
@@ -86,7 +97,7 @@ describe("the measurement cards", () => {
     const result = filmed("front", FRONT_QUALITY);
     renderWithPlayhead(<MetricCard reading={readingFor("front_knee_flexion", result)} phases={result.phases} />);
     const card = screen.getByRole("article", { name: "Front knee bend" });
-    expect(card).toHaveTextContent("≈86°");
+    expect(card).toHaveTextContent("≈86.2°");
     expect(within(card).getByText("approximate from this angle")).toBeInTheDocument();
     expect(within(card).getByTestId("metric-status")).toHaveTextContent("Borderline: a little high");
   });

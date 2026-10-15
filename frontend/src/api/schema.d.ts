@@ -411,6 +411,7 @@ export interface components {
             /** Camera View */
             camera_view?: ("side_hitting" | "side_toss" | "behind" | "behind_diagonal_hitting" | "behind_diagonal_toss" | "front" | "front_diagonal_hitting" | "front_diagonal_toss") | null;
             quality?: components["schemas"]["PhaseQualities"] | null;
+            confidence?: components["schemas"]["PhaseConfidences"] | null;
             /** Video Url */
             video_url: string;
             /** Annotated Video Url */
@@ -598,6 +599,8 @@ export interface components {
             metric?: ("front_knee_flexion" | "back_knee_flexion" | "elbow_angle" | "trunk_tilt" | "wrist_height") | null;
             /** Status */
             status?: ("good" | "borderline" | "off" | "unknown") | null;
+            /** Plain */
+            plain?: string | null;
         };
         /** FrameLandmarks */
         FrameLandmarks: {
@@ -642,6 +645,31 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /**
+         * MeasurementConfidence
+         * @description How far one measurement can be trusted (serve_analyzer.confidence).
+         */
+        MeasurementConfidence: {
+            /** Visibility */
+            visibility?: number | null;
+            /** Noise */
+            noise?: number | null;
+            /** Camera Error */
+            camera_error?: number | null;
+            /**
+             * Camera View Assumed
+             * @default false
+             */
+            camera_view_assumed: boolean;
+        };
+        /** MetricConfidences */
+        MetricConfidences: {
+            front_knee_flexion?: components["schemas"]["MeasurementConfidence"] | null;
+            back_knee_flexion?: components["schemas"]["MeasurementConfidence"] | null;
+            elbow_angle?: components["schemas"]["MeasurementConfidence"] | null;
+            trunk_tilt?: components["schemas"]["MeasurementConfidence"] | null;
+            wrist_height?: components["schemas"]["MeasurementConfidence"] | null;
         };
         /** MetricLabels */
         MetricLabels: {
@@ -731,6 +759,12 @@ export interface components {
              */
             email: string;
         };
+        /** PhaseConfidences */
+        PhaseConfidences: {
+            trophy?: components["schemas"]["MetricConfidences"] | null;
+            racket_drop?: components["schemas"]["MetricConfidences"] | null;
+            contact?: components["schemas"]["MetricConfidences"] | null;
+        };
         /** PhaseFrames */
         PhaseFrames: {
             /** Trophy */
@@ -754,9 +788,9 @@ export interface components {
         };
         /** PhaseQualities */
         PhaseQualities: {
-            trophy?: components["schemas"]["MetricQualities"];
-            racket_drop?: components["schemas"]["MetricQualities"];
-            contact?: components["schemas"]["MetricQualities"];
+            trophy?: components["schemas"]["MetricQualities"] | null;
+            racket_drop?: components["schemas"]["MetricQualities"] | null;
+            contact?: components["schemas"]["MetricQualities"] | null;
         };
         /** PhaseRanges */
         PhaseRanges: {

@@ -24,6 +24,7 @@ from .pose import ensure_model, extract_pose_sequence
 from .preprocessing import clean
 from .reference import RangeTable, assess, load_ranges, ranges_to_dict, to_labels
 from .video import probe_or_convert, validate, write_playback_copy, write_thumbnail
+from .confidence import measurement_confidence
 from .view import UNREADABLE, hitting_arm_hidden, measurement_quality
 
 __all__ = ["AnalysisError", "SequenceAnalysis", "Stage", "analyze", "analyze_sequence"]
@@ -68,6 +69,8 @@ def analyze_sequence(
     range_dict = ranges_to_dict(ranges)
     quality = measurement_quality(camera_view, range_dict)
     readable = [a for a in assessments if not quality or quality.get(a.phase, {}).get(a.metric) != UNREADABLE]
+    measured = {phase: list(by) for phase, by in range_dict.items()}
+    confidence = measurement_confidence(raw, series, phases, hand, config, measured, camera_view)
     warnings = _warnings(phases, raw.n_frames, hand, expected_frames)
     if hitting_arm_hidden(raw, hand, phases.trophy):
         warnings.append(HIDDEN_ARM_WARNING)
@@ -86,6 +89,7 @@ def analyze_sequence(
         warnings=warnings,
         camera_view=camera_view,
         quality=quality,
+        confidence=confidence,
     )
     return SequenceAnalysis(result, pose, series)
 

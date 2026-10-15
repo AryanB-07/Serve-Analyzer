@@ -1,12 +1,13 @@
 import type { AnalysisResult } from "../../api/types";
 import { useOptionalHelp } from "../help/HelpProvider";
 import { CAMERA_VIEWS, joinList, measurementName, measurementsWith } from "../../lib/quality";
+import type { ResultsMode } from "../../lib/useResultsMode";
 
 /**
  * What the camera position the person chose can and can't read. Shown above the measurements
  * when they answered "Where was your camera?"; without an answer there's a one-line tip instead.
  */
-export function CameraNote({ result }: { result: AnalysisResult }) {
+export function CameraNote({ result, mode = "advanced" }: { result: AnalysisResult; mode?: ResultsMode }) {
   const help = useOptionalHelp();
   const view = result.camera_view;
   if (!view || !result.quality) {
@@ -33,7 +34,8 @@ export function CameraNote({ result }: { result: AnalysisResult }) {
           and {one ? "has" : "have"} no feedback.
         </p>
       )}
-      {approximate.length > 0 && (
+      {/* Simple mode's cards already say "rough from this angle", so it doesn't list them again. */}
+      {approximate.length > 0 && mode === "advanced" && (
         <p className="text-sm text-ink-muted">
           The {joinList(approximate)} {approximate.length === 1 ? "is" : "are"} approximate from this angle.
         </p>

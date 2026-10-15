@@ -7,12 +7,14 @@ import { queryKeys, useAnalysis, useFrames, useResult } from "../../api/queries"
 import type { AnalysisResult, AnalysisSummary, FramesPayload } from "../../api/types";
 import { DeleteAnalysisButton } from "../../components/DeleteAnalysisButton";
 import { KnownLimits } from "../../components/KnownLimits";
+import { useResultsMode } from "../../lib/useResultsMode";
 import { PlayheadProvider, usePlayheadStore } from "../../playhead/context";
 import { ProcessingView } from "../processing/ProcessingView";
 import { AngleCharts } from "./charts/AngleCharts";
 import { FeedbackPanel } from "./FeedbackPanel";
 import { FrameControls } from "./FrameControls";
 import { MetricCards } from "./MetricCards";
+import { ModeToggle } from "./ModeToggle";
 import { OverlayToggles } from "./OverlayToggles";
 import { PhaseTimeline } from "./PhaseTimeline";
 import { CurrentPhase, FrameCounter, StatusKey } from "./PlayheadReadout";
@@ -40,6 +42,10 @@ function ResultsView({
   demo: boolean;
 }) {
   const [options, setOptions] = useState(DEFAULT_OPTIONS);
+  const [mode, setMode] = useResultsMode();
+  const simple = mode === "simple";
+  // Simple mode draws the skeleton without angle numbers, from the smoothed landmarks.
+  const shown: OverlayOptions = simple ? { ...options, showLabels: false, source: "smoothed" } : options;
   return (
     <PlayheadProvider nFrames={frames.n_frames} fps={frames.fps}>
       <KeyboardShortcuts result={result} />
@@ -50,28 +56,31 @@ function ResultsView({
             {new Date(summary.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })} ·{" "}
             {result.hand === "right" ? "Right" : "Left"}-handed · {result.fps} fps
           </p>
-          {!demo && <DeleteFromHere summary={summary} className="ml-auto" />}
+          <div className="ml-auto flex flex-wrap items-center gap-3">
+            <ModeToggle mode={mode} onChange={setMode} />
+            {!demo && <DeleteFromHere summary={summary} />}
+          </div>
         </header>
 
         {/* Phone order is DOM order (video, analysis, charts); on large screens the
             analysis column sits beside both. */}
         <div className="grid gap-x-6 gap-y-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
           <section aria-label="Video" className="min-w-0 space-y-3 lg:col-start-1">
-            <VideoStage result={result} frames={frames} options={options} />
+            <VideoStage result={result} frames={frames} options={shown} />
             <FrameControls>
               <CurrentPhase phases={result.phases} />
               <FrameCounter />
             </FrameControls>
             <PhaseTimeline phases={result.phases} />
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-              <OverlayToggles options={options} onChange={setOptions} />
+              <OverlayToggles options={shown} onChange={setOptions} simple={simple} />
               <StatusKey />
             </div>
           </section>
 
           <aside aria-label="Analysis" className="space-y-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <FeedbackPanel result={result} />
-            <MetricCards result={result} />
+            <FeedbackPanel result={result} mode={mode} />
+            <MetricCards result={result} mode={mode} />
             {result.warnings.length > 0 && (
               <div className="rounded-xl border border-warn/40 bg-surface p-4">
                 <h2 className="mb-2 text-sm font-semibold text-warn">About this clip</h2>
@@ -86,9 +95,11 @@ function ResultsView({
             {!demo && <ReportProblem analysisId={summary.id} outcome="succeeded" />}
           </aside>
 
-          <div className="min-w-0 lg:col-start-1">
-            <AngleCharts frames={frames} result={result} />
-          </div>
+          {!simple && (
+            <div className="min-w-0 lg:col-start-1">
+              <AngleCharts frames={frames} result={result} />
+            </div>
+          )}
         </div>
       </div>
     </PlayheadProvider>
