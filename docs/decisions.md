@@ -313,6 +313,17 @@ and what would change the decision. Numbers link to the reports and docs they co
 - **Considered:** a post that points at the analysis (no copy): cheaper, but deleting the post would then have to delete or orphan the analysis, and the post would break when the analysis was deleted.
 - **Trade-off:** a copy of a few megabytes per post, made while the request waits. For S3, a server-side copy would avoid the download and re-upload.
 
+### 16l. The feed: one query per page, built from the same rules
+
+- **Chosen:**
+  - two tabs. Public is every public post by someone not hidden from you (your own included); Friends is every post, of either audience, by your current friends (not your own, and not people you only follow one way). This is the same rule as `visible_kinds`, written as one SQL query so a page is a single indexed read rather than a check per post.
+  - friends are worked out in the query from mutual follows, never stored, so ending a friendship empties the tab at once. Blocks either way and suspended accounts are excluded in the same query.
+  - cursor paging on (created_at, id), newest first, 10 a page (at most 30), the same as the other lists: no repeats or gaps as new posts arrive.
+  - the next page loads when the end of the list is within 600 px (an IntersectionObserver), with a Load more button for when that can't be watched; a failed page keeps what's shown and waits for Try again rather than retrying in a loop. The tab is in the address (`?tab=friends`), so Back and reload keep it.
+  - videos never autoplay and load only when played; starting one pauses any other.
+- **Considered:** a precomputed (fan-out) timeline per person: faster at large scale, but it has to be rewritten whenever someone follows, unfollows, blocks or changes a post's audience, and at this size the query is quick.
+- **Trade-off:** the Public tab is chronological, not ranked; that's simple and predictable but will need ranking or filtering if it gets busy.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**

@@ -1,3 +1,4 @@
+import type { SyntheticEvent } from "react";
 import { Link } from "react-router";
 
 import { useLike } from "../../api/posts";
@@ -43,6 +44,13 @@ export function LikeButton({ post }: { post: Post }) {
   );
 }
 
+/** One video at a time: starting one pauses any other that's playing. */
+function pauseOthers(event: SyntheticEvent<HTMLVideoElement>) {
+  document.querySelectorAll("video").forEach((v) => {
+    if (v !== event.currentTarget && !v.paused) v.pause();
+  });
+}
+
 /**
  * A post: who, when and for whom; the serve's skeleton video (it loads only when played, so a
  * page of posts doesn't fetch every video); the caption and score; likes and comments.
@@ -72,6 +80,7 @@ export function PostCard({ post, linkToPost = true }: { post: Post; linkToPost?:
         playsInline
         className="aspect-video w-full bg-black object-contain"
         aria-label={`${name}'s serve`}
+        onPlay={pauseOthers}
       />
       <div className="space-y-2 p-3">
         {post.caption && <p className="whitespace-pre-line break-words text-sm">{post.caption}</p>}

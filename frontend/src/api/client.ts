@@ -23,6 +23,7 @@ import type {
   Notification,
   Person,
   Post,
+  FeedTab,
   PostPage,
   Profile,
   ProfileUpdate,
@@ -123,6 +124,8 @@ export interface ApiClient {
   deletePost(id: string): Promise<void>;
   /** Someone's posts that you can see, newest first. */
   listPostsBy(username: string, cursor?: string): Promise<PostPage>;
+  /** Public: everyone's public posts. Friends: your friends' posts. Newest first. */
+  getFeed(tab: FeedTab, cursor?: string): Promise<PostPage>;
   like(postId: string): Promise<LikeState>;
   unlike(postId: string): Promise<LikeState>;
   /** Oldest first. */
@@ -283,6 +286,7 @@ export const httpClient: ApiClient = {
   deletePost: (id) => request(`/posts/${encodeURIComponent(id)}`, { method: "DELETE" }),
   listPostsBy: (username, cursor) =>
     request(`/people/${encodeURIComponent(username)}/posts${cursor ? `?${new URLSearchParams({ cursor })}` : ""}`),
+  getFeed: (tab, cursor) => request(`/feed?${new URLSearchParams({ tab, ...(cursor ? { cursor } : {}) })}`),
   like: (postId) => request(`/posts/${encodeURIComponent(postId)}/like`, { method: "PUT" }),
   unlike: (postId) => request(`/posts/${encodeURIComponent(postId)}/like`, { method: "DELETE" }),
   listComments: (postId, cursor) =>

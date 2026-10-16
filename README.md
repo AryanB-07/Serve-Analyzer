@@ -61,6 +61,9 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
   scores), so deleting it removes exactly that, and your analysis stays. Likes (one per person),
   comments in order (yours to delete, or any on your post), editing the caption and audience,
   and reporting. Who can see a post is checked on every request; videos are signed URLs.
+- **Feed:** a Public tab (everyone's public posts) and a Friends tab (your friends' posts of
+  either kind), newest first. More load as you scroll, with a button as a fallback; videos load
+  only when played, and starting one pauses any other.
 - **Notifications and safety:** a bell for new followers, follow-backs and serves sent
   to you. A username someone gives up is held for them for 30 days, so it can't be taken to
   impersonate them. `python -m serve_api.moderate` shows the reports about an account and
@@ -254,6 +257,7 @@ uv run alembic revision --autogenerate -m "add users table"
 | `SERVE_API_COOKIE_SECURE` | on unless `SERVE_API_ENV=development` | `1`/`0` forces the session cookie's `Secure` flag |
 | `SERVE_API_ALLOWED_ORIGINS` | none | Extra origins allowed to send POST/PUT/DELETE, comma-separated; only needed if a proxy rewrites `Host` |
 | `SERVE_API_DAILY_ANALYSIS_LIMIT` | `20` | New analyses each user may create per rolling 24 hours |
+| `SERVE_API_AUTH_ATTEMPTS_PER_IP` | `30` | Sign-ins, sign-ups and resets from one IP address per 10 minutes |
 | `SERVE_API_MAX_ACTIVE_ANALYSES` | `2` | Analyses each user may have queued or processing at once |
 | `SERVE_API_STORAGE` | `local` | `local` keeps files in `SERVE_API_DATA_DIR`; `s3` uses a bucket |
 | `SERVE_API_S3_BUCKET`, `SERVE_API_S3_REGION` | none | The bucket, when `SERVE_API_STORAGE=s3` (credentials come from the usual AWS variables or a role) |
@@ -488,6 +492,7 @@ frontend/
 | `GET /notifications`, `GET /notifications/unread`, `POST /notifications/read` | Your notifications, how many are new, and marking them read |
 | `POST /posts`, `GET`/`PATCH`/`DELETE /posts/{id}` | Post a serve (a snapshot); see, edit caption and audience, or delete it |
 | `GET /people/{username}/posts?cursor=` | Someone's posts you can see, newest first |
+| `GET /feed?tab=public\|friends&cursor=&limit=` | The feed: everyone's public posts, or your friends' posts; newest first |
 | `PUT`/`DELETE /posts/{id}/like` | Like and unlike (idempotent) |
 | `GET`/`POST /posts/{id}/comments`, `DELETE /comments/{id}` | Comments, oldest first; delete yours, or any on your post |
 | `DELETE /auth/me` | Delete the account and everything in it (needs the password) |

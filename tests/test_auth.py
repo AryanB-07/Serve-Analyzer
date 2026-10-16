@@ -153,6 +153,13 @@ def test_each_ip_is_limited_across_signup_and_login(client):
     assert login(client, email="u0@example.com").status_code == 429
 
 
+def test_the_per_ip_limit_is_a_setting(tmp_path):
+    client = TestClient(create_app(Settings(data_dir=tmp_path, secret="test", public_base="", auth_attempts_per_ip=3)))
+    for i in range(3):
+        assert signup(client, email=f"u{i}@example.com").status_code == 201
+    assert signup(client, email="one-more@example.com").status_code == 429
+
+
 def test_rate_limits_are_shared_through_the_database(client):
     database = db(client)
     limiter = RateLimiter(database, "test", limit=2, window=timedelta(minutes=1))

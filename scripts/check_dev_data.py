@@ -131,6 +131,21 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
             if parts.netloc in ("", "testserver"):
                 path = parts.path.removeprefix(settings.public_base.rstrip("/"))
                 c.get(client, f"{path}?{parts.query}", f"{who} post video", headers={"Range": "bytes=0-1023"})
+    for tab in ("public", "friends"):  # the feed, every page; each post must be one they may see
+        seen, cursor = [], None
+        while True:
+            page = c.get(client, "/feed", f"{who} {tab} feed", params={"tab": tab, "limit": 2, **({"cursor": cursor} if cursor else {})})
+            if page.status_code != 200:
+                break
+            seen += page.json()["items"]
+            if not (cursor := page.json()["next_cursor"]):
+                break
+        c.expect(len({p["id"] for p in seen}) == len(seen), f"{who}: a post appears twice across {tab} feed pages")
+        for post in seen:
+            c.counts[f"feed posts ({tab})"] += 1
+            c.expect(tab == "friends" or post["visibility"] == "public", f"{who}: a friends-only post in the public feed")
+            c.expect(tab == "public" or not post["is_yours"], f"{who}: their own post in the friends feed")
+            c.get(client, f"/posts/{post['id']}", f"{who} opens a post from the {tab} feed")
     board = c.get(client, "/leaderboard", f"{who} leaderboard")
     if board.status_code == 200:
         c.counts["leaderboard places"] += len(board.json()["ranked"]) + len(board.json()["not_ranked"])

@@ -17,6 +17,7 @@ import { DemoPage } from "./features/demo/DemoPage";
 import { FriendsPage } from "./features/friends/FriendsPage";
 import { PersonPage } from "./features/friends/PersonPage";
 import { ConversationPage } from "./features/messages/ConversationPage";
+import { FeedPage } from "./features/posts/FeedPage";
 import { PostPage } from "./features/posts/PostPage";
 import { MessagesPage } from "./features/messages/MessagesPage";
 import { HistoryPage } from "./features/history/HistoryPage";
@@ -74,6 +75,7 @@ export const routes = [
               { path: "/u/:username", element: <PersonPage /> },
               { path: "/messages", element: <MessagesPage /> },
               { path: "/messages/:id", element: <ConversationPage /> },
+              { path: "/feed", element: <FeedPage /> },
               { path: "/p/:id", element: <PostPage /> },
               { path: "/settings", element: <SettingsPage /> },
               { path: "/account", element: <Moved to="/settings" /> },

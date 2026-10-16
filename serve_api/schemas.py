@@ -595,6 +595,7 @@ class BlockedPerson(BaseModel):
 MAX_CAPTION = 500
 MAX_COMMENT = 1000
 Visibility = Literal["public", "friends"]
+FeedTab = Literal["public", "friends"]
 
 
 def _clean_body(value: str | None, limit: int, empty: str | None) -> str | None:

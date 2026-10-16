@@ -44,6 +44,7 @@ export type Notification = Schemas["Notification"];
 export type Post = Schemas["Post"];
 export type PostPage = Schemas["PostPage"];
 export type Visibility = Post["visibility"];
+export type FeedTab = "public" | "friends";
 export type Comment = Schemas["Comment"];
 export type CommentPage = Schemas["CommentPage"];
 export type LikeState = Schemas["LikeState"];

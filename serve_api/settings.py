@@ -40,6 +40,10 @@ class Settings:
         default_factory=lambda: int(_env("DAILY_ANALYSIS_LIMIT", "20")))
     max_active_analyses: int = field(
         default_factory=lambda: int(_env("MAX_ACTIVE_ANALYSES", "2")))
+    # Sign-ins, sign-ups and resets from one IP address per 10 minutes. Raised only for the
+    # end-to-end tests, which sign up dozens of accounts from one address.
+    auth_attempts_per_ip: int = field(
+        default_factory=lambda: int(_env("AUTH_ATTEMPTS_PER_IP", "30")))
     # Where uploads and results live: "local" (data_dir/objects) or "s3".
     storage: str = field(default_factory=lambda: _env("STORAGE", "local"))
     s3_bucket: str = field(default_factory=lambda: _env("S3_BUCKET", ""))

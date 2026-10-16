@@ -32,6 +32,7 @@ from .schemas import (
     CreatePost,
     EditPost,
     ErrorResponse,
+    FeedTab,
     LikeState,
     NewComment,
     PersonSummary,
@@ -156,6 +157,16 @@ def posts_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
         if not kinds:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No one has that username.")
         rows = db.posts_by(person["user_id"], kinds, limit + 1, _parse(cursor) if cursor else None)
+        page = rows[:limit]
+        return PostPage(items=as_posts(page, user),
+                        next_cursor=_cursor(page[-1]["created_at"], page[-1]["id"]) if len(rows) > limit else None)
+
+    @router.get("/feed", response_model=PostPage, responses={401: {"model": ErrorResponse}, 422: {"model": ErrorResponse}})
+    def feed(tab: FeedTab = "public", cursor: str | None = None, limit: int = Query(10, ge=1, le=30),
+             user: User = signed_in) -> PostPage:
+        """Public: everyone's public posts. Friends: posts (public and friends-only) from your
+        friends. Newest first, a page at a time; ``cursor`` is the last page's next_cursor."""
+        rows = db.feed_page(user.id, tab, limit + 1, _parse(cursor) if cursor else None)
         page = rows[:limit]
         return PostPage(items=as_posts(page, user),
                         next_cursor=_cursor(page[-1]["created_at"], page[-1]["id"]) if len(rows) > limit else None)

@@ -592,6 +592,15 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return { items, next_cursor: null };
     },
 
+    async getFeed(tab) {
+      await delay();
+      const items = [...posts.values()].map((m) => m.post)
+        .filter((p) => !blocked.has(p.author.username ?? ""))
+        .filter((p) => (tab === "public" ? p.visibility === "public" : !p.is_yours && isFriend(p.author.username ?? "")))
+        .map((p) => view(posts.get(p.id)!)).sort((a, b) => b.created_at.localeCompare(a.created_at));
+      return { items, next_cursor: null };
+    },
+
     async like(postId) {
       await delay();
       const m = mockPost(postId);

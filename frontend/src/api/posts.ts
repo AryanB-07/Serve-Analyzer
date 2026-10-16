@@ -1,12 +1,13 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from ".";
-import type { CreatePost, EditPost, LikeState, Post } from "./types";
+import type { CreatePost, EditPost, FeedTab, LikeState, Post } from "./types";
 
 export const postKeys = {
   all: ["posts"] as const,
   post: (id: string) => ["posts", "one", id] as const,
   by: (username: string) => ["posts", "by", username] as const,
+  feed: (tab: FeedTab) => ["posts", "feed", tab] as const,
   comments: (id: string) => ["posts", "comments", id] as const,
 };
 
@@ -25,6 +26,16 @@ export function usePostsBy(username: string | null | undefined) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.next_cursor ?? undefined,
     enabled: Boolean(username),
+  });
+}
+
+/** A feed tab, a page at a time. */
+export function useFeed(tab: FeedTab) {
+  return useInfiniteQuery({
+    queryKey: postKeys.feed(tab),
+    queryFn: ({ pageParam }) => api.getFeed(tab, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
   });
 }
 

@@ -141,7 +141,7 @@ class Auth:
                  mailer: m.Mailer | None = None) -> None:
         self.db, self.settings, self.storage = db, settings, storage
         self.mailer = mailer or m.make_mailer(settings)
-        self.per_ip = RateLimiter(db, "ip", limit=30, window=timedelta(minutes=10))
+        self.per_ip = RateLimiter(db, "ip", limit=settings.auth_attempts_per_ip, window=timedelta(minutes=10))
         # The signup form checks the username as it's typed.
         self.username_checks = RateLimiter(db, "ip-username", limit=120, window=timedelta(minutes=10))
         self.failures_per_email = RateLimiter(

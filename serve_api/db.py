@@ -773,6 +773,31 @@ class Database:
         with self.engine.connect() as conn:
             return [dict(r) for r in conn.execute(query.order_by(posts.c.created_at.desc(), posts.c.id.desc()).limit(limit)).mappings()]
 
+    def feed_page(self, viewer_id: str, tab: str, limit: int,
+                  before: tuple[datetime, str] | None = None) -> list[dict[str, Any]]:
+        """The feed, newest first. "public": everyone's public posts. "friends": public and
+        friends posts from ``viewer_id``'s friends (people they follow who follow them back).
+        Both leave out anyone hidden from the viewer (a block either way, or a suspension)."""
+        hidden = select(blocks.c.blocked_id).where(blocks.c.blocker_id == viewer_id).union(
+            select(blocks.c.blocker_id).where(blocks.c.blocked_id == viewer_id), self.suspended_ids())
+        query = select(posts).where(posts.c.user_id.not_in(hidden))
+        if tab == "public":
+            query = query.where(posts.c.visibility == "public")
+        elif tab == "friends":
+            out, back = follows.alias("out"), follows.alias("back")
+            friends = (select(out.c.followee_id)
+                       .join(back, and_(back.c.follower_id == out.c.followee_id, back.c.followee_id == viewer_id))
+                       .where(out.c.follower_id == viewer_id))
+            query = query.where(posts.c.user_id.in_(friends))
+        else:
+            raise ValueError(tab)
+        if before:
+            query = query.where(tuple_(posts.c.created_at, posts.c.id) < tuple_(
+                bindparam("f_at", before[0], UTCDateTime), bindparam("f_id", before[1])))
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(
+                query.order_by(posts.c.created_at.desc(), posts.c.id.desc()).limit(limit)).mappings()]
+
     def like(self, post_id: str, user_id: str) -> bool:
         """Like a post; True if it's new. A second like is a no-op (the primary key)."""
         try:
