@@ -784,6 +784,26 @@ class UnreadCount(BaseModel):
     unread: int
 
 
+class ReceivedServe(BaseModel):
+    """A serve a friend sent you, for the Received view."""
+
+    message_id: str
+    conversation_id: str
+    sender: PersonSummary
+    sent_at: datetime
+    seen: bool  # you've opened it
+    serve: SharedServe  # available is false once you can no longer open it
+
+
+class ReceivedServePage(BaseModel):
+    items: list[ReceivedServe]  # newest first
+    next_cursor: str | None = None
+
+
+class UnseenCount(BaseModel):
+    unseen: int
+
+
 class UserReportRequest(BaseModel):
     username: str = Field(min_length=1, max_length=40)
     message_id: str | None = Field(default=None, max_length=32)
@@ -797,6 +817,7 @@ class ExportedMessage(BaseModel):
     from_you: bool
     body: str | None = None
     serve: str | None = None  # the analysis id of a serve sent in it
+    serve_opened_at: datetime | None = None  # when you opened a serve sent to you (never shown to the sender)
     deleted: bool = False
     created_at: datetime
 

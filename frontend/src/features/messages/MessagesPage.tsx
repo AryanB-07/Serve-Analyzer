@@ -1,6 +1,6 @@
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router";
 
-import { useConversations } from "../../api/messages";
+import { useConversations, useUnseenServes } from "../../api/messages";
 import { Avatar } from "../../components/Avatar";
 import { displayName } from "../friends/FriendsPage";
 
@@ -12,15 +12,39 @@ export function shortWhen(iso: string): string {
     : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+/** The heading, and a switch between your conversations and the serves friends sent you. */
+export function MessagesHeader({ hint }: { hint: string }) {
+  const unseen = useUnseenServes().data ?? 0;
+  const tab = ({ isActive }: { isActive: boolean }) =>
+    `flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium ${isActive ? "bg-surface-2 text-ink" : "text-ink-muted hover:text-ink"}`;
+  return (
+    <header className="space-y-3">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Messages</h1>
+        <p className="text-ink-muted">{hint}</p>
+      </div>
+      <nav aria-label="Messages" className="flex gap-1 rounded-xl border border-border bg-surface p-1">
+        <NavLink to="/messages" end className={tab}>Conversations</NavLink>
+        <NavLink to="/messages/received" className={tab}
+          aria-label={unseen > 0 ? `Received serves, ${unseen} new` : undefined}>
+          Received serves
+          {unseen > 0 && (
+            <span aria-hidden className="grid min-w-5 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold leading-5 text-on-accent">
+              {unseen > 9 ? "9+" : unseen}
+            </span>
+          )}
+        </NavLink>
+      </nav>
+    </header>
+  );
+}
+
 export function MessagesPage() {
   const list = useConversations();
   const items = list.data;
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 py-4">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Messages</h1>
-        <p className="text-ink-muted">Message your friends from their page on Friends.</p>
-      </header>
+      <MessagesHeader hint="Message your friends from their page on Friends." />
       {list.isError ? (
         <div role="alert" className="space-y-2">
           <p>We couldn't load your messages.</p>

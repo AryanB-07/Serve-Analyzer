@@ -26,10 +26,13 @@ from .schemas import (
     MessagePage,
     MessagePreview,
     PersonSummary,
+    ReceivedServe,
+    ReceivedServePage,
     SendMessage,
     SharedServe,
     StartConversation,
     UnreadCount,
+    UnseenCount,
     User,
     UserReportRequest,
     normalise_username,
@@ -125,6 +128,26 @@ def messaging_router(db: Database, storage: Storage, auth: Auth) -> APIRouter:
     def count_unread(user: User = signed_in) -> UnreadCount:
         """Unread messages across all your conversations, for the navigation's badge."""
         return UnreadCount(unread=sum(c["unread"] for c in visible_conversations(user)))
+
+    @router.get("/inbox", response_model=ReceivedServePage, responses={**errors, 422: {"model": ErrorResponse}})
+    def received(cursor: str | None = None, limit: int = Query(20, ge=1, le=50), user: User = signed_in) -> ReceivedServePage:
+        """Serves your friends sent you, newest first: who, when, whether you've opened it, and
+        whether you still can (not once the friendship ends or the serve is deleted)."""
+        rows = db.received_serves(user.id, limit + 1, _parse_cursor(cursor) if cursor else None)
+        page = rows[:limit]
+        serves = serves_for(page, user)
+        people = db.profiles_of(list({r["sender_id"] for r in page}))
+        return ReceivedServePage(
+            items=[ReceivedServe(message_id=r["id"], conversation_id=r["conversation_id"],
+                                 sender=summary(people.get(r["sender_id"])) or PersonSummary(),
+                                 sent_at=r["created_at"], seen=r["seen_at"] is not None, serve=serves[r["id"]])
+                   for r in page],
+            next_cursor=_cursor(page[-1]) if len(rows) > limit else None)
+
+    @router.get("/inbox/unseen", response_model=UnseenCount, responses=errors)
+    def count_unseen(user: User = signed_in) -> UnseenCount:
+        """Serves sent to you that you haven't opened yet and still can, for the Received badge."""
+        return UnseenCount(unseen=db.unseen_serves(user.id))
 
     @router.post("/conversations", response_model=ConversationSummary,
                  responses={**errors, 403: {"model": ErrorResponse}})

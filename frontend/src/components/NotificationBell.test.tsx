@@ -51,7 +51,7 @@ describe("the notification bell", () => {
     const bell = await screen.findByRole("button", { name: "Notifications, 2 new" });
     await userEvent.click(bell);
     const ann = await screen.findByRole("link", { name: /Ann A sent you a serve/ });
-    expect(ann).toHaveAttribute("href", "/messages/c1");
+    expect(ann).toHaveAttribute("href", "/messages/received");
     expect(screen.getByRole("link", { name: /@bob followed you back/ })).toHaveAttribute("href", "/u/bob");
     expect(screen.getByRole("link", { name: /@carol started following you/ })).toHaveAttribute("href", "/u/carol");
     expect(within(ann).getByText("(new)")).toBeInTheDocument();

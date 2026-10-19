@@ -20,6 +20,7 @@ import { ConversationPage } from "./features/messages/ConversationPage";
 import { FeedPage } from "./features/posts/FeedPage";
 import { PostPage } from "./features/posts/PostPage";
 import { MessagesPage } from "./features/messages/MessagesPage";
+import { ReceivedPage } from "./features/messages/ReceivedPage";
 import { HistoryPage } from "./features/history/HistoryPage";
 import { PrivacyPage, TermsPage } from "./features/legal/LegalPages";
 import { ChooseUsernamePage } from "./features/profile/ChooseUsernamePage";
@@ -74,6 +75,7 @@ export const routes = [
               { path: "/friends", element: <FriendsPage /> },
               { path: "/u/:username", element: <PersonPage /> },
               { path: "/messages", element: <MessagesPage /> },
+              { path: "/messages/received", element: <ReceivedPage /> },
               { path: "/messages/:id", element: <ConversationPage /> },
               { path: "/feed", element: <FeedPage /> },
               { path: "/p/:id", element: <PostPage /> },

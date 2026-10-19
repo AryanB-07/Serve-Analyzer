@@ -128,7 +128,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   }
   // Mock conversations, keyed by the other person's username.
   type MockMessage = {
-    id: string; from_you: boolean; body: string | null; deleted: boolean; created_at: string;
+    id: string; from_you: boolean; body: string | null; deleted: boolean; created_at: string; seen?: boolean;
     serve?: { analysis_id: string | null; available: boolean; overall_score: number | null; recorded_at: string | null; thumbnail_url: string | null } | null;
   };
   const chats = new Map<string, { id: string; messages: MockMessage[]; read_at: string | null }>([
@@ -137,6 +137,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         { id: "m1", from_you: false, body: "Saw your new serve. The knee bend looks much deeper!", deleted: false, created_at: "2026-10-12T18:00:00Z" },
         { id: "m2", from_you: true, body: "Thanks! Still working on the toss.", deleted: false, created_at: "2026-10-12T18:05:00Z" },
         { id: "m3", from_you: false, body: "Hit on Saturday?", deleted: false, created_at: "2026-10-13T09:00:00Z" },
+        { id: "m4", from_you: false, body: "Here's mine from today.", deleted: false, created_at: "2026-10-13T09:02:00Z", seen: false,
+          serve: { analysis_id: "demo-serve-2", available: true, overall_score: 83, recorded_at: "2026-10-13T08:30:00Z",
+            thumbnail_url: "/mock/demo-serve-2/thumbnail.jpg" } },
       ],
     }],
   ]);
@@ -487,6 +490,24 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return [...chats.keys()].filter((u) => !blocked.has(u)).reduce((n, u) => n + conversationSummary(u).unread, 0);
     },
 
+    async listReceived() {
+      await delay();
+      const items = [...chats.entries()].filter(([u]) => !blocked.has(u)).flatMap(([u, c]) => c.messages
+        .filter((m) => !m.from_you && !m.deleted && m.serve)
+        .map((m) => {
+          const open = Boolean(m.serve!.available && isFriend(u));
+          return {
+            message_id: m.id, conversation_id: c.id, sender: summaryOf(u), sent_at: m.created_at, seen: Boolean(m.seen),
+            serve: open ? m.serve! : { analysis_id: null, available: false, overall_score: null, recorded_at: null, thumbnail_url: null },
+          };
+        }));
+      return { items: items.sort((a, b) => b.sent_at.localeCompare(a.sent_at)), next_cursor: null };
+    },
+
+    async countUnseenServes() {
+      return (await this.listReceived()).items.filter((r) => !r.seen && r.serve.available).length;
+    },
+
     async startConversation(username) {
       await delay();
       const name = findPerson(username);
@@ -768,6 +789,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async getAnalysis(id) {
       await delay();
       if (deleted.has(id)) throw new ApiError(404, "Analysis not found");
+      for (const c of chats.values()) for (const m of c.messages) if (!m.from_you && m.serve?.analysis_id === id) m.seen = true;
       if (isDemo(id)) return fetchJson<AnalysisSummary>(`/mock/${id}/summary.json`);
       return current(entryOrThrow(id));
     },

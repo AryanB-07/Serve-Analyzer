@@ -128,7 +128,8 @@ export function PrivacyPage() {
             the skeleton, the phases, measurements, scores and feedback. They don't see your note, the file's name or the
             original upload, and can't change or delete anything. They can open it until you delete the message, either of
             you ends the friendship or blocks, or the analysis or an account is deleted. We can't stop someone recording
-            their screen, so only send serves to people you trust with them.
+            their screen, so only send serves to people you trust with them. When a friend sends you a serve, we record
+            when you first open it, so your Received serves can show what's new; it's never shown to the sender.
           </li>
           <li>
             You can stop new people following you, unfollow someone, remove a follower, or block someone, in Settings or

@@ -25,6 +25,7 @@ import type {
   Post,
   FeedTab,
   PostPage,
+  ReceivedServePage,
   Profile,
   ProfileUpdate,
   Report,
@@ -106,6 +107,10 @@ export interface ApiClient {
   getLeaderboard(): Promise<Leaderboard>;
   listConversations(): Promise<ConversationSummary[]>;
   countUnread(): Promise<number>;
+  /** Serves friends sent you, newest first. Opening one (getAnalysis) marks it seen. */
+  listReceived(cursor?: string): Promise<ReceivedServePage>;
+  /** Received serves you haven't opened and still can. */
+  countUnseenServes(): Promise<number>;
   /** Open (or make) your conversation with a friend. */
   startConversation(username: string): Promise<ConversationSummary>;
   getConversation(id: string): Promise<ConversationSummary>;
@@ -271,6 +276,8 @@ export const httpClient: ApiClient = {
   getLeaderboard: () => request("/leaderboard"),
   listConversations: () => request("/conversations"),
   countUnread: async () => (await request<{ unread: number }>("/conversations/unread")).unread,
+  listReceived: (cursor) => request(`/inbox${cursor ? `?${new URLSearchParams({ cursor })}` : ""}`),
+  countUnseenServes: async () => (await request<{ unseen: number }>("/inbox/unseen")).unseen,
   startConversation: (username) => request("/conversations", { method: "POST", body: JSON.stringify({ username }) }),
   getConversation: (id) => request(`/conversations/${encodeURIComponent(id)}`),
   listMessages: (id, before) =>

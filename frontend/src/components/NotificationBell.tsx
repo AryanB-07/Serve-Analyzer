@@ -12,7 +12,7 @@ const TEXT: Record<Notification["kind"], string> = {
 };
 
 function linkFor(n: Notification): string {
-  if (n.kind === "serve_received" && n.conversation_id) return `/messages/${n.conversation_id}`;
+  if (n.kind === "serve_received") return "/messages/received";
   return n.person?.username ? `/u/${n.person.username}` : "/friends";
 }
 

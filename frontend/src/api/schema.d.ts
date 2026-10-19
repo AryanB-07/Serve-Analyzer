@@ -688,6 +688,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Received
+         * @description Serves your friends sent you, newest first: who, when, whether you've opened it, and
+         *     whether you still can (not once the friendship ends or the serve is deleted).
+         */
+        get: operations["received_inbox_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/inbox/unseen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count Unseen
+         * @description Serves sent to you that you haven't opened yet and still can, for the Received badge.
+         */
+        get: operations["count_unseen_inbox_unseen_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/conversations/{conversation_id}": {
         parameters: {
             query?: never;
@@ -1405,6 +1446,8 @@ export interface components {
             body?: string | null;
             /** Serve */
             serve?: string | null;
+            /** Serve Opened At */
+            serve_opened_at?: string | null;
             /**
              * Deleted
              * @default false
@@ -2101,6 +2144,32 @@ export interface components {
             left_ankle: components["schemas"]["RawLandmarkTrack"];
             right_ankle: components["schemas"]["RawLandmarkTrack"];
         };
+        /**
+         * ReceivedServe
+         * @description A serve a friend sent you, for the Received view.
+         */
+        ReceivedServe: {
+            /** Message Id */
+            message_id: string;
+            /** Conversation Id */
+            conversation_id: string;
+            sender: components["schemas"]["PersonSummary"];
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+            /** Seen */
+            seen: boolean;
+            serve: components["schemas"]["SharedServe"];
+        };
+        /** ReceivedServePage */
+        ReceivedServePage: {
+            /** Items */
+            items: components["schemas"]["ReceivedServe"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
         /** Report */
         Report: {
             /**
@@ -2241,6 +2310,11 @@ export interface components {
         UnreadCount: {
             /** Unread */
             unread: number;
+        };
+        /** UnseenCount */
+        UnseenCount: {
+            /** Unseen */
+            unseen: number;
         };
         /** UploadTarget */
         UploadTarget: {
@@ -4434,6 +4508,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UnreadCount"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    received_inbox_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivedServePage"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    count_unseen_inbox_unseen_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnseenCount"];
                 };
             };
             /** @description Unauthorized */

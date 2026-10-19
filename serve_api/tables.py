@@ -168,6 +168,8 @@ messages = Table(
     Column("analysis_id", String(32), ForeignKey("analyses.id", ondelete="SET NULL")),
     Column("created_at", UTCDateTime, nullable=False),
     Column("deleted_at", UTCDateTime),
+    # When the other person first opened the serve sent in it (the Received view's seen/unseen).
+    Column("seen_at", UTCDateTime),
     Index("messages_conversation", "conversation_id", "created_at"),
     Index("messages_sender", "sender_id"),
     Index("messages_analysis", "analysis_id"),

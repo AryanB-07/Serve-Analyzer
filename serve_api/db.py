@@ -778,17 +778,11 @@ class Database:
         """The feed, newest first. "public": everyone's public posts. "friends": public and
         friends posts from ``viewer_id``'s friends (people they follow who follow them back).
         Both leave out anyone hidden from the viewer (a block either way, or a suspension)."""
-        hidden = select(blocks.c.blocked_id).where(blocks.c.blocker_id == viewer_id).union(
-            select(blocks.c.blocker_id).where(blocks.c.blocked_id == viewer_id), self.suspended_ids())
-        query = select(posts).where(posts.c.user_id.not_in(hidden))
+        query = select(posts).where(posts.c.user_id.not_in(self.hidden_from(viewer_id)))
         if tab == "public":
             query = query.where(posts.c.visibility == "public")
         elif tab == "friends":
-            out, back = follows.alias("out"), follows.alias("back")
-            friends = (select(out.c.followee_id)
-                       .join(back, and_(back.c.follower_id == out.c.followee_id, back.c.followee_id == viewer_id))
-                       .where(out.c.follower_id == viewer_id))
-            query = query.where(posts.c.user_id.in_(friends))
+            query = query.where(posts.c.user_id.in_(self.friends_of(viewer_id)))
         else:
             raise ValueError(tab)
         if before:
@@ -1168,6 +1162,56 @@ class Database:
         if owner is None or self.hidden_between(owner, viewer_id):
             return None
         return owner if self.are_friends(owner, viewer_id) else None
+
+    def hidden_from(self, viewer_id: str) -> Any:
+        """A subquery of the ids hidden from ``viewer_id``: a block either way, or suspended."""
+        return select(blocks.c.blocked_id).where(blocks.c.blocker_id == viewer_id).union(
+            select(blocks.c.blocker_id).where(blocks.c.blocked_id == viewer_id), self.suspended_ids())
+
+    def friends_of(self, user_id: str) -> Any:
+        """A subquery of ``user_id``'s friends' ids: people they follow who follow them back."""
+        out, back = follows.alias("out"), follows.alias("back")
+        return (select(out.c.followee_id)
+                .join(back, and_(back.c.follower_id == out.c.followee_id, back.c.followee_id == user_id))
+                .where(out.c.follower_id == user_id))
+
+    def _received(self, viewer_id: str) -> Any:
+        """Messages carrying a serve sent to ``viewer_id``, still there, from someone not hidden from them."""
+        return (select(messages)
+                .join(conversation_members, and_(conversation_members.c.conversation_id == messages.c.conversation_id,
+                                                 conversation_members.c.user_id == viewer_id))
+                .where(messages.c.sender_id != viewer_id, messages.c.analysis_id.is_not(None),
+                       messages.c.deleted_at.is_(None), messages.c.sender_id.not_in(self.hidden_from(viewer_id))))
+
+    def received_serves(self, viewer_id: str, limit: int,
+                        before: tuple[datetime, str] | None = None) -> list[dict[str, Any]]:
+        """Serves sent to ``viewer_id``, newest first, whether or not they can still open them."""
+        query = self._received(viewer_id)
+        if before:
+            query = query.where(tuple_(messages.c.created_at, messages.c.id) < tuple_(
+                bindparam("r_at", before[0], UTCDateTime), bindparam("r_id", before[1])))
+        with self.engine.connect() as conn:
+            return [dict(r) for r in conn.execute(
+                query.order_by(messages.c.created_at.desc(), messages.c.id.desc()).limit(limit)).mappings()]
+
+    def unseen_serves(self, viewer_id: str) -> int:
+        """How many serves sent to ``viewer_id`` they haven't opened and still can: the sender's
+        own finished analysis, from someone who's a friend now."""
+        received = self._received(viewer_id).subquery()
+        with self.engine.connect() as conn:
+            return conn.execute(
+                select(func.count()).select_from(received)
+                .join(analyses, and_(analyses.c.id == received.c.analysis_id, analyses.c.user_id == received.c.sender_id))
+                .where(received.c.seen_at.is_(None), analyses.c.status == "succeeded",
+                       received.c.sender_id.in_(self.friends_of(viewer_id)))).scalar_one()
+
+    def mark_serve_seen(self, analysis_id: str, viewer_id: str) -> int:
+        """``viewer_id`` opened ``analysis_id``: every message that sent it to them is now seen."""
+        theirs = select(conversation_members.c.conversation_id).where(conversation_members.c.user_id == viewer_id)
+        with self.engine.begin() as conn:
+            return conn.execute(update(messages).where(
+                messages.c.analysis_id == analysis_id, messages.c.sender_id != viewer_id,
+                messages.c.seen_at.is_(None), messages.c.conversation_id.in_(theirs)).values(seen_at=now())).rowcount
 
     def analyses_by_id(self, ids: list[str]) -> dict[str, dict[str, Any]]:
         if not ids:

@@ -56,6 +56,9 @@ and a React frontend. Once deployed, `/demo` shows a real analysis without signi
 - **Sending serves:** send one of your analyses in a message, or with "Send to a friend" from its
   results page. The friend opens it read-only (no note, filename or original video) and can
   compare it with one of their own, until the message is deleted or the friendship ends.
+- **Received serves:** a view in Messages listing the serves friends sent you: who, when, and
+  New until you open it, with a badge for how many are new. Ones you can't open any more (the
+  friendship ended) stay listed, greyed out. Whether you've opened one is never shown to the sender.
 - **Posts:** post one of your analysed serves with a caption, for friends (the default) or
   everyone signed in. A post is a snapshot (its own copy of the skeleton video, thumbnail and
   scores), so deleting it removes exactly that, and your analysis stays. Likes (one per person),
@@ -487,6 +490,7 @@ frontend/
 | `GET /leaderboard` | You and your friends who joined it, ranked by the average of each one's latest serves |
 | `GET /conversations`, `POST /conversations`, `GET /conversations/unread` | Your conversations; open one with a friend; the unread total |
 | `GET`/`POST /conversations/{id}/messages`, `POST /conversations/{id}/read` | Read (paged, newest first) and send text and/or one of your serves; mark as read |
+| `GET /inbox?cursor=&limit=`, `GET /inbox/unseen` | Serves friends sent you (sender, when, seen, still available), newest first; how many are new |
 | `DELETE /messages/{id}` | Delete your message for everyone |
 | `POST /reports` | Report a person, or one of their messages to you |
 | `GET /notifications`, `GET /notifications/unread`, `POST /notifications/read` | Your notifications, how many are new, and marking them read |

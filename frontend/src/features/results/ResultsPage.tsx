@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import { api, ApiError } from "../../api";
+import { messageKeys } from "../../api/messages";
 import { queryKeys, useAnalysis, useFrames, useResult } from "../../api/queries";
 import type { AnalysisResult, AnalysisSummary, FramesPayload } from "../../api/types";
 import { DeleteAnalysisButton } from "../../components/DeleteAnalysisButton";
@@ -51,6 +52,11 @@ function ResultsView({
   // A friend's serve: watch and compare only.
   const shared = Boolean(summary.shared_by);
   const owner = !demo && !shared;
+  // Opening a friend's serve marks it seen on the server: refresh the Received view and badge.
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (shared) void queryClient.invalidateQueries({ queryKey: messageKeys.received });
+  }, [shared, summary.id, queryClient]);
   return (
     <PlayheadProvider nFrames={frames.n_frames} fps={frames.fps}>
       <KeyboardShortcuts result={result} />

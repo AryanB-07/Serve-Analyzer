@@ -13,6 +13,8 @@ export const messageKeys = {
   unread: ["conversations", "unread"] as const,
   conversation: (id: string) => ["conversation", id] as const,
   messages: (id: string) => ["messages", id] as const,
+  received: ["inbox"] as const,
+  unseen: ["inbox", "unseen"] as const,
 };
 
 const notFound = (error: unknown) =>
@@ -24,6 +26,21 @@ export function useConversations() {
 
 export function useUnreadCount(enabled = true) {
   return useQuery({ queryKey: messageKeys.unread, queryFn: () => api.countUnread(), enabled, refetchInterval: 30_000 });
+}
+
+/** Serves friends sent you, a page at a time, checked every 30 s like the badges. */
+export function useReceived() {
+  return useInfiniteQuery({
+    queryKey: [...messageKeys.received, "list"],
+    queryFn: ({ pageParam }) => api.listReceived(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useUnseenServes(enabled = true) {
+  return useQuery({ queryKey: messageKeys.unseen, queryFn: () => api.countUnseenServes(), enabled, refetchInterval: 30_000 });
 }
 
 export function useConversation(id: string) {

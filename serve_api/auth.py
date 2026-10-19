@@ -205,6 +205,7 @@ class Auth:
         conversations = [ExportedConversation(
             with_username=name_of(c["other_id"]) if c["other_id"] else None,
             messages=[ExportedMessage(from_you=m["sender_id"] == user.id, body=m["body"], serve=m["analysis_id"],
+                                      serve_opened_at=m["seen_at"] if m["sender_id"] != user.id else None,
                                       deleted=m["deleted_at"] is not None, created_at=m["created_at"])
                       for m in reversed(self.db.messages_page(c["id"], limit=100_000))],
         ) for c in chats]

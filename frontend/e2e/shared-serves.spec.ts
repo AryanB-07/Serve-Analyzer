@@ -33,9 +33,18 @@ test("a serve sent to a friend opens read-only, until the message is deleted", a
   await ann.getByRole("button", { name: /Bob Share/ }).click();
   await expect(ann.getByRole("status").filter({ hasText: "Sent to Bob Share." })).toBeVisible();
 
-  // Bob opens it from the message: read-only, named by Ann, no note or filename.
+  // It's new in Bob's Received serves, which says who sent it.
   await bob.goto("/messages");
-  await bob.getByRole("link", { name: /Ann Share/ }).click();
+  await bob.getByRole("link", { name: "Received serves, 1 new" }).click();
+  await expect(bob).toHaveURL(/\/messages\/received$/);
+  const received = bob.getByRole("list", { name: "Received serves" }).getByRole("listitem");
+  await expect(received).toHaveCount(1);
+  await expect(received).toContainText("Ann Share sent you a serve");
+  await expect(received.getByText("New", { exact: true })).toBeVisible();
+  await expectAccessible(bob, "received serves");
+
+  // Bob opens it from the message: read-only, named by Ann, no note or filename.
+  await received.getByRole("link", { name: "Open conversation" }).click();
   await bob.getByRole("link", { name: /Open their serve from/ }).click();
   await expect(bob).toHaveURL(new RegExp(`${analysisUrl}$`));
   await expect(bob.getByRole("heading", { level: 1, name: "Ann Share's serve" })).toBeVisible();
@@ -45,6 +54,11 @@ test("a serve sent to a friend opens read-only, until the message is deleted", a
   await expect(bob.getByRole("button", { name: /Delete/ })).toHaveCount(0);
   await expect(bob.getByRole("button", { name: "This result looks wrong?" })).toHaveCount(0);
   await expectAccessible(bob, "a serve a friend sent you");
+  // Opening it made it seen.
+  await bob.goto("/messages/received");
+  await expect(received.getByText("Seen", { exact: true })).toBeVisible();
+  await expect(bob.getByRole("link", { name: "Received serves", exact: true })).toBeVisible();
+  await bob.goto(analysisUrl);
   // He has no serves of his own to compare with yet.
   await bob.getByRole("button", { name: "Compare with one of my serves" }).click();
   await expect(bob.getByText("You don't have a finished serve yet.")).toBeVisible();
@@ -63,6 +77,8 @@ test("a serve sent to a friend opens read-only, until the message is deleted", a
   await bob.reload();
   await expect(bob.getByRole("heading", { name: /couldn't find|not found/i })).toBeVisible();
   expect((await bob.request.get(`/api/analyses/${id}/result`)).status()).toBe(404);
+  await bob.goto("/messages/received");
+  await expect(bob.getByText("No serves yet")).toBeVisible();
 
   for (const page of [ann, bob]) {
     await deleteAccount(page);

@@ -62,7 +62,7 @@ jobs:
       - name: API tests (Postgres)
         env:
           SERVE_API_DATABASE_URL: postgresql://serve:serve@localhost:5432/serve_test
-        run: uv run pytest -q -m "not integration" tests/test_api.py tests/test_auth.py tests/test_account.py tests/test_account_data.py tests/test_history.py tests/test_profile.py tests/test_follows.py tests/test_friend_stats.py tests/test_messages.py tests/test_shared_serves.py tests/test_moderation.py tests/test_posts.py tests/test_feed.py tests/test_existing_data.py tests/test_camera_view.py tests/test_privacy.py tests/test_queue.py tests/test_db.py tests/test_ownership.py tests/test_errors.py
+        run: uv run pytest -q -m "not integration" tests/test_api.py tests/test_auth.py tests/test_account.py tests/test_account_data.py tests/test_history.py tests/test_profile.py tests/test_follows.py tests/test_friend_stats.py tests/test_messages.py tests/test_shared_serves.py tests/test_inbox.py tests/test_moderation.py tests/test_posts.py tests/test_feed.py tests/test_existing_data.py tests/test_camera_view.py tests/test_privacy.py tests/test_queue.py tests/test_db.py tests/test_ownership.py tests/test_errors.py
 
   frontend:
     name: Frontend checks

@@ -2630,6 +2630,130 @@
         }
       }
     },
+    "/inbox": {
+      "get": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "Received",
+        "description": "Serves your friends sent you, newest first: who, when, whether you've opened it, and\nwhether you still can (not once the friendship ends or the serve is deleted).",
+        "operationId": "received_inbox_get",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceivedServePage"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/inbox/unseen": {
+      "get": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "Count Unseen",
+        "description": "Serves sent to you that you haven't opened yet and still can, for the Received badge.",
+        "operationId": "count_unseen_inbox_unseen_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnseenCount"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/conversations/{conversation_id}": {
       "get": {
         "tags": [
@@ -5194,6 +5318,18 @@
             ],
             "title": "Serve"
           },
+          "serve_opened_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serve Opened At"
+          },
           "deleted": {
             "type": "boolean",
             "title": "Deleted",
@@ -7501,6 +7637,71 @@
         ],
         "title": "RawLandmarks"
       },
+      "ReceivedServe": {
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "title": "Message Id"
+          },
+          "conversation_id": {
+            "type": "string",
+            "title": "Conversation Id"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/PersonSummary"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          },
+          "seen": {
+            "type": "boolean",
+            "title": "Seen"
+          },
+          "serve": {
+            "$ref": "#/components/schemas/SharedServe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message_id",
+          "conversation_id",
+          "sender",
+          "sent_at",
+          "seen",
+          "serve"
+        ],
+        "title": "ReceivedServe",
+        "description": "A serve a friend sent you, for the Received view."
+      },
+      "ReceivedServePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReceivedServe"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ReceivedServePage"
+      },
       "Report": {
         "properties": {
           "reason": {
@@ -7949,6 +8150,19 @@
           "unread"
         ],
         "title": "UnreadCount"
+      },
+      "UnseenCount": {
+        "properties": {
+          "unseen": {
+            "type": "integer",
+            "title": "Unseen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unseen"
+        ],
+        "title": "UnseenCount"
       },
       "UploadTarget": {
         "properties": {

@@ -32,6 +32,7 @@ const fake = vi.hoisted(() => ({
   getMe: vi.fn(),
   getProfile: vi.fn(),
   countUnread: vi.fn(),
+  countUnseenServes: vi.fn(async () => 0),
   listConversations: vi.fn(),
   getConversation: vi.fn(),
   listMessages: vi.fn(),

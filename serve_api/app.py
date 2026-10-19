@@ -216,7 +216,10 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
 
     @app.get("/analyses/{analysis_id}", response_model=AnalysisSummary, responses=ERRORS)
     def get_analysis(analysis_id: str, user: User = signed_in) -> AnalysisSummary:
-        return readable_summary(*readable_row(analysis_id, user))
+        row, sharer = readable_row(analysis_id, user)
+        if sharer:  # a friend's serve, opened: it's seen in your Received view
+            db.mark_serve_seen(analysis_id, user.id)
+        return readable_summary(row, sharer)
 
     @app.post("/analyses/{analysis_id}/start", status_code=202, response_model=AnalysisSummary,
               responses=LIMITED)

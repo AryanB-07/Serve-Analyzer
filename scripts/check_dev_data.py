@@ -104,6 +104,22 @@ def check_user(c: Check, client: TestClient, user: dict, settings: Settings) -> 
     if notes.status_code == 200:
         c.counts["notifications"] += len(notes.json())
     c.get(client, "/blocks", f"{who} blocked people")
+    # Received serves, every page, before anything below opens one (which marks it seen).
+    received, cursor = [], None
+    while True:
+        page = c.get(client, "/inbox", f"{who} received serves", params={"limit": 2, **({"cursor": cursor} if cursor else {})})
+        if page.status_code != 200:
+            break
+        received += page.json()["items"]
+        if not (cursor := page.json()["next_cursor"]):
+            break
+    c.expect(len({r["message_id"] for r in received}) == len(received), f"{who}: a received serve appears twice")
+    count = c.get(client, "/inbox/unseen", f"{who} unseen serves")
+    if count.status_code == 200:
+        openable = sum(1 for r in received if not r["seen"] and r["serve"]["available"])
+        c.expect(count.json()["unseen"] == openable, f"{who}: unseen badge {count.json()['unseen']}, list has {openable}")
+    for r in received:
+        c.counts["received serves (unseen)" if not r["seen"] else "received serves (seen)"] += 1
     chats = c.get(client, "/conversations", f"{who} conversations")
     c.get(client, "/conversations/unread", f"{who} unread count")
     if chats.status_code == 200:

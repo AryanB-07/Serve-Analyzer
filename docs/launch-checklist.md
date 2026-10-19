@@ -136,6 +136,7 @@ The goal is a consumer-ready product deployed on AWS. Tick items off as they're 
 - [x] Notifications (new followers, follow-backs, serves sent to you) and account suspension.
 - [x] Posts: serves posted for friends or everyone signed in, with likes, comments and reports.
 - [x] Feed: Public and Friends tabs, newest first, more as you scroll; videos load only when played.
+- [x] Received serves in Messages: who sent what and when, new until opened, with a badge.
 - [ ] **Before public posts go live:** have a plan for moderating them (reports go to the weekly review, and
   `serve_api.moderate` suspends); public content from 13–17-year-olds needs a faster response than weekly.
 - [x] History (now My Serves): score cards with upload time, optional notes, key-position details, and

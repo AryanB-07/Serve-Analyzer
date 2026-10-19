@@ -324,6 +324,18 @@ and what would change the decision. Numbers link to the reports and docs they co
 - **Considered:** a precomputed (fan-out) timeline per person: faster at large scale, but it has to be rewritten whenever someone follows, unfollows, blocks or changes a post's audience, and at this size the query is quick.
 - **Trade-off:** the Public tab is chronological, not ranked; that's simple and predictable but will need ranking or filtering if it gets busy.
 
+### 16m. Received serves: seen means opened, kept on the message
+
+- **Chosen:**
+  - the Received view is a list of messages that carry a serve, sent to you: no new share record, so it follows every rule messages already have. A deleted message, a deleted serve, a block or a suspension removes it; ending the friendship keeps it listed but greyed out, since you can no longer open it.
+  - "seen" is a `seen_at` on the message, set the first time you open the serve's summary (`GET /analyses/{id}`). Opening the results or frames alone doesn't count, and viewing the list doesn't either: you've seen a serve when you've looked at it.
+  - the badge counts only serves you haven't opened and still can, so it can always be cleared.
+  - it's yours alone. The sender never sees whether you opened it (that would be a read receipt nobody asked for); your data download includes when you opened each one, the sender's doesn't.
+  - serves sent before this existed have no record of being opened, so they start unseen.
+  - it lives inside Messages, next to Conversations, rather than as a sixth navigation tab. The bell's "sent you a serve" now opens it.
+- **Considered:** marking a serve seen when the conversation is read: simpler, but reading "here's my serve" isn't watching it.
+- **Trade-off:** availability is checked per item with the same rule that opens a shared serve (`shared_by`), a few queries per row. Pages are 20, so that's fine at this size.
+
 ### 17. Accessibility as a test, not a review
 
 - **Chosen:**
